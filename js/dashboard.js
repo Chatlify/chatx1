@@ -62,11 +62,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ... existing code ...
 
     // *** ÖNEMLİ: Veri yükleme fonksiyonları burada çağrılmalı ***
-    console.log('Arkadaş listesi yükleniyor...');
+    console.log('Arkadas listesi yukleniyor...');
     await loadFriendsList();
-    console.log('Sponsorlu sunucular yükleniyor...');
+    console.log('Sponsorlu sunucular yukleniyor...');
     await loadSponsoredServers();
-    console.log('Okunmamış mesajlar yükleniyor...');
+    console.log('Okunmamis mesajlar yukleniyor...');
     await loadUnreadMessages();
 
     // Realtime presence takibini başlat
@@ -728,4 +728,108 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
 }
 
 // ... existing code ...
+
+// --- Veri Yükleme Fonksiyonları (Taslak) ---
+
+// Arkadaş listesini yükler ve arayüzü günceller
+async function loadFriendsList() {
+    if (!currentUserId) {
+        console.error('loadFriendsList: Kullanici ID bulunamadi.');
+        return;
+    }
+    console.log("Arkadas listesi Supabase'den cekiliyor...");
+    try {
+        // 1. Mevcut kullanıcının arkadaş olduğu ID'leri al (friends tablosu varsayıldı)
+        //    İlişkiyi tutan tablo ve sütun adlarını güncellemelisin (user_id, friend_id)
+        const { data: friendRelations, error: friendsError } = await supabase
+            .from('friends') // 'friends' tablo adını kontrol et
+            .select('friend_id') // Arkadaş ID'sini içeren sütun adını kontrol et
+            .eq('user_id', currentUserId); // Mevcut kullanıcı ID'sinin sütun adını kontrol et
+
+        if (friendsError) throw friendsError;
+
+        if (!friendRelations || friendRelations.length === 0) {
+            console.log('Arkadas bulunamadi.');
+            // TODO: Arayüzde "arkadaş yok" mesajını göster
+            return;
+        }
+
+        const friendIds = friendRelations.map(relation => relation.friend_id);
+
+        // 2. Arkadaş ID'leri ile profil bilgilerini çek (profiles tablosu varsayıldı)
+        const { data: friendsProfiles, error: profilesError } = await supabase
+            .from('profiles') // 'profiles' tablo adını kontrol et
+            .select('id, username, avatar_url, status') // Gerekli sütunları kontrol et (status?) 
+            .in('id', friendIds);
+
+        if (profilesError) throw profilesError;
+
+        console.log('Arkadas profilleri:', friendsProfiles);
+
+        // TODO: Çekilen friendsProfiles verisi ile HTML'deki arkadaş listesini (online/offline) güncelle.
+        //       - '.friends-list' veya ilgili konteyneri bul.
+        //       - Her bir profil için bir arkadaş kartı oluştur/güncelle.
+        //       - Online/Offline durumuna göre ayır.
+
+    } catch (error) {
+        console.error('Arkadas listesi yuklenirken hata:', error.message);
+        // TODO: Arayüzde hata mesajı göster
+    }
+}
+
+// Sponsorlu sunucuları yükler ve arayüzü günceller
+async function loadSponsoredServers() {
+    console.log("Sponsorlu sunucular Supabase'den cekiliyor...");
+    try {
+        // Varsayım: 'servers' tablosunda 'is_sponsored' diye bir sütun var
+        const { data: servers, error } = await supabase
+            .from('servers') // 'servers' tablo adını kontrol et
+            .select('id, name, description, icon_url, member_count, category') // Gerekli sütunları kontrol et
+            .eq('is_sponsored', true) // Sponsorlu olma koşulunu kontrol et
+            .order('member_count', { ascending: false }); // Sıralama (isteğe bağlı)
+
+        if (error) throw error;
+
+        console.log('Sponsorlu sunucular:', servers);
+
+        // TODO: Çekilen servers verisi ile HTML'deki sponsorlu sunucu listesini güncelle.
+        //       - '.sponsored-servers-list' veya ilgili konteyneri bul.
+        //       - Her bir sunucu için bir kart oluştur/güncelle.
+
+    } catch (error) {
+        console.error('Sponsorlu sunucular yuklenirken hata:', error.message);
+        // TODO: Arayüzde hata mesajı göster
+    }
+}
+
+// Okunmamış mesaj sayısını yükler ve arayüzü günceller (varsa)
+async function loadUnreadMessages() {
+    if (!currentUserId) {
+        console.error('loadUnreadMessages: Kullanici ID bulunamadi.');
+        return;
+    }
+    console.log('Okunmamis mesajlar kontrol ediliyor...');
+    try {
+        // Varsayım: 'messages' tablosunda alıcı ID'si ve okundu durumu var
+        const { count, error } = await supabase
+            .from('messages') // 'messages' tablo adını kontrol et
+            .select('*', { count: 'exact', head: true }) // Sadece sayıyı almak için head:true
+            .eq('receiver_id', currentUserId) // Alıcı ID sütununu kontrol et
+            .eq('is_read', false); // Okunmadı durumu sütununu kontrol et
+
+        if (error) throw error;
+
+        console.log('Okunmamis mesaj sayisi:', count);
+        unreadCounts.total = count; // Global sayacı güncelle (eğer kullanılıyorsa)
+
+        // TODO: Arayüzde okunmamış mesaj sayısını gösteren bir element varsa güncelle.
+        //       Örn: Bir bildirim balonu veya kenar çubuğundaki bir sayaç.
+
+        // TODO: Bireysel sohbetler için okunmamış sayıları da çekmek gerekebilir (daha karmaşık sorgu)
+        //       unreadCounts objesini { userId: count } şeklinde doldur.
+
+    } catch (error) {
+        console.error('Okunmamis mesajlar yuklenirken hata:', error.message);
+    }
+}
 
