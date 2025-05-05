@@ -7229,8 +7229,8 @@ emoji-picker {
 /* ----- Sohbet Açık Durumu ----- */
 .dashboard-container.chat-open .direct-messages,
 .dashboard-container.chat-open .main-content .dashboard-header {
-    display: none;
-    /* DM panelini ve ana içeriğin header'ını gizle */
+    display: none !important;
+    /* Header'ı gizlemeyi zorla */
 }
 
 .dashboard-container.chat-open .main-content {
