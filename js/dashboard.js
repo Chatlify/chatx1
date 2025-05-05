@@ -48,6 +48,12 @@ const servers = {
 
 // Sayfa yüklendiğinde - DOM içinde binding işlemlerini yapar
 document.addEventListener('DOMContentLoaded', async () => {
+    // Loading screen'i doğrudan kaldır (animasyon olmadan)
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
+
     // ... existing code ...
 
     // Sohbet başlığındaki sesli arama butonunu bul ve işlev ekle
@@ -341,7 +347,7 @@ async function handleIncomingCall(callerId, signal) {
         // Aktif arama ID'sini kaydet
         activeCallUserId = callerId;
 
-        // Bildirim sesini çal
+        // Bildirim sesi çal
         playCallSound();
 
         // 30 saniye sonra cevap yoksa aramayı otomatik reddet
