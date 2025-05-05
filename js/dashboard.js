@@ -60,6 +60,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupCallPanelButtons();
 
     // ... existing code ...
+
+    // *** ÖNEMLİ: Veri yükleme fonksiyonları burada çağrılmalı ***
+    console.log('Arkadaş listesi yükleniyor...');
+    await loadFriendsList();
+    console.log('Sponsorlu sunucular yükleniyor...');
+    await loadSponsoredServers();
+    console.log('Okunmamış mesajlar yükleniyor...');
+    await loadUnreadMessages();
+
+    // Realtime presence takibini başlat
+    // ... existing code ...
 });
 
 // Arama panel butonlarını ayarla
@@ -341,7 +352,7 @@ async function handleIncomingCall(callerId, signal) {
         // Aktif arama ID'sini kaydet
         activeCallUserId = callerId;
 
-        // Bildirim sesini çal
+        // Bildirim sesi çal
         playCallSound();
 
         // 30 saniye sonra cevap yoksa aramayı otomatik reddet
