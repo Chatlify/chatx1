@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         query = query.toLowerCase().trim();
 
+        // Search in all FAQs, not just visible ones
         const results = allFaqs.filter(faq =>
             faq.question.toLowerCase().includes(query) ||
             faq.answer.toLowerCase().includes(query)
@@ -194,8 +195,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-            searchFaqs(searchInput.value);
+        // Real-time search as user types
+        searchFaqs(searchInput.value);
+    });
+
+    // Clear search results when input is cleared
+    searchInput.addEventListener('input', () => {
+        if (searchInput.value === '') {
+            renderFaqs(visibleFaqs);
         }
     });
 

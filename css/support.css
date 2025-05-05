@@ -88,19 +88,20 @@
     padding: 1rem 1.5rem;
     border-radius: 40px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.08);
     color: var(--text-color);
     font-size: 1rem;
     font-family: 'Poppins', sans-serif;
     transition: all 0.3s ease;
     padding-right: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .search-container input:focus {
     outline: none;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.12);
     border-color: rgba(106, 17, 203, 0.5);
-    box-shadow: 0 0 15px rgba(106, 17, 203, 0.3);
+    box-shadow: 0 0 20px rgba(106, 17, 203, 0.3);
 }
 
 .search-container button {
@@ -119,6 +120,7 @@
     color: white;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .search-container button:hover {
@@ -132,7 +134,8 @@
     position: relative;
     max-width: 1000px;
     margin: 0 auto;
-    overflow: hidden; /* Contain the pseudo-element */
+    overflow: hidden;
+    /* Contain the pseudo-element */
 }
 
 /* Add animated background */
@@ -144,7 +147,8 @@
     top: -50%;
     left: -50%;
     background: radial-gradient(circle at center, rgba(37, 117, 252, 0.05), transparent 60%);
-    animation: rotate 35s linear infinite reverse; /* Slightly different speed/direction */
+    animation: rotate 35s linear infinite reverse;
+    /* Slightly different speed/direction */
     z-index: -1;
 }
 

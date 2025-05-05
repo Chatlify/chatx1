@@ -135,65 +135,221 @@
             <div class="requirements-container">
                 <h2>SYSTEM <span class="highlight">REQUIREMENTS</span></h2>
 
-                <div class="requirements-grid">
+                <!-- Platform Seçici - Sekme Navigasyon -->
+                <div class="platform-tabs">
+                    <button class="platform-tab active" data-platform="windows"><i class="fab fa-windows"></i>
+                        Windows</button>
+                    <button class="platform-tab" data-platform="mac"><i class="fab fa-apple"></i> macOS</button>
+                    <button class="platform-tab" data-platform="linux"><i class="fab fa-linux"></i> Linux</button>
+                    <button class="platform-tab" data-platform="android"><i class="fab fa-android"></i> Android</button>
+                    <button class="platform-tab" data-platform="ios"><i class="fab fa-apple"></i> iOS</button>
+                </div>
+
+                <!-- Platform İçerikleri -->
+                <div class="platform-contents">
                     <!-- Windows Gereksinimleri -->
-                    <div class="requirement-card">
-                        <h3><i class="fab fa-windows"></i> Windows</h3>
-                        <ul>
-                            <li><strong>OS:</strong> Windows 10/11 (64-bit)</li>
-                            <li><strong>Processor:</strong> Intel Core i3 or AMD equivalent</li>
-                            <li><strong>Memory:</strong> 4 GB RAM</li>
-                            <li><strong>Storage:</strong> 500 MB available space</li>
-                            <li><strong>Network:</strong> Broadband Internet connection</li>
-                            <li><strong>DirectX:</strong> Version 11</li>
-                        </ul>
+                    <div class="platform-content active" id="windows-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-desktop"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>Windows 10/11 (64-bit)</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>Intel Core i3 veya AMD eşdeğeri</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>4 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>500 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-globe"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>Geniş bant internet bağlantısı</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-gamepad"></i></div>
+                                <div class="spec-info">
+                                    <h4>DirectX</h4>
+                                    <p>Sürüm 11</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- macOS Gereksinimleri -->
-                    <div class="requirement-card">
-                        <h3><i class="fab fa-apple"></i> macOS</h3>
-                        <ul>
-                            <li><strong>OS:</strong> macOS 10.13 High Sierra or newer</li>
-                            <li><strong>Processor:</strong> 64-bit Intel or Apple Silicon</li>
-                            <li><strong>Memory:</strong> 4 GB RAM</li>
-                            <li><strong>Storage:</strong> 500 MB available space</li>
-                            <li><strong>Network:</strong> Broadband Internet connection</li>
-                        </ul>
+                    <div class="platform-content" id="mac-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-desktop"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>macOS 10.13 High Sierra veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>64-bit Intel veya Apple Silicon</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>4 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>500 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-globe"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>Geniş bant internet bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Linux Gereksinimleri -->
-                    <div class="requirement-card">
-                        <h3><i class="fab fa-linux"></i> Linux</h3>
-                        <ul>
-                            <li><strong>OS:</strong> Ubuntu 18.04+, Debian 10+, Fedora 33+</li>
-                            <li><strong>Processor:</strong> 64-bit Intel or AMD</li>
-                            <li><strong>Memory:</strong> 4 GB RAM</li>
-                            <li><strong>Storage:</strong> 500 MB available space</li>
-                            <li><strong>Network:</strong> Broadband Internet connection</li>
-                        </ul>
+                    <div class="platform-content" id="linux-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-desktop"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>Ubuntu 18.04+, Debian 10+, Fedora 33+</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>64-bit Intel veya AMD</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>4 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>500 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-globe"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>Geniş bant internet bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Android Gereksinimleri -->
-                    <div class="requirement-card">
-                        <h3><i class="fab fa-android"></i> Android</h3>
-                        <ul>
-                            <li><strong>OS:</strong> Android 8.0 (Oreo) or newer</li>
-                            <li><strong>Processor:</strong> 1.5 GHz quad-core or better</li>
-                            <li><strong>Memory:</strong> 2 GB RAM</li>
-                            <li><strong>Storage:</strong> 200 MB available space</li>
-                            <li><strong>Network:</strong> WiFi or mobile data connection</li>
-                        </ul>
+                    <div class="platform-content" id="android-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-mobile-alt"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>Android 8.0 (Oreo) veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>1.5 GHz dört çekirdekli veya daha iyi</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>2 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>200 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-wifi"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>WiFi veya mobil veri bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- iOS Gereksinimleri -->
-                    <div class="requirement-card">
-                        <h3><i class="fab fa-apple"></i> iOS</h3>
-                        <ul>
-                            <li><strong>OS:</strong> iOS 14.0 or newer</li>
-                            <li><strong>Device:</strong> iPhone 6s or newer, iPad 5th gen or newer</li>
-                            <li><strong>Storage:</strong> 200 MB available space</li>
-                            <li><strong>Network:</strong> WiFi or mobile data connection</li>
-                        </ul>
+                    <div class="platform-content" id="ios-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-mobile-alt"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>iOS 14.0 veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-tablet-alt"></i></div>
+                                <div class="spec-info">
+                                    <h4>Cihaz</h4>
+                                    <p>iPhone 6s veya daha yeni, iPad 5. nesil veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>200 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-wifi"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>WiFi veya mobil veri bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

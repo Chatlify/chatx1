@@ -276,4 +276,148 @@ document.addEventListener('DOMContentLoaded', () => {
     if (content) {
         content.classList.add('loaded');
     }
+
+    // Testimonial kartları için animasyon ve etkileşimler
+    const initTestimonials = () => {
+        const testimonialItems = document.querySelectorAll('.testimonial-item');
+        const dotsContainer = document.querySelector('.nav-dots');
+        const dots = document.querySelectorAll('.dot');
+        const prevBtn = document.querySelector('.nav-btn.prev');
+        const nextBtn = document.querySelector('.nav-btn.next');
+
+        if (!testimonialItems.length || !dotsContainer || !prevBtn || !nextBtn) return;
+
+        let currentIndex = 0;
+        const totalItems = testimonialItems.length;
+
+        // İlk kartı aktif yap
+        testimonialItems[0].classList.add('active');
+
+        // Dot'ları güncelle
+        const updateDots = () => {
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+        };
+
+        // Kartları güncelle
+        const updateCards = () => {
+            testimonialItems.forEach((item, index) => {
+                item.classList.remove('active', 'prev');
+
+                if (index === currentIndex) {
+                    item.classList.add('active');
+                } else if (index === ((currentIndex - 1 + totalItems) % totalItems)) {
+                    item.classList.add('prev');
+                }
+            });
+
+            updateDots();
+        };
+
+        // Click olaylarını ekle
+        prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+            updateCards();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % totalItems;
+            updateCards();
+        });
+
+        // Dot'lara click fonksiyonu ekle
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentIndex = index;
+                updateCards();
+            });
+        });
+
+        // Otomatik değiştirme için interval
+        let interval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % totalItems;
+            updateCards();
+        }, 5000);
+
+        // Mouse hover olunca interval'i durdur
+        const testimonialsContainer = document.querySelector('.testimonials-container');
+        if (testimonialsContainer) {
+            testimonialsContainer.addEventListener('mouseenter', () => {
+                clearInterval(interval);
+            });
+
+            testimonialsContainer.addEventListener('mouseleave', () => {
+                interval = setInterval(() => {
+                    currentIndex = (currentIndex + 1) % totalItems;
+                    updateCards();
+                }, 5000);
+            });
+        }
+    };
+
+    // Değerlendirme kartlarını başlat
+    initTestimonials();
+
+    // Scrolled classını animasyon için ekle
+    setTimeout(() => {
+        document.querySelector('main')?.classList.add('loaded');
+    }, 200);
+});
+
+// Utility function to check if element is in viewport
+function isElementInViewport(el) {
+    const rect = el.getBoundingClientRect();
+    return (
+        rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.8 &&
+        rect.bottom >= 0
+    );
+}
+
+// Page transition for links
+document.querySelectorAll('a[href]:not([target="_blank"])').forEach(link => {
+    link.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href.startsWith('#') || href.indexOf('://') > -1) return;
+
+        e.preventDefault();
+        document.body.classList.add('page-transition');
+
+        setTimeout(() => {
+            window.location.href = href;
+        }, 300);
+    });
+});
+
+// Şifre gösterme/gizleme butonları için fonksiyon
+document.addEventListener('DOMContentLoaded', function () {
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            // Hedef input elementini bul
+            const targetId = this.hasAttribute('data-target') ?
+                this.getAttribute('data-target') : 'password';
+            const targetInput = document.getElementById(targetId);
+
+            if (!targetInput) return;
+
+            // Şifre tipini değiştir
+            const currentType = targetInput.getAttribute('type');
+            const newType = currentType === 'password' ? 'text' : 'password';
+            targetInput.setAttribute('type', newType);
+
+            // İkonu değiştir
+            const icon = this.querySelector('i');
+            if (icon) {
+                if (newType === 'password') {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            }
+        });
+    });
 });

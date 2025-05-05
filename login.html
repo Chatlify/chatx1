@@ -233,6 +233,11 @@
             cursor: pointer;
             z-index: 10;
             transition: color 0.2s ease;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .input-container .toggle-password:hover {
@@ -249,6 +254,11 @@
             font-size: 0.95rem;
             transition: all 0.3s ease;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            padding-right: 45px;
         }
 
         input:focus {
@@ -542,10 +552,42 @@
                 width: 80px;
             }
         }
+
+        /* Geri Tuşu Stilleri */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(26, 26, 46, 0.8);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .back-button:hover {
+            background: rgba(106, 17, 203, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 
 <body>
+    <!-- Geri Tuşu -->
+    <a href="index.html" class="back-button" title="Ana Sayfaya Dön">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
     <div class="container">
         <div class="form-container">
             <div class="logo-wrapper">
@@ -567,8 +609,10 @@
                     <label for="password">Şifre</label>
                     <div class="input-container">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" required placeholder="Şifreniz">
-                        <i class="fas fa-eye toggle-password" id="toggle-password"></i>
+                        <input type="password" id="password" name="password" placeholder="Şifrenizi girin" required>
+                        <span class="toggle-password" aria-label="Şifreyi göster/gizle">
+                            <i class="fas fa-eye"></i>
+                        </span>
                     </div>
                 </div>
 
@@ -623,6 +667,24 @@
                             <p>Oyun oynayın ve arkadaşlarınızla paylaşın</p>
                         </div>
                     </div>
+                    <div class="feature">
+                        <div class="feature-icon">
+                            <i class="fas fa-paint-brush"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Özelleştirilebilir Temalar</h3>
+                            <p>Kişisel tarzınıza uygun arayüz teması seçin</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Akıllı Bot Asistanlar</h3>
+                            <p>İşlerinizi kolaylaştıran bot asistanları kullanın</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -635,6 +697,36 @@
     <!-- Supabase Client -->
     <script type="module" src="js/auth_config.js"></script>
     <script type="module" src="js/login.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Şifre gösterme/gizleme için inline script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.querySelector('.toggle-password');
+            const passwordInput = document.getElementById('password');
+
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function () {
+                    // Şifre tipini değiştir
+                    const currentType = passwordInput.getAttribute('type');
+                    const newType = currentType === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', newType);
+
+                    // İkonu değiştir
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        if (newType === 'password') {
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        } else {
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

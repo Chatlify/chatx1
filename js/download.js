@@ -119,13 +119,46 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 5000);
     }
 
+    // Sistem gereksinimleri sekme işlevselliği
+    const platformTabs = document.querySelectorAll('.platform-tab');
+    const platformContents = document.querySelectorAll('.platform-content');
+
+    // İlk sekme aktif olacak şekilde başlat
+    if (platformTabs.length > 0 && platformContents.length > 0) {
+        platformTabs[0].classList.add('active');
+        platformContents[0].classList.add('active');
+
+        // Her sekmeye tıklama olayı ekle
+        platformTabs.forEach(tab => {
+            tab.addEventListener('click', function () {
+                // Tüm sekmelerin aktif sınıfını kaldır
+                platformTabs.forEach(t => t.classList.remove('active'));
+
+                // Tıklanan sekmeyi aktif yap
+                this.classList.add('active');
+
+                // Hangi platformun seçildiğini al
+                const platform = this.getAttribute('data-platform');
+
+                // Tüm içeriklerin aktif sınıfını kaldır
+                platformContents.forEach(content => content.classList.remove('active'));
+
+                // Seçilen platforma ait içeriği aktif yap
+                document.getElementById(`${platform}-content`).classList.add('active');
+            });
+        });
+    }
+
     // Sistem gereksinimleri kartları animasyonu
-    const requirementCards = document.querySelectorAll('.requirement-card');
+    const requirementSpecs = document.querySelectorAll('.spec-item');
 
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animated');
+                // Kademeli animasyon için gecikme ekle
+                setTimeout(() => {
+                    entry.target.classList.add('animated');
+                }, index * 100);
                 observer.unobserve(entry.target);
             }
         });
@@ -133,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
         threshold: 0.2
     });
 
-    requirementCards.forEach(card => {
-        observer.observe(card);
+    requirementSpecs.forEach(spec => {
+        observer.observe(spec);
     });
 }); 
