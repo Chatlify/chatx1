@@ -761,13 +761,48 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
             throw error;
         }
 
-        if (!profileData || profileData.length === 0) {
-            console.error('Profil verisi bulunamadı');
-            throw new Error('Kullanıcı profili bulunamadı');
-        }
+        let userProfile;
 
-        const userProfile = profileData[0];
-        console.log('Kullanıcı profili yüklendi:', userProfile);
+        // Profil bulunamadıysa yeni profil oluştur
+        if (!profileData || profileData.length === 0) {
+            console.log('Profil bulunamadı. Yeni profil oluşturuluyor...');
+
+            // Varsayılan kullanıcı adı ve avatar belirle
+            const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
+
+            // Yeni profil kaydı oluştur
+            const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: user.id,
+                        username: username,
+                        avatar_url: defaultAvatar,
+                        status: 'online',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                ])
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('Yeni profil oluşturulurken hata:', insertError);
+                // Hata olsa bile devam et, varsayılan değerlerle çalış
+                userProfile = {
+                    id: user.id,
+                    username: username,
+                    avatar_url: defaultAvatar,
+                    status: 'online'
+                };
+            } else {
+                console.log('Yeni profil başarıyla oluşturuldu:', newProfile);
+                userProfile = newProfile;
+            }
+        } else {
+            userProfile = profileData[0];
+            console.log('Kullanıcı profili yüklendi:', userProfile);
+        }
 
         // Kullanıcı arayüz elementlerini güncelle
         if (userPanelUsernameElement) {
@@ -788,7 +823,7 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
         return userProfile;
     } catch (error) {
         console.error('Kullanıcı profili alınamadı:', error.message);
-        showNotification('Kullanıcı profili yüklenemedi', 'error');
+        showNotification('Kullanıcı profili işlenirken hata: ' + error.message, 'error');
         throw error;
     }
 }
