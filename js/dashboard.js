@@ -772,35 +772,7 @@ function closeNotification(notification) {
 // Kullanıcı oturumu başlatılınca arama dinleyicisini de başlat
 async function initializeUserSession({ userPanelUsernameElement, userPanelAvatarElement }) {
     try {
-        // Demo modda veya RLS hatası durumunda kullanmak için test kullanıcısı
-        const demoUser = {
-            id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
-            user_metadata: {
-                username: 'Demo Kullanıcı'
-            }
-        };
-
-        // Eğer demo modda isek veya Supabase bağlantısı yoksa
-        if (isDemoMode) {
-            console.log('Demo mod: Test kullanıcısı yükleniyor');
-            currentUserId = demoUser.id;
-
-            // Demo profil
-            const demoProfile = {
-                id: demoUser.id,
-                username: demoUser.user_metadata.username,
-                status: 'online'
-            };
-
-            // UI'yı güncelle
-            updateUserInterface(demoProfile, demoUser, userPanelUsernameElement, userPanelAvatarElement);
-
-            // Listeneri başlat ve profili döndür
-            listenForCalls();
-            return demoProfile;
-        }
-
-        // Normal akış - gerçek Supabase bağlantısı
+        // Oturum açmış kullanıcı bilgisini al
         const { data: { user }, error: userError } = await supabase.auth.getUser();
 
         if (userError) {
@@ -809,172 +781,99 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
         }
 
         if (!user) {
-            console.warn('Kullanıcı bulunamadı, demo moduna geçiliyor');
-            // Demo kullanıcısıyla devam et
-            currentUserId = demoUser.id;
+            console.error('Kullanıcı bulunamadı - lütfen tekrar giriş yapın');
+            showNotification('Oturum bulunamadı. Lütfen tekrar giriş yapın.', 'error');
 
-            // Demo profil yarat
-            const demoProfile = {
-                id: demoUser.id,
-                username: 'Misafir Kullanıcı',
-                status: 'online'
-            };
-
-            // UI'yı güncelle
-            updateUserInterface(demoProfile, demoUser, userPanelUsernameElement, userPanelAvatarElement);
-
-            showNotification('Misafir modunda çalışıyorsunuz', 'info');
-
-            // Listeneri başlat ve profili döndür
-            listenForCalls();
-            return demoProfile;
+            // Login sayfasına yönlendir
+            window.location.href = 'login.html';
+            return null;
         }
 
         currentUserId = user.id;
         console.log('Kullanıcı ID:', currentUserId);
 
-        try {
-            // Kullanıcı profil bilgilerini al
-            const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .limit(1);
-
-            if (error) {
-                console.error('Profil verisi alınırken hata:', error);
-                throw error;
-            }
-
-            let userProfile;
-
-            // Profil bulunamadıysa yeni profil oluştur
-            if (!profileData || profileData.length === 0) {
-                console.log('Profil bulunamadı. Yeni profil oluşturuluyor...');
-
-                // Varsayılan kullanıcı adı belirle
-                const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
-
-                try {
-                    // Şema yapısını kontrol etmeye çalış
-                    const { data: schemaData } = await supabase
-                        .from('profiles')
-                        .select()
-                        .limit(1);
-
-                    // Şema yapısını belirle
-                    const schemaColumns = schemaData && schemaData.length > 0
-                        ? Object.keys(schemaData[0])
-                        : ['id', 'username', 'created_at', 'updated_at'];
-
-                    console.log('Algılanan şema sütunları:', schemaColumns);
-
-                    // Profil nesnesini oluştur - sadece var olan sütunları kullan
-                    const profileData = {
-                        id: user.id,
-                        username: username
-                    };
-
-                    // Opsiyonel alanları kontrol et ve ekle
-                    if (schemaColumns.includes('created_at')) profileData.created_at = new Date().toISOString();
-                    if (schemaColumns.includes('updated_at')) profileData.updated_at = new Date().toISOString();
-                    if (schemaColumns.includes('status')) profileData.status = 'online';
-                    if (schemaColumns.includes('avatar_url')) profileData.avatar_url = defaultAvatar;
-
-                    // RLS hatası durumunda skip
-                    try {
-                        // Yeni profil kaydı oluşturmayı dene
-                        const { data: newProfile, error: insertError } = await supabase
-                            .from('profiles')
-                            .insert([profileData])
-                            .select();
-
-                        if (insertError) {
-                            // RLS hatası - sadece log al ve devam et
-                            console.error('Yeni profil oluşturulurken hata (RLS):', insertError);
-                            // Varsayılan değerlerle devam et
-                            userProfile = {
-                                id: user.id,
-                                username: username,
-                                status: 'online'
-                            };
-                        } else {
-                            console.log('Yeni profil başarıyla oluşturuldu:', newProfile);
-                            userProfile = newProfile[0];
-                        }
-                    } catch (insertErr) {
-                        console.error('Profil kaydedilirken hata (try/catch):', insertErr);
-                        // Varsayılan değerlerle devam et
-                        userProfile = {
-                            id: user.id,
-                            username: username,
-                            status: 'online'
-                        };
-                    }
-                } catch (schemaErr) {
-                    console.error('Şema kontrolü sırasında hata:', schemaErr);
-                    userProfile = {
-                        id: user.id,
-                        username: user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı',
-                        status: 'online'
-                    };
-                }
-            } else {
-                userProfile = profileData[0];
-                console.log('Kullanıcı profili yüklendi:', userProfile);
-            }
-
-            // UI güncelle
-            updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
-
-            // Sesli aramalar için dinleyici başlat
-            listenForCalls();
-
-            return userProfile;
-        } catch (profileErr) {
-            console.error('Profil işlemleri sırasında hata:', profileErr);
-
-            // Hata olsa bile varsayılan değerlerle devam et
-            const defaultProfile = {
-                id: user.id,
-                username: user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı',
-                status: 'online'
-            };
-
-            // UI güncelle
-            updateUserInterface(defaultProfile, user, userPanelUsernameElement, userPanelAvatarElement);
-
-            // Sesli aramalar için dinleyici başlat
-            listenForCalls();
-
-            return defaultProfile;
-        }
-    } catch (error) {
-        console.error('Kullanıcı oturumu sırasında hata:', error.message);
-        showNotification('Kullanıcı işlemleri sırasında hata: ' + error.message, 'error');
-
-        // Demo kullanıcısıyla devam et
-        const demoUser = {
-            id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
-            user_metadata: {
-                username: 'Geçici Kullanıcı'
-            }
-        };
-
-        currentUserId = demoUser.id;
-
-        // Demo profil
-        const demoProfile = {
-            id: demoUser.id,
-            username: demoUser.user_metadata.username,
-            status: 'online'
-        };
+        // Kullanıcı profil bilgilerini al veya oluştur
+        const userProfile = await getOrCreateUserProfile(user);
 
         // UI güncelle
-        updateUserInterface(demoProfile, demoUser, userPanelUsernameElement, userPanelAvatarElement);
+        updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
 
-        showNotification('Geçici kullanıcı modu etkinleştirildi', 'warning');
-        return demoProfile;
+        // Sesli aramalar için dinleyici başlat
+        listenForCalls();
+
+        return userProfile;
+    } catch (error) {
+        console.error('Kullanıcı oturumu sırasında hata:', error.message);
+        showNotification('Oturum hatası: ' + error.message, 'error');
+        throw error;
+    }
+}
+
+// Kullanıcı profilini al veya oluştur
+async function getOrCreateUserProfile(user) {
+    try {
+        // Profil bilgisini sorgula
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        // Profil varsa döndür
+        if (profile) {
+            console.log('Mevcut profil bulundu:', profile);
+            return profile;
+        }
+
+        // Hata varsa kontrol et
+        if (error) {
+            console.warn('Profil sorgulanırken hata:', error);
+        }
+
+        // Profil yoksa oluştur
+        console.log('Profil bulunamadı, yeni profil oluşturuluyor...');
+
+        // Varsayılan kullanıcı adı belirle
+        const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
+
+        // Profil oluştur
+        const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .upsert([
+                {
+                    id: user.id,
+                    username: username,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }
+            ])
+            .select();
+
+        if (insertError) {
+            console.error('Profil oluşturma hatası:', insertError);
+
+            // RLS hatası olsa bile varsayılan profil döndür
+            return {
+                id: user.id,
+                username: username,
+                created_at: new Date().toISOString()
+            };
+        }
+
+        console.log('Yeni profil oluşturuldu:', newProfile);
+        return newProfile[0] || {
+            id: user.id,
+            username: username,
+            created_at: new Date().toISOString()
+        };
+    } catch (error) {
+        console.error('Profil işlemi hatası:', error);
+
+        // Hata durumunda varsayılan profil
+        return {
+            id: user.id,
+            username: user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı'
+        };
     }
 }
 
@@ -989,7 +888,7 @@ function updateUserInterface(userProfile, user, userPanelUsernameElement, userPa
         userPanelAvatarElement.src = userProfile.avatar_url || defaultAvatar;
     }
 
-    // Global değişkenleri güncelle
+    // Global değişkenleri güncelle - bu kolaylıkla erişilebilmesi için
     window.currentUserUsername = userProfile.username || user.user_metadata?.username;
     window.currentUserAvatar = userProfile.avatar_url || defaultAvatar;
 }
@@ -1004,169 +903,132 @@ async function loadFriends() {
             return;
         }
 
-        try {
-            // Backend yapısını kontrol etmeye çalış - önce friendships tablosunu dene
-            let friendsData = null;
-            let hataVar = false;
+        // Arkadaş listesi / konuşmaları yükle
+        const { data: conversations, error: convError } = await supabase
+            .from('conversations')
+            .select(`
+                id,
+                type,
+                created_at,
+                conversation_participants:conversation_participants (
+                    user_id,
+                    profiles:user_id ( id, username, avatar_url, status )
+                )
+            `)
+            .contains('participant_ids', [currentUserId]); // Bu kullanıcının katıldığı konuşmalar
 
-            // 1. Friendships tablosunu kontrol et
-            try {
-                const { data, error } = await supabase
-                    .from('friendships')
-                    .select(`
-                        friend_id,
-                        profiles:friend_id (
-                            id, 
-                            username, 
-                            avatar_url, 
-                            status
-                        )
-                    `)
-                    .eq('user_id', currentUserId)
-                    .eq('status', 'accepted');
-
-                if (!error && data && data.length > 0) {
-                    console.log('Friendships tablosundan veri alındı');
-                    friendsData = data;
-                }
-            } catch (err) {
-                console.log('Friendships tablosu sorgulanamadı:', err);
-            }
-
-            // 2. Friends tablosunu kontrol et
-            if (!friendsData) {
-                try {
-                    const { data, error } = await supabase
-                        .from('friends')
-                        .select('*')
-                        .eq('user_id', currentUserId);
-
-                    if (!error && data && data.length > 0) {
-                        console.log('Friends tablosundan veri alındı, fakat ilişki yok');
-                        // Verileri manuel olarak dönüştür
-                        friendsData = data.map(friend => ({
-                            profiles: {
-                                id: friend.friend_id || friend.friend_user_id,
-                                username: friend.friend_name || 'İsimsiz Arkadaş',
-                                avatar_url: friend.friend_avatar || defaultAvatar,
-                                status: friend.status || 'offline'
-                            }
-                        }));
-                    }
-                } catch (err) {
-                    console.log('Friends tablosu sorgulanamadı:', err);
-                    hataVar = true;
-                }
-            }
-
-            // 3. Hiçbir veri alınamadıysa demo göster
-            if (!friendsData || hataVar) {
-                console.log('Arkadaş tabloları bulunamadı veya boş, örnek arkadaşlar gösteriliyor');
-                showDemoFriends();
-                return;
-            }
-
-            // Arkadaşlar varsa listele
-            console.log('Arkadaşlar başarıyla yüklendi:', friendsData);
-            renderFriendsList(friendsData);
-
-        } catch (error) {
-            console.error('Arkadaşlar yüklenirken kritik hata:', error);
-            showDemoFriends();
-        }
-
-    } catch (error) {
-        console.error('Arkadaşlar yüklenirken hata:', error);
-        showNotification('Arkadaşlar yüklenemedi', 'error');
-    }
-}
-
-// Demo arkadaşlar göster
-function showDemoFriends() {
-    try {
-        // Örnek arkadaş verileri - Lokal resimlerle
-        const demoFriends = [
-            {
-                profiles: {
-                    id: 'demo-1',
-                    username: 'Ahmet Demo',
-                    avatar_url: defaultAvatar,
-                    status: 'online'
-                }
-            },
-            {
-                profiles: {
-                    id: 'demo-2',
-                    username: 'Zeynep Demo',
-                    avatar_url: defaultAvatar,
-                    status: 'offline'
-                }
-            },
-            {
-                profiles: {
-                    id: 'demo-3',
-                    username: 'Mehmet Demo',
-                    avatar_url: defaultAvatar,
-                    status: 'online'
-                }
-            }
-        ];
-
-        // Arkadaşlar listesini oluştur
-        renderFriendsList(demoFriends);
-
-        // Demo modu bildirimi
-        if (!isDemoMode) {
-            showNotification('Demo mod: Örnek arkadaşlar gösteriliyor', 'info');
-        }
-    } catch (error) {
-        console.error('Demo arkadaşlar gösterilirken hata:', error);
-    }
-}
-
-// Arkadaşlar listesini oluştur
-function renderFriendsList(friendsData) {
-    try {
-        // Arkadaşlar listesini oluştur
-        const friendsContainer = document.querySelector('#friends-group .dm-items');
-        if (!friendsContainer) {
-            console.error('Arkadaşlar konteyner elemanı bulunamadı');
+        if (convError) {
+            console.error('Konuşmalar yüklenirken hata:', convError);
+            // Konuşmaların tanımlanmış olduğundan emin ol
+            clearFriendsList();
             return;
         }
 
-        // Listeyi temizle
-        friendsContainer.innerHTML = '';
+        if (!conversations || conversations.length === 0) {
+            console.log('Henüz konuşma bulunamadı');
+            clearFriendsList();
+            return;
+        }
 
-        // Her arkadaş için liste elemanı oluştur
-        friendsData.forEach(friend => {
-            const friendProfile = friend.profiles;
-            if (!friendProfile) return;
+        console.log('Konuşmalar yüklendi:', conversations);
 
-            const friendItem = document.createElement('div');
-            friendItem.className = 'dm-item';
-            friendItem.dataset.userId = friendProfile.id;
+        // Arkadaşlar listesini temizle
+        clearFriendsList();
 
-            friendItem.innerHTML = `
-                <div class="dm-avatar">
-                    <img src="${friendProfile.avatar_url || defaultAvatar}" alt="${friendProfile.username}">
-                    <div class="dm-status ${friendProfile.status || 'offline'}"></div>
-                </div>
-                <div class="dm-info">
-                    <div class="dm-name">${friendProfile.username}</div>
-                    <div class="dm-activity">${friendProfile.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
-                </div>
-            `;
+        // Konuşmalardan arkadaşları çıkar ve göster
+        const friends = extractFriendsFromConversations(conversations);
+        console.log('Bulunan arkadaşlar:', friends);
 
-            // Tıklama olayını ekle
-            friendItem.addEventListener('click', () => {
-                openConversation(friendProfile.id, friendProfile.username, friendProfile.avatar_url);
-            });
+        if (friends.length === 0) {
+            showEmptyFriendsList();
+            return;
+        }
 
-            friendsContainer.appendChild(friendItem);
-        });
+        // Arkadaşları listeye ekle
+        renderActualFriendsList(friends);
     } catch (error) {
-        console.error('Arkadaşlar listesi oluşturulurken hata:', error);
+        console.error('Arkadaşlar yüklenirken hata:', error);
+        clearFriendsList();
     }
+}
+
+// Arkadaşlar listesini temizle
+function clearFriendsList() {
+    const friendsContainer = document.querySelector('#friends-group .dm-items');
+    if (friendsContainer) {
+        friendsContainer.innerHTML = '';
+    }
+}
+
+// Boş arkadaş listesi göster
+function showEmptyFriendsList() {
+    const friendsContainer = document.querySelector('#friends-group .dm-items');
+    if (friendsContainer) {
+        friendsContainer.innerHTML = `
+            <div class="dm-empty-state">
+                <div class="dm-empty-icon"><i class="fas fa-user-friends"></i></div>
+                <div class="dm-empty-text">Henüz arkadaşınız yok</div>
+            </div>
+        `;
+    }
+}
+
+// Konuşmalardan arkadaşları çıkar
+function extractFriendsFromConversations(conversations) {
+    const friends = [];
+
+    conversations.forEach(conversation => {
+        // DM konuşması ise
+        if (conversation.type === 'direct') {
+            // Konuşma katılımcılarını bul
+            const participants = conversation.conversation_participants || [];
+
+            // Kendisi olmayan katılımcıları ekle
+            participants.forEach(participant => {
+                if (participant.user_id !== currentUserId && participant.profiles) {
+                    // Arkadaş bilgilerini ekle ve konuşma ID'sini kaydet
+                    friends.push({
+                        ...participant.profiles,
+                        conversation_id: conversation.id
+                    });
+                }
+            });
+        }
+    });
+
+    return friends;
+}
+
+// Arkadaşlar listesini oluştur
+function renderActualFriendsList(friends) {
+    const friendsContainer = document.querySelector('#friends-group .dm-items');
+    if (!friendsContainer) return;
+
+    friends.forEach(friend => {
+        const friendItem = document.createElement('div');
+        friendItem.className = 'dm-item';
+        friendItem.dataset.userId = friend.id;
+        friendItem.dataset.conversationId = friend.conversation_id;
+
+        friendItem.innerHTML = `
+            <div class="dm-avatar">
+                <img src="${friend.avatar_url || defaultAvatar}" alt="${friend.username}" onerror="this.src='${defaultAvatar}'">
+                <div class="dm-status ${friend.status || 'offline'}"></div>
+            </div>
+            <div class="dm-info">
+                <div class="dm-name">${friend.username}</div>
+                <div class="dm-activity">${friend.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
+            </div>
+            ${unreadCounts[friend.id] ? `<div class="dm-notification">${unreadCounts[friend.id]}</div>` : ''}
+        `;
+
+        // Tıklama olayını ekle
+        friendItem.addEventListener('click', () => {
+            openConversation(friend.id, friend.username, friend.avatar_url, friend.conversation_id);
+        });
+
+        friendsContainer.appendChild(friendItem);
+    });
 }
 
 // Bildirim sesini yükle
@@ -1288,10 +1150,213 @@ function addChatEventListeners() {
 }
 
 // Sohbeti aç
-function openConversation(userId, username, avatarUrl) {
-    // Bu fonksiyon implementasyonu daha sonra yapılacak
-    console.log(`${username} ile sohbet açılıyor...`);
-    // showNotification(`${username} ile sohbet özelliği henüz tamamlanmadı`, 'info');
+function openConversation(userId, username, avatarUrl, conversationId) {
+    // Aktif konuşma ID'sini kaydet
+    currentConversationId = conversationId;
+
+    // Chat panelini aktifleştir
+    const chatPanel = document.querySelector('.chat-panel');
+    if (chatPanel) {
+        chatPanel.dataset.activeChatUserId = userId;
+    }
+
+    // Chat başlığını güncelle
+    const chatUsername = document.querySelector('.chat-header-user .chat-username');
+    const chatAvatar = document.querySelector('.chat-header-user .chat-avatar img');
+
+    if (chatUsername) chatUsername.textContent = username;
+    if (chatAvatar) chatAvatar.src = avatarUrl || defaultAvatar;
+
+    // UI'da arkadaşı seçili olarak işaretle
+    const allFriendItems = document.querySelectorAll('.dm-item');
+    allFriendItems.forEach(item => item.classList.remove('active'));
+
+    const selectedFriend = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
+    if (selectedFriend) selectedFriend.classList.add('active');
+
+    // Konuşmayı göster
+    document.querySelector('.chat-container').style.display = 'flex';
+    document.querySelector('.welcome-container').style.display = 'none';
+
+    // Mesajları yükle
+    loadConversationMessages(conversationId);
+
+    console.log(`${username} ile sohbet açıldı, konuşma ID: ${conversationId}`);
+}
+
+// Konuşma mesajlarını yükle
+async function loadConversationMessages(conversationId) {
+    if (!conversationId) {
+        console.error('Mesajlar yüklenemedi: Konuşma ID bulunamadı');
+        return;
+    }
+
+    try {
+        // Mesajları yükle
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select(`
+                id,
+                content,
+                created_at,
+                sender_id,
+                profiles:sender_id (username, avatar_url)
+            `)
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Mesajlar alınırken hata:', error);
+            return;
+        }
+
+        // Mesajları göster
+        renderMessages(messages);
+
+        // Realtime mesajlar için abone ol
+        subscribeToMessages(conversationId);
+
+    } catch (error) {
+        console.error('Mesajlar yüklenirken hata:', error);
+    }
+}
+
+// Mesajları görüntüle
+function renderMessages(messages) {
+    const messagesContainer = document.querySelector('.chat-messages');
+    if (!messagesContainer) return;
+
+    // Mesajlar konteynerini temizle
+    messagesContainer.innerHTML = '';
+
+    if (!messages || messages.length === 0) {
+        // Mesaj yoksa bilgi göster
+        messagesContainer.innerHTML = `
+            <div class="chat-empty-state">
+                <div class="chat-empty-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="chat-empty-text">Henüz mesaj yok. Konuşmaya başlayın!</div>
+            </div>
+        `;
+        return;
+    }
+
+    // Her mesajı ekle
+    messages.forEach(message => {
+        const isOwnMessage = message.sender_id === currentUserId;
+        const profile = message.profiles || {};
+
+        const messageElement = document.createElement('div');
+        messageElement.className = `chat-message ${isOwnMessage ? 'own-message' : ''}`;
+        messageElement.dataset.messageId = message.id;
+
+        messageElement.innerHTML = `
+            ${!isOwnMessage ? `
+                <div class="message-avatar">
+                    <img src="${profile.avatar_url || defaultAvatar}" alt="${profile.username || 'Kullanıcı'}" onerror="this.src='${defaultAvatar}'">
+                </div>
+            ` : ''}
+            <div class="message-content">
+                ${!isOwnMessage ? `<div class="message-sender">${profile.username || 'Kullanıcı'}</div>` : ''}
+                <div class="message-bubble">${message.content}</div>
+                <div class="message-time">${formatMessageTime(message.created_at)}</div>
+            </div>
+        `;
+
+        messagesContainer.appendChild(messageElement);
+    });
+
+    // Sohbet alanını en alta kaydır
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Mesaj zamanını formatla
+function formatMessageTime(timestamp) {
+    if (!timestamp) return '';
+
+    const date = new Date(timestamp);
+    const now = new Date();
+
+    // Aynı gün içindeyse sadece saat:dakika göster
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Farklı günlerdeyse tarih ve saat göster
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Realtime mesajları dinle
+function subscribeToMessages(conversationId) {
+    // Önceki aboneliği iptal et
+    if (messageSubscription) {
+        messageSubscription.unsubscribe();
+    }
+
+    // Yeni konuşma için abone ol
+    messageSubscription = supabase
+        .channel(`messages:${conversationId}`)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversationId}`
+        }, handleNewMessage)
+        .subscribe();
+
+    console.log(`Konuşma ID ${conversationId} için realtime mesajlar dinleniyor`);
+}
+
+// Yeni mesaj geldiğinde
+async function handleNewMessage(payload) {
+    console.log('Yeni mesaj alındı:', payload);
+
+    // Mesaj gönderen ben değilsem bildirim ver
+    if (payload.new && payload.new.sender_id !== currentUserId) {
+        // Bildirim sesi çal
+        if (messageNotificationSound) {
+            messageNotificationSound.play().catch(err => console.warn('Bildirim sesi çalınamadı:', err));
+        }
+
+        // Gönderici bilgilerini al
+        const { data: sender } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', payload.new.sender_id)
+            .single();
+
+        // Ekranda bildirim göster
+        showNotification(`${sender?.username || 'Birisi'} yeni bir mesaj gönderdi`, 'info');
+
+        // Okunmamış mesaj sayısını artır
+        updateUnreadCount(payload.new.sender_id);
+    }
+
+    // Mesajları yeniden yükle
+    loadConversationMessages(currentConversationId);
+}
+
+// Okunmamış mesaj sayısını güncelle
+function updateUnreadCount(senderId) {
+    // Bu konuşma şu anda açık değilse sayacı artır
+    if (!document.querySelector(`.dm-item[data-user-id="${senderId}"].active`)) {
+        unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
+
+        // UI güncelle
+        const badgeElement = document.querySelector(`.dm-item[data-user-id="${senderId}"] .dm-notification`);
+
+        if (badgeElement) {
+            badgeElement.textContent = unreadCounts[senderId];
+        } else {
+            // Badge yoksa oluştur
+            const dmInfo = document.querySelector(`.dm-item[data-user-id="${senderId}"] .dm-info`);
+            if (dmInfo) {
+                const badge = document.createElement('div');
+                badge.className = 'dm-notification';
+                badge.textContent = unreadCounts[senderId];
+                dmInfo.insertAdjacentElement('afterend', badge);
+            }
+        }
+    }
 }
 
 // Çıkış işlemini yönet
@@ -1313,16 +1378,194 @@ async function handleLogout() {
 }
 
 // Mesaj göndermeyi yönet
-function handleSendMessage(event) {
+async function handleSendMessage(event) {
     event.preventDefault();
-    // Bu fonksiyon implementasyonu daha sonra yapılacak
-    console.log('Mesaj gönderme fonksiyonu çağrıldı');
+
+    if (!currentConversationId) {
+        showNotification('Mesaj göndermek için önce bir sohbet seçmelisiniz', 'warning');
+        return;
+    }
+
+    // Mesaj içeriğini al
+    const messageInput = document.querySelector('.message-input');
+    const content = messageInput.value.trim();
+
+    if (!content) return;
+
+    try {
+        // Mesajı veritabanına ekle
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    conversation_id: currentConversationId,
+                    sender_id: currentUserId,
+                    content: content,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
+        if (error) {
+            console.error('Mesaj gönderilirken hata:', error);
+            showNotification('Mesaj gönderilemedi', 'error');
+            return;
+        }
+
+        // Formu temizle
+        messageInput.value = '';
+
+    } catch (error) {
+        console.error('Mesaj gönderme hatası:', error);
+        showNotification('Mesaj gönderilemedi: ' + error.message, 'error');
+    }
 }
 
 // GIF panelini aç/kapat
 function toggleGifPanel() {
-    // Bu fonksiyon implementasyonu daha sonra yapılacak
-    console.log('GIF paneli aç/kapa fonksiyonu çağrıldı');
-    showNotification('GIF özelliği henüz tamamlanmadı', 'info');
+    const gifPanel = document.querySelector('.gif-panel');
+
+    if (!gifPanel) {
+        // Panel yoksa oluştur
+        createGifPanel();
+    } else {
+        // Panel varsa aç/kapat
+        gifPanel.style.display = gifPanel.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// GIF paneli oluştur
+function createGifPanel() {
+    // Panel container oluştur
+    const gifPanel = document.createElement('div');
+    gifPanel.className = 'gif-panel';
+
+    // Panel içeriği
+    gifPanel.innerHTML = `
+        <div class="gif-header">
+            <div class="gif-search">
+                <input type="text" placeholder="GIF Ara..." class="gif-search-input">
+                <button class="gif-search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <button class="gif-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="gif-content">
+            <div class="gif-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>GIFler yükleniyor...</span>
+            </div>
+            <div class="gif-results"></div>
+        </div>
+    `;
+
+    // Chat giriş alanının üzerine ekle
+    const messageInput = document.querySelector('.message-input-container');
+    messageInput.appendChild(gifPanel);
+
+    // Kapatma butonu olayı
+    const closeBtn = gifPanel.querySelector('.gif-close-btn');
+    closeBtn.addEventListener('click', () => {
+        gifPanel.style.display = 'none';
+    });
+
+    // Arama olayı
+    const searchInput = gifPanel.querySelector('.gif-search-input');
+    const searchBtn = gifPanel.querySelector('.gif-search-btn');
+
+    searchBtn.addEventListener('click', () => {
+        searchGifs(searchInput.value.trim());
+    });
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchGifs(searchInput.value.trim());
+        }
+    });
+
+    // Varsayılan GIFler yükle
+    searchGifs('hello');
+}
+
+// GIF arama
+async function searchGifs(query) {
+    if (!query) return;
+
+    const resultsContainer = document.querySelector('.gif-results');
+    const loadingIndicator = document.querySelector('.gif-loading');
+
+    if (!resultsContainer || !loadingIndicator) return;
+
+    // Yükleme göster
+    loadingIndicator.style.display = 'flex';
+    resultsContainer.innerHTML = '';
+
+    try {
+        // Tenor API'ye istek
+        const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=20`);
+        const data = await response.json();
+
+        // Sonuçları göster
+        loadingIndicator.style.display = 'none';
+
+        if (!data.results || data.results.length === 0) {
+            resultsContainer.innerHTML = '<div class="gif-empty">Sonuç bulunamadı</div>';
+            return;
+        }
+
+        // GIFleri ekle
+        data.results.forEach(gif => {
+            const gifElement = document.createElement('div');
+            gifElement.className = 'gif-item';
+
+            const mediaFormats = gif.media_formats;
+            const gifUrl = mediaFormats.gif?.url || mediaFormats.tinygif?.url || gif.url;
+
+            gifElement.innerHTML = `<img src="${gifUrl}" alt="${gif.content_description || 'GIF'}" loading="lazy">`;
+
+            // GIF'e tıklandığında
+            gifElement.addEventListener('click', () => {
+                sendGifMessage(gifUrl);
+                document.querySelector('.gif-panel').style.display = 'none';
+            });
+
+            resultsContainer.appendChild(gifElement);
+        });
+
+    } catch (error) {
+        console.error('GIF arama hatası:', error);
+        loadingIndicator.style.display = 'none';
+        resultsContainer.innerHTML = '<div class="gif-error">GIF yüklenemedi</div>';
+    }
+}
+
+// GIF mesajı gönder
+async function sendGifMessage(gifUrl) {
+    if (!currentConversationId) {
+        showNotification('GIF göndermek için önce bir sohbet seçmelisiniz', 'warning');
+        return;
+    }
+
+    try {
+        // GIF mesajını veritabanına ekle
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    conversation_id: currentConversationId,
+                    sender_id: currentUserId,
+                    content: `<img src="${gifUrl}" alt="GIF" class="message-gif">`,
+                    is_gif: true,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
+        if (error) {
+            console.error('GIF gönderilirken hata:', error);
+            showNotification('GIF gönderilemedi', 'error');
+        }
+
+    } catch (error) {
+        console.error('GIF gönderme hatası:', error);
+        showNotification('GIF gönderilemedi: ' + error.message, 'error');
+    }
 }
 
