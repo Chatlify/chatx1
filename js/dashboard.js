@@ -7,20 +7,24 @@ let presenceChannel = null;
 let currentConversationId = null; // Aktif sohbet için ID
 let messageSubscription = null; // Realtime mesaj aboneliği
 let sampleColumnFormat = 'camelCase'; // Varsayılan olarak camelCase formatını kullan
-const defaultAvatar = 'images/DefaultAvatar.png';
+const defaultAvatar = 'images/chatlifyprofile1.png'; // Varsayılan avatar - lokal resim kullanıyoruz
 let messageNotificationSound = null; // Ses nesnesi için global değişken
 let unreadCounts = {}; // Okunmamış mesaj sayaçları { userId: count }
 
 // Tenor API anahtarını doğrudan tanımla
 // DİKKAT: API anahtarını doğrudan istemci koduna yazmak güvenlik riski taşır.
 // İdealde bu anahtar backend üzerinden veya güvenli bir yapılandırma ile yönetilmelidir.
-const TENOR_API_KEY = "YOUR_TENOR_API_KEY"; // BURAYI KENDİ TENOR API KEY'İNİZ İLE DEĞİŞTİRİN
+const TENOR_API_KEY = "AIzaSyDPnKkjVyVEbfnxRsNjAVgaU8jkAaQP4Vk"; // Geçici demo anahtar - üretimde değiştirin!
 
 // API anahtarı kontrolü
 if (!TENOR_API_KEY || TENOR_API_KEY === "YOUR_TENOR_API_KEY") {
     console.error('Tenor API anahtarı bulunamadı veya güncellenmemiş! GIF özellikleri çalışmayabilir. Lütfen js/dashboard.js dosyasını kontrol edin.');
     // alert("Tenor API anahtarı eksik. GIF özellikleri kullanılamayacak.");
 }
+
+// Demo mod kontrolü - sayfa URL'inde ?demo=true parametresi varsa demo modda çalış
+const urlParams = new URLSearchParams(window.location.search);
+const isDemoMode = urlParams.get('demo') === 'true';
 
 // ... existing code ...
 
@@ -55,6 +59,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+        // Placeholder resim hatalarını düzelt
+        fixPlaceholderImages();
+
         // Kullanıcı oturumunu başlat
         const userPanelUsernameElement = document.querySelector('.dm-user-name');
         const userPanelAvatarElement = document.querySelector('.dm-user-avatar img');
@@ -91,6 +98,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         showNotification('Bağlantı hatası: ' + error.message, 'error');
     }
 });
+
+// Placeholder resim hatalarını düzeltme
+function fixPlaceholderImages() {
+    // Via placeholder servisi çalışmıyor, lokal resimleri kullan
+    const avatarImages = document.querySelectorAll('img[src^="https://via.placeholder.com"]');
+
+    avatarImages.forEach((img) => {
+        // Orijinal src'yi veri olarak sakla
+        const originalSrc = img.getAttribute('src');
+        img.dataset.originalSrc = originalSrc;
+
+        // Varsayılan avatar kullan
+        img.src = defaultAvatar;
+
+        // Alternatif text bil
+        const altText = img.getAttribute('alt') || 'Avatar';
+
+        // Bir hata olursa tekrar dene
+        img.onerror = () => {
+            img.src = defaultAvatar;
+            console.log(`Avatar yüklenemedi, varsayılan kullanılıyor: ${altText}`);
+        };
+    });
+
+    console.log(`${avatarImages.length} adet placeholder resim yerel resimlerle değiştirildi`);
+}
 
 // Arama panel butonlarını ayarla
 function setupCallPanelButtons() {
@@ -739,114 +772,209 @@ function closeNotification(notification) {
 // Kullanıcı oturumu başlatılınca arama dinleyicisini de başlat
 async function initializeUserSession({ userPanelUsernameElement, userPanelAvatarElement }) {
     try {
-        // Oturum açmış kullanıcı bilgisini al
-        const { data: { user } } = await supabase.auth.getUser();
+        // Demo modda veya RLS hatası durumunda kullanmak için test kullanıcısı
+        const demoUser = {
+            id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
+            user_metadata: {
+                username: 'Demo Kullanıcı'
+            }
+        };
+
+        // Eğer demo modda isek veya Supabase bağlantısı yoksa
+        if (isDemoMode) {
+            console.log('Demo mod: Test kullanıcısı yükleniyor');
+            currentUserId = demoUser.id;
+
+            // Demo profil
+            const demoProfile = {
+                id: demoUser.id,
+                username: demoUser.user_metadata.username,
+                status: 'online'
+            };
+
+            // UI'yı güncelle
+            updateUserInterface(demoProfile, demoUser, userPanelUsernameElement, userPanelAvatarElement);
+
+            // Listeneri başlat ve profili döndür
+            listenForCalls();
+            return demoProfile;
+        }
+
+        // Normal akış - gerçek Supabase bağlantısı
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError) {
+            console.error('Kullanıcı oturumu alınamadı:', userError);
+            throw userError;
+        }
 
         if (!user) {
-            throw new Error('Kullanıcı bulunamadı');
+            console.warn('Kullanıcı bulunamadı, demo moduna geçiliyor');
+            // Demo kullanıcısıyla devam et
+            currentUserId = demoUser.id;
+
+            // Demo profil yarat
+            const demoProfile = {
+                id: demoUser.id,
+                username: 'Misafir Kullanıcı',
+                status: 'online'
+            };
+
+            // UI'yı güncelle
+            updateUserInterface(demoProfile, demoUser, userPanelUsernameElement, userPanelAvatarElement);
+
+            showNotification('Misafir modunda çalışıyorsunuz', 'info');
+
+            // Listeneri başlat ve profili döndür
+            listenForCalls();
+            return demoProfile;
         }
 
         currentUserId = user.id;
         console.log('Kullanıcı ID:', currentUserId);
 
-        // Kullanıcı profil bilgilerini al
-        const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .limit(1);
+        try {
+            // Kullanıcı profil bilgilerini al
+            const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .limit(1);
 
-        if (error) {
-            console.error('Profil verisi alınırken hata:', error);
-            // Hata olsa bile varsayılan profil ile devam et
-            const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
-            const userProfile = {
+            if (error) {
+                console.error('Profil verisi alınırken hata:', error);
+                throw error;
+            }
+
+            let userProfile;
+
+            // Profil bulunamadıysa yeni profil oluştur
+            if (!profileData || profileData.length === 0) {
+                console.log('Profil bulunamadı. Yeni profil oluşturuluyor...');
+
+                // Varsayılan kullanıcı adı belirle
+                const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
+
+                try {
+                    // Şema yapısını kontrol etmeye çalış
+                    const { data: schemaData } = await supabase
+                        .from('profiles')
+                        .select()
+                        .limit(1);
+
+                    // Şema yapısını belirle
+                    const schemaColumns = schemaData && schemaData.length > 0
+                        ? Object.keys(schemaData[0])
+                        : ['id', 'username', 'created_at', 'updated_at'];
+
+                    console.log('Algılanan şema sütunları:', schemaColumns);
+
+                    // Profil nesnesini oluştur - sadece var olan sütunları kullan
+                    const profileData = {
+                        id: user.id,
+                        username: username
+                    };
+
+                    // Opsiyonel alanları kontrol et ve ekle
+                    if (schemaColumns.includes('created_at')) profileData.created_at = new Date().toISOString();
+                    if (schemaColumns.includes('updated_at')) profileData.updated_at = new Date().toISOString();
+                    if (schemaColumns.includes('status')) profileData.status = 'online';
+                    if (schemaColumns.includes('avatar_url')) profileData.avatar_url = defaultAvatar;
+
+                    // RLS hatası durumunda skip
+                    try {
+                        // Yeni profil kaydı oluşturmayı dene
+                        const { data: newProfile, error: insertError } = await supabase
+                            .from('profiles')
+                            .insert([profileData])
+                            .select();
+
+                        if (insertError) {
+                            // RLS hatası - sadece log al ve devam et
+                            console.error('Yeni profil oluşturulurken hata (RLS):', insertError);
+                            // Varsayılan değerlerle devam et
+                            userProfile = {
+                                id: user.id,
+                                username: username,
+                                status: 'online'
+                            };
+                        } else {
+                            console.log('Yeni profil başarıyla oluşturuldu:', newProfile);
+                            userProfile = newProfile[0];
+                        }
+                    } catch (insertErr) {
+                        console.error('Profil kaydedilirken hata (try/catch):', insertErr);
+                        // Varsayılan değerlerle devam et
+                        userProfile = {
+                            id: user.id,
+                            username: username,
+                            status: 'online'
+                        };
+                    }
+                } catch (schemaErr) {
+                    console.error('Şema kontrolü sırasında hata:', schemaErr);
+                    userProfile = {
+                        id: user.id,
+                        username: user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı',
+                        status: 'online'
+                    };
+                }
+            } else {
+                userProfile = profileData[0];
+                console.log('Kullanıcı profili yüklendi:', userProfile);
+            }
+
+            // UI güncelle
+            updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
+
+            // Sesli aramalar için dinleyici başlat
+            listenForCalls();
+
+            return userProfile;
+        } catch (profileErr) {
+            console.error('Profil işlemleri sırasında hata:', profileErr);
+
+            // Hata olsa bile varsayılan değerlerle devam et
+            const defaultProfile = {
                 id: user.id,
-                username: username,
+                username: user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı',
                 status: 'online'
             };
 
-            // UI güncelle ve bu profille devam et
-            updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
-            showNotification('Sistem bakım modunda çalışıyor, bazı özellikler sınırlı olabilir', 'info');
-            return userProfile;
+            // UI güncelle
+            updateUserInterface(defaultProfile, user, userPanelUsernameElement, userPanelAvatarElement);
+
+            // Sesli aramalar için dinleyici başlat
+            listenForCalls();
+
+            return defaultProfile;
         }
+    } catch (error) {
+        console.error('Kullanıcı oturumu sırasında hata:', error.message);
+        showNotification('Kullanıcı işlemleri sırasında hata: ' + error.message, 'error');
 
-        let userProfile;
-
-        // Profil bulunamadıysa yeni profil oluştur
-        if (!profileData || profileData.length === 0) {
-            console.log('Profil bulunamadı. Yeni profil oluşturuluyor...');
-
-            // Varsayılan kullanıcı adı belirle
-            const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
-
-            try {
-                // Veritabanı şemasını kontrol et ve ona göre veri ekle
-                // Şema hatasını önlemek için sütun adlarını otomatik algıla
-                const { data: schemaData } = await supabase
-                    .from('profiles')
-                    .select()
-                    .limit(1);
-
-                // Şema yapısını belirle
-                const schemaColumns = schemaData && schemaData.length > 0
-                    ? Object.keys(schemaData[0])
-                    : ['id', 'username', 'created_at', 'updated_at'];
-
-                console.log('Algılanan şema sütunları:', schemaColumns);
-
-                // Profil nesnesini oluştur - sadece var olan sütunları kullan
-                const profileData = {
-                    id: user.id,
-                    username: username
-                };
-
-                // Opsiyonel alanları kontrol et ve ekle
-                if (schemaColumns.includes('created_at')) profileData.created_at = new Date().toISOString();
-                if (schemaColumns.includes('updated_at')) profileData.updated_at = new Date().toISOString();
-                if (schemaColumns.includes('status')) profileData.status = 'online';
-                if (schemaColumns.includes('avatar_url')) profileData.avatar_url = defaultAvatar;
-
-                // Yeni profil kaydı oluştur
-                const { data: newProfile, error: insertError } = await supabase
-                    .from('profiles')
-                    .insert([profileData])
-                    .select();
-
-                if (insertError) {
-                    console.error('Yeni profil oluşturulurken hata:', insertError);
-                    throw insertError;
-                }
-
-                console.log('Yeni profil başarıyla oluşturuldu:', newProfile);
-                userProfile = newProfile[0];
-            } catch (insertErr) {
-                console.error('Profil kaydedilirken hata detayı:', insertErr);
-                // Hata olsa bile devam et, varsayılan değerlerle çalış
-                userProfile = {
-                    id: user.id,
-                    username: username,
-                    status: 'online'
-                };
-                showNotification('Profil oluşturulamadı, varsayılan değerler kullanılıyor', 'warning');
+        // Demo kullanıcısıyla devam et
+        const demoUser = {
+            id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
+            user_metadata: {
+                username: 'Geçici Kullanıcı'
             }
-        } else {
-            userProfile = profileData[0];
-            console.log('Kullanıcı profili yüklendi:', userProfile);
-        }
+        };
+
+        currentUserId = demoUser.id;
+
+        // Demo profil
+        const demoProfile = {
+            id: demoUser.id,
+            username: demoUser.user_metadata.username,
+            status: 'online'
+        };
 
         // UI güncelle
-        updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
+        updateUserInterface(demoProfile, demoUser, userPanelUsernameElement, userPanelAvatarElement);
 
-        // Sesli aramalar için dinleyici başlat
-        listenForCalls();
-
-        return userProfile;
-    } catch (error) {
-        console.error('Kullanıcı profili alınamadı:', error.message);
-        showNotification('Kullanıcı profili işlenirken hata: ' + error.message, 'error');
-        throw error;
+        showNotification('Geçici kullanıcı modu etkinleştirildi', 'warning');
+        return demoProfile;
     }
 }
 
@@ -956,13 +1084,13 @@ async function loadFriends() {
 // Demo arkadaşlar göster
 function showDemoFriends() {
     try {
-        // Örnek arkadaş verileri
+        // Örnek arkadaş verileri - Lokal resimlerle
         const demoFriends = [
             {
                 profiles: {
                     id: 'demo-1',
                     username: 'Ahmet Demo',
-                    avatar_url: 'https://via.placeholder.com/100/0672ac/ffffff?text=A',
+                    avatar_url: defaultAvatar,
                     status: 'online'
                 }
             },
@@ -970,7 +1098,7 @@ function showDemoFriends() {
                 profiles: {
                     id: 'demo-2',
                     username: 'Zeynep Demo',
-                    avatar_url: 'https://via.placeholder.com/100/ac7206/ffffff?text=Z',
+                    avatar_url: defaultAvatar,
                     status: 'offline'
                 }
             },
@@ -978,7 +1106,7 @@ function showDemoFriends() {
                 profiles: {
                     id: 'demo-3',
                     username: 'Mehmet Demo',
-                    avatar_url: 'https://via.placeholder.com/100/06ac72/ffffff?text=M',
+                    avatar_url: defaultAvatar,
                     status: 'online'
                 }
             }
@@ -988,7 +1116,9 @@ function showDemoFriends() {
         renderFriendsList(demoFriends);
 
         // Demo modu bildirimi
-        showNotification('Demo mod: Örnek arkadaşlar gösteriliyor', 'info');
+        if (!isDemoMode) {
+            showNotification('Demo mod: Örnek arkadaşlar gösteriliyor', 'info');
+        }
     } catch (error) {
         console.error('Demo arkadaşlar gösterilirken hata:', error);
     }
