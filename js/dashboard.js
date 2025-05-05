@@ -831,39 +831,12 @@ async function getOrCreateUserProfile(user) {
         }
 
         // Profil yoksa oluştur
-        console.log('Profil bulunamadı, yeni profil oluşturuluyor...');
+        console.log('Profil bulunamadı, RLS nedeniyle direk giriş yapıyoruz');
 
-        // Varsayılan kullanıcı adı belirle
-        const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
-
-        // Profil oluştur
-        const { data: newProfile, error: insertError } = await supabase
-            .from('profiles')
-            .upsert([
-                {
-                    id: user.id,
-                    username: username,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }
-            ])
-            .select();
-
-        if (insertError) {
-            console.error('Profil oluşturma hatası:', insertError);
-
-            // RLS hatası olsa bile varsayılan profil döndür
-            return {
-                id: user.id,
-                username: username,
-                created_at: new Date().toISOString()
-            };
-        }
-
-        console.log('Yeni profil oluşturuldu:', newProfile);
-        return newProfile[0] || {
+        // RLS nedeniyle profil oluşturamıyoruz - varsayılan profil döndür
+        return {
             id: user.id,
-            username: username,
+            username: user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı',
             created_at: new Date().toISOString()
         };
     } catch (error) {
@@ -903,135 +876,325 @@ async function loadFriends() {
             return;
         }
 
-        // Arkadaş listesi / konuşmaları yükle
-        const { data: conversations, error: convError } = await supabase
-            .from('conversations')
-            .select(`
-                id,
-                type,
-                created_at,
-                conversation_participants:conversation_participants (
-                    user_id,
-                    profiles:user_id ( id, username, avatar_url, status )
-                )
-            `)
-            .contains('participant_ids', [currentUserId]); // Bu kullanıcının katıldığı konuşmalar
+        // Basitleştirilmiş yöntem - doğrudan kullanıcıları yükle (ilişkisel tablo kullanmadan)
+        const { data: users, error } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, status')
+            .neq('id', currentUserId)  // Kendimiz dışında
+            .limit(20); // İlk 20 kullanıcı
 
-        if (convError) {
-            console.error('Konuşmalar yüklenirken hata:', convError);
-            // Konuşmaların tanımlanmış olduğundan emin ol
-            clearFriendsList();
-            return;
-        }
-
-        if (!conversations || conversations.length === 0) {
-            console.log('Henüz konuşma bulunamadı');
-            clearFriendsList();
-            return;
-        }
-
-        console.log('Konuşmalar yüklendi:', conversations);
-
-        // Arkadaşlar listesini temizle
+        // Tüm kullanıcıları temizle
         clearFriendsList();
 
-        // Konuşmalardan arkadaşları çıkar ve göster
-        const friends = extractFriendsFromConversations(conversations);
-        console.log('Bulunan arkadaşlar:', friends);
-
-        if (friends.length === 0) {
+        if (error) {
+            console.error('Kullanıcılar yüklenirken hata:', error);
             showEmptyFriendsList();
             return;
         }
 
-        // Arkadaşları listeye ekle
-        renderActualFriendsList(friends);
+        if (!users || users.length === 0) {
+            console.log('Kullanıcı bulunamadı');
+            showEmptyFriendsList();
+            return;
+        }
+
+        console.log('Kullanıcılar yüklendi:', users);
+
+        // Arkadaşlar listesine ekle
+        renderBasicFriendsList(users);
     } catch (error) {
         console.error('Arkadaşlar yüklenirken hata:', error);
         clearFriendsList();
     }
 }
 
-// Arkadaşlar listesini temizle
-function clearFriendsList() {
-    const friendsContainer = document.querySelector('#friends-group .dm-items');
-    if (friendsContainer) {
-        friendsContainer.innerHTML = '';
-    }
-}
-
-// Boş arkadaş listesi göster
-function showEmptyFriendsList() {
-    const friendsContainer = document.querySelector('#friends-group .dm-items');
-    if (friendsContainer) {
-        friendsContainer.innerHTML = `
-            <div class="dm-empty-state">
-                <div class="dm-empty-icon"><i class="fas fa-user-friends"></i></div>
-                <div class="dm-empty-text">Henüz arkadaşınız yok</div>
-            </div>
-        `;
-    }
-}
-
-// Konuşmalardan arkadaşları çıkar
-function extractFriendsFromConversations(conversations) {
-    const friends = [];
-
-    conversations.forEach(conversation => {
-        // DM konuşması ise
-        if (conversation.type === 'direct') {
-            // Konuşma katılımcılarını bul
-            const participants = conversation.conversation_participants || [];
-
-            // Kendisi olmayan katılımcıları ekle
-            participants.forEach(participant => {
-                if (participant.user_id !== currentUserId && participant.profiles) {
-                    // Arkadaş bilgilerini ekle ve konuşma ID'sini kaydet
-                    friends.push({
-                        ...participant.profiles,
-                        conversation_id: conversation.id
-                    });
-                }
-            });
-        }
-    });
-
-    return friends;
-}
-
-// Arkadaşlar listesini oluştur
-function renderActualFriendsList(friends) {
+// Basit arkadaş listesi render et
+function renderBasicFriendsList(users) {
     const friendsContainer = document.querySelector('#friends-group .dm-items');
     if (!friendsContainer) return;
 
-    friends.forEach(friend => {
+    users.forEach(user => {
         const friendItem = document.createElement('div');
         friendItem.className = 'dm-item';
-        friendItem.dataset.userId = friend.id;
-        friendItem.dataset.conversationId = friend.conversation_id;
+        friendItem.dataset.userId = user.id;
 
         friendItem.innerHTML = `
             <div class="dm-avatar">
-                <img src="${friend.avatar_url || defaultAvatar}" alt="${friend.username}" onerror="this.src='${defaultAvatar}'">
-                <div class="dm-status ${friend.status || 'offline'}"></div>
+                <img src="${user.avatar_url || defaultAvatar}" alt="${user.username}" onerror="this.src='${defaultAvatar}'">
+                <div class="dm-status ${user.status || 'offline'}"></div>
             </div>
             <div class="dm-info">
-                <div class="dm-name">${friend.username}</div>
-                <div class="dm-activity">${friend.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
+                <div class="dm-name">${user.username}</div>
+                <div class="dm-activity">${user.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
             </div>
-            ${unreadCounts[friend.id] ? `<div class="dm-notification">${unreadCounts[friend.id]}</div>` : ''}
         `;
 
         // Tıklama olayını ekle
         friendItem.addEventListener('click', () => {
-            openConversation(friend.id, friend.username, friend.avatar_url, friend.conversation_id);
+            // Doğrudan kullanıcıya göre mesajlaşma
+            openDirectChat(user.id, user.username, user.avatar_url);
         });
 
         friendsContainer.appendChild(friendItem);
     });
 }
 
-// Bildirim sesini yükle
+// Doğrudan chat (conversations tablosu olmadan)
+function openDirectChat(userId, username, avatarUrl) {
+    // Chat UI hazırla
+    const chatPanel = document.querySelector('.chat-panel');
+    if (chatPanel) {
+        chatPanel.dataset.activeChatUserId = userId;
+    }
+
+    // Chat başlığını güncelle
+    const chatUsername = document.querySelector('.chat-header-user .chat-username');
+    const chatAvatar = document.querySelector('.chat-header-user .chat-avatar img');
+
+    if (chatUsername) chatUsername.textContent = username;
+    if (chatAvatar) chatAvatar.src = avatarUrl || defaultAvatar;
+
+    // UI'da arkadaşı seçili olarak işaretle
+    const allFriendItems = document.querySelectorAll('.dm-item');
+    allFriendItems.forEach(item => item.classList.remove('active'));
+
+    const selectedFriend = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
+    if (selectedFriend) selectedFriend.classList.add('active');
+
+    // Konuşmayı göster
+    document.querySelector('.chat-container').style.display = 'flex';
+    document.querySelector('.welcome-container').style.display = 'none';
+
+    // Kullanıcılar arasındaki mesajları yükle
+    loadDirectMessages(userId);
+
+    console.log(`${username} ile sohbet açıldı`);
+}
+
+// Kullanıcılar arası mesajları yükle
+async function loadDirectMessages(otherUserId) {
+    if (!currentUserId || !otherUserId) {
+        console.error('Mesajlar yüklenemedi: Kullanıcı ID bulunamadı');
+        showEmptyMessages();
+        return;
+    }
+
+    try {
+        // Mesajlar tablosunda iki yönlü sorgula:
+        // 1. Ben gönderici, diğer kişi alıcı
+        // 2. Diğer kişi gönderici, ben alıcı
+        const { data: messages, error } = await supabase
+            .from('direct_messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Mesajlar alınırken hata:', error);
+            showEmptyMessages();
+            return;
+        }
+
+        // Mesajları göster
+        renderDirectMessages(messages, otherUserId);
+
+        // Realtime mesajları dinle
+        subscribeToDirectMessages(otherUserId);
+
+    } catch (error) {
+        console.error('Mesajlar yüklenirken hata:', error);
+        showEmptyMessages();
+    }
+}
+
+// Boş mesaj durumu
+function showEmptyMessages() {
+    const messagesContainer = document.querySelector('.chat-messages');
+    if (messagesContainer) {
+        messagesContainer.innerHTML = `
+            <div class="chat-empty-state">
+                <div class="chat-empty-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="chat-empty-text">Henüz mesaj yok. Konuşmaya başlayın!</div>
+            </div>
+        `;
+    }
+}
+
+// Direkt mesajları görüntüle
+function renderDirectMessages(messages, otherUserId) {
+    const messagesContainer = document.querySelector('.chat-messages');
+    if (!messagesContainer) return;
+
+    // Mesajlar konteynerini temizle
+    messagesContainer.innerHTML = '';
+
+    if (!messages || messages.length === 0) {
+        showEmptyMessages();
+        return;
+    }
+
+    let lastMessageSender = null;
+    let messageGroup = null;
+
+    // Her mesajı ekle
+    messages.forEach((message, index) => {
+        const isOwnMessage = message.sender_id === currentUserId;
+
+        // Aynı gönderenden arka arkaya gelen mesajları grupla
+        if (lastMessageSender !== message.sender_id) {
+            // Yeni grup başlat
+            messageGroup = document.createElement('div');
+            messageGroup.className = `chat-message-group ${isOwnMessage ? 'own-group' : ''}`;
+            messagesContainer.appendChild(messageGroup);
+
+            // İlk mesajı ekleyerek avatarı göster
+            const firstMessageElem = createMessageElement(message, true, isOwnMessage);
+            messageGroup.appendChild(firstMessageElem);
+
+            lastMessageSender = message.sender_id;
+        } else {
+            // Aynı gruba devam
+            const nextMessageElem = createMessageElement(message, false, isOwnMessage);
+            messageGroup.appendChild(nextMessageElem);
+        }
+    });
+
+    // Sohbet alanını en alta kaydır
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Mesaj elementi oluştur
+function createMessageElement(message, showAvatar, isOwnMessage) {
+    const messageElem = document.createElement('div');
+    messageElem.className = `chat-message ${isOwnMessage ? 'own-message' : ''}`;
+    messageElem.dataset.messageId = message.id;
+
+    // İçeriğin HTML mi yoksa plain text mi olduğunu belirle
+    const content = message.is_gif || message.content.startsWith('<img')
+        ? message.content // HTML içerik
+        : escapeHtml(message.content); // Düz metin güvenli hale getir
+
+    messageElem.innerHTML = `
+        <div class="message-content">
+            <div class="message-bubble">${content}</div>
+            <div class="message-time">${formatMessageTime(message.created_at)}</div>
+        </div>
+    `;
+
+    return messageElem;
+}
+
+// HTML içeriğini escape et
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Realtime direkt mesajları dinle
+function subscribeToDirectMessages(otherUserId) {
+    // Önceki aboneliği iptal et
+    if (messageSubscription) {
+        messageSubscription.unsubscribe();
+    }
+
+    // Yeni abonelik oluştur
+    messageSubscription = supabase
+        .channel(`direct_messages`)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'direct_messages',
+            filter: `or(and(sender_id=eq.${currentUserId},receiver_id=eq.${otherUserId}),and(sender_id=eq.${otherUserId},receiver_id=eq.${currentUserId}))`
+        }, handleNewDirectMessage)
+        .subscribe();
+
+    console.log(`${otherUserId} ile mesajlaşma için realtime dinleme başlatıldı`);
+}
+
+// Yeni direkt mesaj geldiğinde
+function handleNewDirectMessage(payload) {
+    console.log('Yeni direkt mesaj alındı:', payload);
+
+    // Aktif sohbet var mı?
+    const activeUserId = document.querySelector('.chat-panel').dataset.activeChatUserId;
+    if (!activeUserId) return;
+
+    // Mesajları yeniden yükle
+    loadDirectMessages(activeUserId);
+
+    // Ben göndermedim ve aktif kullanıcıdan geldiyse
+    if (payload.new && payload.new.sender_id !== currentUserId) {
+        // Bildirim sesi çal
+        if (messageNotificationSound) {
+            messageNotificationSound.play().catch(err => console.warn('Bildirim sesi çalınamadı:', err));
+        }
+    }
+}
+
+// Direk mesaj gönder
+async function sendDirectMessage(receiverId, content, isGif = false) {
+    if (!currentUserId || !receiverId) {
+        showNotification('Mesaj göndermek için geçerli bir alıcı seçmelisiniz', 'warning');
+        return;
+    }
+
+    try {
+        // Mesajı veritabanına ekle
+        const { data, error } = await supabase
+            .from('direct_messages')
+            .insert([
+                {
+                    sender_id: currentUserId,
+                    receiver_id: receiverId,
+                    content: content,
+                    is_gif: isGif,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
+        if (error) {
+            console.error('Mesaj gönderilirken hata:', error);
+            showNotification('Mesaj gönderilemedi', 'error');
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Mesaj gönderme hatası:', error);
+        showNotification('Mesaj gönderilemedi: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// Mesaj göndermeyi yönet
+async function handleSendMessage(event) {
+    event.preventDefault();
+
+    // Aktif sohbet kullanıcısını al
+    const receiverId = document.querySelector('.chat-panel').dataset.activeChatUserId;
+
+    if (!receiverId) {
+        showNotification('Mesaj göndermek için önce bir sohbet seçmelisiniz', 'warning');
+        return;
+    }
+
+    // Mesaj içeriğini al
+    const messageInput = document.querySelector('.message-input');
+    const content = messageInput.value.trim();
+
+    if (!content) return;
+
+    // Mesajı gönder
+    const success = await sendDirectMessage(receiverId, content);
+
+    if (success) {
+        // Formu temizle
+        messageInput.value = '';
+    }
+}
+
+// Bildirim sesi yükle
 function loadNotificationSound() {
     try {
         // Ses nesnesini oluştur
@@ -1149,216 +1312,6 @@ function addChatEventListeners() {
     }
 }
 
-// Sohbeti aç
-function openConversation(userId, username, avatarUrl, conversationId) {
-    // Aktif konuşma ID'sini kaydet
-    currentConversationId = conversationId;
-
-    // Chat panelini aktifleştir
-    const chatPanel = document.querySelector('.chat-panel');
-    if (chatPanel) {
-        chatPanel.dataset.activeChatUserId = userId;
-    }
-
-    // Chat başlığını güncelle
-    const chatUsername = document.querySelector('.chat-header-user .chat-username');
-    const chatAvatar = document.querySelector('.chat-header-user .chat-avatar img');
-
-    if (chatUsername) chatUsername.textContent = username;
-    if (chatAvatar) chatAvatar.src = avatarUrl || defaultAvatar;
-
-    // UI'da arkadaşı seçili olarak işaretle
-    const allFriendItems = document.querySelectorAll('.dm-item');
-    allFriendItems.forEach(item => item.classList.remove('active'));
-
-    const selectedFriend = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
-    if (selectedFriend) selectedFriend.classList.add('active');
-
-    // Konuşmayı göster
-    document.querySelector('.chat-container').style.display = 'flex';
-    document.querySelector('.welcome-container').style.display = 'none';
-
-    // Mesajları yükle
-    loadConversationMessages(conversationId);
-
-    console.log(`${username} ile sohbet açıldı, konuşma ID: ${conversationId}`);
-}
-
-// Konuşma mesajlarını yükle
-async function loadConversationMessages(conversationId) {
-    if (!conversationId) {
-        console.error('Mesajlar yüklenemedi: Konuşma ID bulunamadı');
-        return;
-    }
-
-    try {
-        // Mesajları yükle
-        const { data: messages, error } = await supabase
-            .from('messages')
-            .select(`
-                id,
-                content,
-                created_at,
-                sender_id,
-                profiles:sender_id (username, avatar_url)
-            `)
-            .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true });
-
-        if (error) {
-            console.error('Mesajlar alınırken hata:', error);
-            return;
-        }
-
-        // Mesajları göster
-        renderMessages(messages);
-
-        // Realtime mesajlar için abone ol
-        subscribeToMessages(conversationId);
-
-    } catch (error) {
-        console.error('Mesajlar yüklenirken hata:', error);
-    }
-}
-
-// Mesajları görüntüle
-function renderMessages(messages) {
-    const messagesContainer = document.querySelector('.chat-messages');
-    if (!messagesContainer) return;
-
-    // Mesajlar konteynerini temizle
-    messagesContainer.innerHTML = '';
-
-    if (!messages || messages.length === 0) {
-        // Mesaj yoksa bilgi göster
-        messagesContainer.innerHTML = `
-            <div class="chat-empty-state">
-                <div class="chat-empty-icon"><i class="fas fa-comment-dots"></i></div>
-                <div class="chat-empty-text">Henüz mesaj yok. Konuşmaya başlayın!</div>
-            </div>
-        `;
-        return;
-    }
-
-    // Her mesajı ekle
-    messages.forEach(message => {
-        const isOwnMessage = message.sender_id === currentUserId;
-        const profile = message.profiles || {};
-
-        const messageElement = document.createElement('div');
-        messageElement.className = `chat-message ${isOwnMessage ? 'own-message' : ''}`;
-        messageElement.dataset.messageId = message.id;
-
-        messageElement.innerHTML = `
-            ${!isOwnMessage ? `
-                <div class="message-avatar">
-                    <img src="${profile.avatar_url || defaultAvatar}" alt="${profile.username || 'Kullanıcı'}" onerror="this.src='${defaultAvatar}'">
-                </div>
-            ` : ''}
-            <div class="message-content">
-                ${!isOwnMessage ? `<div class="message-sender">${profile.username || 'Kullanıcı'}</div>` : ''}
-                <div class="message-bubble">${message.content}</div>
-                <div class="message-time">${formatMessageTime(message.created_at)}</div>
-            </div>
-        `;
-
-        messagesContainer.appendChild(messageElement);
-    });
-
-    // Sohbet alanını en alta kaydır
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-// Mesaj zamanını formatla
-function formatMessageTime(timestamp) {
-    if (!timestamp) return '';
-
-    const date = new Date(timestamp);
-    const now = new Date();
-
-    // Aynı gün içindeyse sadece saat:dakika göster
-    if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    // Farklı günlerdeyse tarih ve saat göster
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-// Realtime mesajları dinle
-function subscribeToMessages(conversationId) {
-    // Önceki aboneliği iptal et
-    if (messageSubscription) {
-        messageSubscription.unsubscribe();
-    }
-
-    // Yeni konuşma için abone ol
-    messageSubscription = supabase
-        .channel(`messages:${conversationId}`)
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: `conversation_id=eq.${conversationId}`
-        }, handleNewMessage)
-        .subscribe();
-
-    console.log(`Konuşma ID ${conversationId} için realtime mesajlar dinleniyor`);
-}
-
-// Yeni mesaj geldiğinde
-async function handleNewMessage(payload) {
-    console.log('Yeni mesaj alındı:', payload);
-
-    // Mesaj gönderen ben değilsem bildirim ver
-    if (payload.new && payload.new.sender_id !== currentUserId) {
-        // Bildirim sesi çal
-        if (messageNotificationSound) {
-            messageNotificationSound.play().catch(err => console.warn('Bildirim sesi çalınamadı:', err));
-        }
-
-        // Gönderici bilgilerini al
-        const { data: sender } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', payload.new.sender_id)
-            .single();
-
-        // Ekranda bildirim göster
-        showNotification(`${sender?.username || 'Birisi'} yeni bir mesaj gönderdi`, 'info');
-
-        // Okunmamış mesaj sayısını artır
-        updateUnreadCount(payload.new.sender_id);
-    }
-
-    // Mesajları yeniden yükle
-    loadConversationMessages(currentConversationId);
-}
-
-// Okunmamış mesaj sayısını güncelle
-function updateUnreadCount(senderId) {
-    // Bu konuşma şu anda açık değilse sayacı artır
-    if (!document.querySelector(`.dm-item[data-user-id="${senderId}"].active`)) {
-        unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
-
-        // UI güncelle
-        const badgeElement = document.querySelector(`.dm-item[data-user-id="${senderId}"] .dm-notification`);
-
-        if (badgeElement) {
-            badgeElement.textContent = unreadCounts[senderId];
-        } else {
-            // Badge yoksa oluştur
-            const dmInfo = document.querySelector(`.dm-item[data-user-id="${senderId}"] .dm-info`);
-            if (dmInfo) {
-                const badge = document.createElement('div');
-                badge.className = 'dm-notification';
-                badge.textContent = unreadCounts[senderId];
-                dmInfo.insertAdjacentElement('afterend', badge);
-            }
-        }
-    }
-}
-
 // Çıkış işlemini yönet
 async function handleLogout() {
     try {
@@ -1374,49 +1327,6 @@ async function handleLogout() {
     } catch (error) {
         console.error('Çıkış yapılırken hata:', error);
         showNotification('Çıkış yapılamadı: ' + error.message, 'error');
-    }
-}
-
-// Mesaj göndermeyi yönet
-async function handleSendMessage(event) {
-    event.preventDefault();
-
-    if (!currentConversationId) {
-        showNotification('Mesaj göndermek için önce bir sohbet seçmelisiniz', 'warning');
-        return;
-    }
-
-    // Mesaj içeriğini al
-    const messageInput = document.querySelector('.message-input');
-    const content = messageInput.value.trim();
-
-    if (!content) return;
-
-    try {
-        // Mesajı veritabanına ekle
-        const { data, error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    conversation_id: currentConversationId,
-                    sender_id: currentUserId,
-                    content: content,
-                    created_at: new Date().toISOString()
-                }
-            ]);
-
-        if (error) {
-            console.error('Mesaj gönderilirken hata:', error);
-            showNotification('Mesaj gönderilemedi', 'error');
-            return;
-        }
-
-        // Formu temizle
-        messageInput.value = '';
-
-    } catch (error) {
-        console.error('Mesaj gönderme hatası:', error);
-        showNotification('Mesaj gönderilemedi: ' + error.message, 'error');
     }
 }
 
@@ -1539,33 +1449,16 @@ async function searchGifs(query) {
 
 // GIF mesajı gönder
 async function sendGifMessage(gifUrl) {
-    if (!currentConversationId) {
+    // Aktif sohbet kullanıcısını al
+    const receiverId = document.querySelector('.chat-panel').dataset.activeChatUserId;
+
+    if (!receiverId) {
         showNotification('GIF göndermek için önce bir sohbet seçmelisiniz', 'warning');
         return;
     }
 
-    try {
-        // GIF mesajını veritabanına ekle
-        const { data, error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    conversation_id: currentConversationId,
-                    sender_id: currentUserId,
-                    content: `<img src="${gifUrl}" alt="GIF" class="message-gif">`,
-                    is_gif: true,
-                    created_at: new Date().toISOString()
-                }
-            ]);
-
-        if (error) {
-            console.error('GIF gönderilirken hata:', error);
-            showNotification('GIF gönderilemedi', 'error');
-        }
-
-    } catch (error) {
-        console.error('GIF gönderme hatası:', error);
-        showNotification('GIF gönderilemedi: ' + error.message, 'error');
-    }
+    // GIF mesajını gönder
+    const content = `<img src="${gifUrl}" alt="GIF" class="message-gif">`;
+    await sendDirectMessage(receiverId, content, true);
 }
 
