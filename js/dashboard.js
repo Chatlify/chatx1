@@ -48,7 +48,14 @@ const servers = {
 
 // Sayfa yüklendiğinde - DOM içinde binding işlemlerini yapar
 document.addEventListener('DOMContentLoaded', async () => {
-    // ... existing code ...
+    // Kullanıcı paneli elementlerini seç
+    const userPanelUsernameElement = document.querySelector('#user-panel-username'); // ID'yi kontrol et
+    const userPanelAvatarElement = document.querySelector('#user-panel-avatar img'); // Seçiciyi kontrol et
+
+    // Oturumu başlat ve ilk verileri yükle (ÇAĞRI EKLENDİ)
+    await initializeUserSession({ userPanelUsernameElement, userPanelAvatarElement });
+
+    // ... Diğer DOMContentLoaded kodları ...
 
     // Sohbet başlığındaki sesli arama butonunu bul ve işlev ekle
     const voiceCallBtn = document.querySelector('.chat-header-actions .chat-action-btn[title="Sesli Arama"]');
@@ -61,16 +68,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ... existing code ...
 
-    // *** ÖNEMLİ: Veri yükleme fonksiyonları burada çağrılmalı ***
-    console.log('Arkadas listesi yukleniyor...');
-    await loadFriendsList();
-    console.log('Sponsorlu sunucular yukleniyor...');
-    await loadSponsoredServers();
-    console.log('Okunmamis mesajlar yukleniyor...');
-    await loadUnreadMessages();
+    // *** ÖNEMLİ: Veri yükleme fonksiyonları initializeUserSession içinde çağrılmalı ***
+    // Bu çağrılar initializeUserSession içine taşınmalı veya ondan sonra yapılmalı
+    // console.log('Arkadas listesi yukleniyor...');
+    // await loadFriendsList(); // initializeUserSession içinde zaten çağrılıyor (olmalı)
+    // console.log('Sponsorlu sunucular yukleniyor...');
+    // await loadSponsoredServers(); // initializeUserSession içinde zaten çağrılıyor (olmalı)
+    // console.log('Okunmamis mesajlar yukleniyor...');
+    // await loadUnreadMessages(); // initializeUserSession içinde zaten çağrılıyor (olmalı)
 
     // Realtime presence takibini başlat
-    // ... existing code ...
+    // initializePresence(); // Bu initializeUserSession içine taşınabilir veya burada kalabilir
+    // listenForMessages(); // Bu initializeUserSession içine taşınabilir veya burada kalabilir
+    // listenForCalls(); // Bu initializeUserSession içine taşınabilir veya burada kalabilir
 });
 
 // Arama panel butonlarını ayarla
@@ -719,12 +729,57 @@ function closeNotification(notification) {
 
 // Kullanıcı oturumu başlatılınca arama dinleyicisini de başlat
 async function initializeUserSession({ userPanelUsernameElement, userPanelAvatarElement }) {
-    // ... existing code ...
+    console.log('Oturum baslatiliyor ve veriler yukleniyor...'); // Türkçe karakter düzeltildi
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // Sesli aramalar için dinleyici başlat
-    listenForCalls();
+        if (authError || !user) {
+            console.error('Oturum bilgileri alinamadi:', authError?.message); // Türkçe karakter düzeltildi
+            // Kullanıcıyı giriş sayfasına yönlendir veya hata göster
+            // window.location.href = '/'; // Örnek yönlendirme
+            return;
+        }
 
-    // ... existing code ...
+        currentUserId = user.id; // <<< currentUserId burada ayarlanıyor
+        console.log('Kullanici ID:', currentUserId);
+
+        // Kullanıcı profil bilgilerini getir
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', currentUserId)
+            .single();
+
+        let currentUserUsername = 'Kullanici'; // Varsayılan değer
+        let currentUserAvatar = defaultAvatar; // Varsayılan değer
+
+        if (profileError) {
+            console.error('Profil bilgileri alinamadi:', profileError.message); // Türkçe karakter düzeltildi
+        } else if (profile) {
+            console.log('Profil bilgileri:', profile);
+            currentUserUsername = profile.username || 'Kullanici';
+            currentUserAvatar = profile.avatar_url || defaultAvatar;
+            if (userPanelUsernameElement) userPanelUsernameElement.textContent = currentUserUsername;
+            if (userPanelAvatarElement) userPanelAvatarElement.src = currentUserAvatar;
+        }
+
+        // *** Veri yükleme fonksiyonları ARTIK BURADA çağrılmalı ***
+        console.log("Arkadas listesi yukleniyor...");
+        await loadFriendsList();
+        console.log("Okunmamis mesajlar yukleniyor...");
+        await loadUnreadMessages();
+
+        // Realtime servisleri başlat
+        initializePresence();
+        listenForMessages();
+        listenForCalls();
+
+        console.log('Oturum basariyla baslatildi.'); // Türkçe karakter düzeltildi
+
+    } catch (error) {
+        console.error('Oturum baslatilirken genel hata:', error.message); // Türkçe karakter düzeltildi
+        // Hata yönetimi
+    }
 }
 
 // ... existing code ...
@@ -781,23 +836,27 @@ async function loadFriendsList() {
 async function loadSponsoredServers() {
     console.log("Sponsorlu sunucular Supabase'den cekiliyor...");
     try {
-        // Varsayım: 'servers' tablosunda 'is_sponsored' diye bir sütun var
+        // Sponsorlu sunucu mantığını netleştir (is_sponsored sütunu yok)
+        // Şimdilik tüm public sunucuları çekiyor gibi varsayalım
+        // TODO: Sponsorlu sunucuları doğru şekilde filtrele
         const { data: servers, error } = await supabase
-            .from('servers') // 'servers' tablo adını kontrol et
-            .select('id, name, description, icon_url, member_count, category') // Gerekli sütunları kontrol et
-            .eq('is_sponsored', true) // Sponsorlu olma koşulunu kontrol et
-            .order('member_count', { ascending: false }); // Sıralama (isteğe bağlı)
+            .from('servers')
+            .select('id, name, description, avatar, memberIds') // icon_url -> avatar olarak düzeltildi, member_count -> memberIds varsayıldı?
+            // .eq('is_sponsored', true) // BU SÜTUN YOK - Filtreleme mantığını güncelle
+            .eq('isPublic', true) // Örnek: Sadece public sunucuları çekelim?
+            .order('name', { ascending: true }); // Sıralama (örneğin isme göre)
 
         if (error) throw error;
 
-        console.log('Sponsorlu sunucular:', servers);
+        console.log('Sunucular (Filtre Gerekli):', servers);
 
+        // TODO: memberIds dizisinin uzunluğunu kullanarak üye sayısını hesapla (eğer gerekiyorsa)
         // TODO: Çekilen servers verisi ile HTML'deki sponsorlu sunucu listesini güncelle.
         //       - '.sponsored-servers-list' veya ilgili konteyneri bul.
         //       - Her bir sunucu için bir kart oluştur/güncelle.
 
     } catch (error) {
-        console.error('Sponsorlu sunucular yuklenirken hata:', error.message);
+        console.error('Sunucular yuklenirken hata (sponsor filtresi eksik):', error.message);
         // TODO: Arayüzde hata mesajı göster
     }
 }
