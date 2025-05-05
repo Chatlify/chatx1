@@ -758,12 +758,18 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
 
         if (error) {
             console.error('Profil verisi alınırken hata:', error);
-            // profiles tablosu bulunamadıysa oluştur
-            if (error.code === '42P01') { // "relation does not exist" hatası
-                await createProfilesTable();
-            } else {
-                throw error;
-            }
+            // Hata olsa bile varsayılan profil ile devam et
+            const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
+            const userProfile = {
+                id: user.id,
+                username: username,
+                status: 'online'
+            };
+
+            // UI güncelle ve bu profille devam et
+            updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
+            showNotification('Sistem bakım modunda çalışıyor, bazı özellikler sınırlı olabilir', 'info');
+            return userProfile;
         }
 
         let userProfile;
@@ -772,23 +778,40 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
         if (!profileData || profileData.length === 0) {
             console.log('Profil bulunamadı. Yeni profil oluşturuluyor...');
 
-            // Varsayılan kullanıcı adı ve avatar belirle
+            // Varsayılan kullanıcı adı belirle
             const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
 
             try {
+                // Veritabanı şemasını kontrol et ve ona göre veri ekle
+                // Şema hatasını önlemek için sütun adlarını otomatik algıla
+                const { data: schemaData } = await supabase
+                    .from('profiles')
+                    .select()
+                    .limit(1);
+
+                // Şema yapısını belirle
+                const schemaColumns = schemaData && schemaData.length > 0
+                    ? Object.keys(schemaData[0])
+                    : ['id', 'username', 'created_at', 'updated_at'];
+
+                console.log('Algılanan şema sütunları:', schemaColumns);
+
+                // Profil nesnesini oluştur - sadece var olan sütunları kullan
+                const profileData = {
+                    id: user.id,
+                    username: username
+                };
+
+                // Opsiyonel alanları kontrol et ve ekle
+                if (schemaColumns.includes('created_at')) profileData.created_at = new Date().toISOString();
+                if (schemaColumns.includes('updated_at')) profileData.updated_at = new Date().toISOString();
+                if (schemaColumns.includes('status')) profileData.status = 'online';
+                if (schemaColumns.includes('avatar_url')) profileData.avatar_url = defaultAvatar;
+
                 // Yeni profil kaydı oluştur
                 const { data: newProfile, error: insertError } = await supabase
                     .from('profiles')
-                    .insert([
-                        {
-                            id: user.id,
-                            username: username,
-                            avatar_url: defaultAvatar,
-                            status: 'online',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
-                    ])
+                    .insert([profileData])
                     .select();
 
                 if (insertError) {
@@ -804,7 +827,6 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
                 userProfile = {
                     id: user.id,
                     username: username,
-                    avatar_url: defaultAvatar,
                     status: 'online'
                 };
                 showNotification('Profil oluşturulamadı, varsayılan değerler kullanılıyor', 'warning');
@@ -814,18 +836,8 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
             console.log('Kullanıcı profili yüklendi:', userProfile);
         }
 
-        // Kullanıcı arayüz elementlerini güncelle
-        if (userPanelUsernameElement) {
-            userPanelUsernameElement.textContent = userProfile.username || user.user_metadata?.username || 'İsimsiz Kullanıcı';
-        }
-
-        if (userPanelAvatarElement) {
-            userPanelAvatarElement.src = userProfile.avatar_url || defaultAvatar;
-        }
-
-        // Global değişkenleri güncelle
-        window.currentUserUsername = userProfile.username || user.user_metadata?.username;
-        window.currentUserAvatar = userProfile.avatar_url || defaultAvatar;
+        // UI güncelle
+        updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement);
 
         // Sesli aramalar için dinleyici başlat
         listenForCalls();
@@ -838,23 +850,20 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
     }
 }
 
-// Profiles tablosunu oluştur - eğer mevcut değilse
-async function createProfilesTable() {
-    try {
-        console.log('Profiles tablosu oluşturuluyor...');
-
-        // Not: Supabase ile SQL sorgusu çalıştırmak 
-        // sadece tam yetkilere sahip olunduğunda çalışır
-        // Bu örnekte bunu gösteriyoruz, ancak gerçek uygulamada 
-        // bu işlem backend tarafında yapılmalıdır
-
-        showNotification('Sistem tabloları hazırlanıyor, lütfen bekleyin...', 'info');
-
-        return; // Kullanıcı tarafında tablo oluşturma işlemi yapmıyoruz
-    } catch (error) {
-        console.error('Profiles tablosu oluşturulurken hata:', error);
-        throw error;
+// Kullanıcı arayüzünü güncelle
+function updateUserInterface(userProfile, user, userPanelUsernameElement, userPanelAvatarElement) {
+    // Kullanıcı arayüz elementlerini güncelle
+    if (userPanelUsernameElement) {
+        userPanelUsernameElement.textContent = userProfile.username || user.user_metadata?.username || 'İsimsiz Kullanıcı';
     }
+
+    if (userPanelAvatarElement) {
+        userPanelAvatarElement.src = userProfile.avatar_url || defaultAvatar;
+    }
+
+    // Global değişkenleri güncelle
+    window.currentUserUsername = userProfile.username || user.user_metadata?.username;
+    window.currentUserAvatar = userProfile.avatar_url || defaultAvatar;
 }
 
 // Sohbet arkadaşlarını yükleme fonksiyonu
@@ -868,50 +877,69 @@ async function loadFriends() {
         }
 
         try {
-            // Önce friends tablosunun varlığını kontrol et
-            const { error: checkError } = await supabase
-                .from('friends')
-                .select('count', { count: 'exact', head: true });
+            // Backend yapısını kontrol etmeye çalış - önce friendships tablosunu dene
+            let friendsData = null;
+            let hataVar = false;
 
-            // Tablo bulunamadı hatası - demo için varsayılan arkadaşlar göster
-            if (checkError && (checkError.code === '42P01' || checkError.message.includes('does not exist'))) {
-                console.log('Friends tablosu bulunamadı, örnek arkadaşlar gösteriliyor');
+            // 1. Friendships tablosunu kontrol et
+            try {
+                const { data, error } = await supabase
+                    .from('friendships')
+                    .select(`
+                        friend_id,
+                        profiles:friend_id (
+                            id, 
+                            username, 
+                            avatar_url, 
+                            status
+                        )
+                    `)
+                    .eq('user_id', currentUserId)
+                    .eq('status', 'accepted');
+
+                if (!error && data && data.length > 0) {
+                    console.log('Friendships tablosundan veri alındı');
+                    friendsData = data;
+                }
+            } catch (err) {
+                console.log('Friendships tablosu sorgulanamadı:', err);
+            }
+
+            // 2. Friends tablosunu kontrol et
+            if (!friendsData) {
+                try {
+                    const { data, error } = await supabase
+                        .from('friends')
+                        .select('*')
+                        .eq('user_id', currentUserId);
+
+                    if (!error && data && data.length > 0) {
+                        console.log('Friends tablosundan veri alındı, fakat ilişki yok');
+                        // Verileri manuel olarak dönüştür
+                        friendsData = data.map(friend => ({
+                            profiles: {
+                                id: friend.friend_id || friend.friend_user_id,
+                                username: friend.friend_name || 'İsimsiz Arkadaş',
+                                avatar_url: friend.friend_avatar || defaultAvatar,
+                                status: friend.status || 'offline'
+                            }
+                        }));
+                    }
+                } catch (err) {
+                    console.log('Friends tablosu sorgulanamadı:', err);
+                    hataVar = true;
+                }
+            }
+
+            // 3. Hiçbir veri alınamadıysa demo göster
+            if (!friendsData || hataVar) {
+                console.log('Arkadaş tabloları bulunamadı veya boş, örnek arkadaşlar gösteriliyor');
                 showDemoFriends();
                 return;
             }
 
-            // Arkadaşları al - friends tablosu üzerinden
-            const { data: friendsData, error: friendsError } = await supabase
-                .from('friends')
-                .select(`
-                    friend_id,
-                    profiles:friend_id (
-                        id, 
-                        username, 
-                        avatar_url, 
-                        status
-                    )
-                `)
-                .eq('user_id', currentUserId)
-                .eq('status', 'accepted');
-
-            if (friendsError) {
-                console.error('Arkadaşlar alınırken hata detayı:', friendsError);
-
-                // Yapısal hata durumunda demo arkadaşlar göster
-                showDemoFriends();
-                return;
-            }
-
-            if (!friendsData || friendsData.length === 0) {
-                console.log('Henüz arkadaş eklenmemiş, örnek arkadaşlar gösteriliyor');
-                showDemoFriends();
-                return;
-            }
-
+            // Arkadaşlar varsa listele
             console.log('Arkadaşlar başarıyla yüklendi:', friendsData);
-
-            // Arkadaşlar listesini oluştur
             renderFriendsList(friendsData);
 
         } catch (error) {
