@@ -729,43 +729,44 @@ function closeNotification(notification) {
 
 // Kullanıcı oturumu başlatılınca arama dinleyicisini de başlat
 async function initializeUserSession({ userPanelUsernameElement, userPanelAvatarElement }) {
-    console.log('Oturum baslatiliyor ve veriler yukleniyor...'); // Türkçe karakter düzeltildi
+    console.log('Oturum baslatiliyor ve veriler yukleniyor...');
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
-            console.error('Oturum bilgileri alinamadi:', authError?.message); // Türkçe karakter düzeltildi
-            // Kullanıcıyı giriş sayfasına yönlendir veya hata göster
-            // window.location.href = '/'; // Örnek yönlendirme
+            console.error('Oturum bilgileri alinamadi:', authError?.message);
             return;
         }
 
-        currentUserId = user.id; // <<< currentUserId burada ayarlanıyor
+        currentUserId = user.id;
         console.log('Kullanici ID:', currentUserId);
 
         // Kullanıcı profil bilgilerini getir
+        // DİKKAT: SQL çıktısına göre 'profiles' tablosunda avatar sütunu yok.
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('username, avatar_url')
+            .select('username') // Avatar sütunu kaldırıldı
             .eq('id', currentUserId)
             .single();
 
-        let currentUserUsername = 'Kullanici'; // Varsayılan değer
-        let currentUserAvatar = defaultAvatar; // Varsayılan değer
+        let currentUserUsername = 'Kullanici';
+        // Avatar sütunu olmadığı için varsayılanı kullan
+        let currentUserAvatar = defaultAvatar;
+        if (userPanelAvatarElement) userPanelAvatarElement.src = currentUserAvatar;
 
         if (profileError) {
-            console.error('Profil bilgileri alinamadi:', profileError.message); // Türkçe karakter düzeltildi
+            console.error('Profil bilgileri alinamadi (avatar sütunu eksik olabilir):', profileError.message);
         } else if (profile) {
             console.log('Profil bilgileri:', profile);
             currentUserUsername = profile.username || 'Kullanici';
-            currentUserAvatar = profile.avatar_url || defaultAvatar;
             if (userPanelUsernameElement) userPanelUsernameElement.textContent = currentUserUsername;
-            if (userPanelAvatarElement) userPanelAvatarElement.src = currentUserAvatar;
         }
 
         // *** Veri yükleme fonksiyonları ARTIK BURADA çağrılmalı ***
         console.log("Arkadas listesi yukleniyor...");
         await loadFriendsList();
+        // console.log("Sponsorlu sunucular yukleniyor..."); // Sponsor bölümü statik
+        // await loadSponsoredServers(); // Sponsor bölümü statik
         console.log("Okunmamis mesajlar yukleniyor...");
         await loadUnreadMessages();
 
@@ -774,17 +775,21 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
         listenForMessages();
         listenForCalls();
 
-        console.log('Oturum basariyla baslatildi.'); // Türkçe karakter düzeltildi
+        console.log('Oturum basariyla baslatildi.');
 
     } catch (error) {
-        console.error('Oturum baslatilirken genel hata:', error.message); // Türkçe karakter düzeltildi
-        // Hata yönetimi
+        // Hata logları güncellendi
+        if (error instanceof ReferenceError && error.message.includes('initializePresence is not defined')) {
+            console.error('HATA: initializePresence fonksiyonu bulunamadı!');
+        } else if (error instanceof ReferenceError && error.message.includes('listenForMessages is not defined')) {
+            console.error('HATA: listenForMessages fonksiyonu bulunamadı!');
+        } else {
+            console.error('Oturum baslatilirken genel hata:', error.message);
+        }
     }
 }
 
-// ... existing code ...
-
-// --- Veri Yükleme Fonksiyonları (Taslak) ---
+// --- Veri Yükleme Fonksiyonları (Güncellendi) ---
 
 // Arkadaş listesini yükler ve arayüzü günceller
 async function loadFriendsList() {
@@ -792,74 +797,60 @@ async function loadFriendsList() {
         console.error('loadFriendsList: Kullanici ID bulunamadi.');
         return;
     }
-    console.log("Arkadas listesi Supabase'den cekiliyor...");
+    console.log("Arkadas listesi (friendships) Supabase'den cekiliyor...");
     try {
-        // 1. Mevcut kullanıcının arkadaş olduğu ID'leri al (friends tablosu varsayıldı)
-        //    İlişkiyi tutan tablo ve sütun adlarını güncellemelisin (user_id, friend_id)
-        const { data: friendRelations, error: friendsError } = await supabase
-            .from('friends') // 'friends' tablo adını kontrol et
-            .select('friend_id') // Arkadaş ID'sini içeren sütun adını kontrol et
-            .eq('user_id', currentUserId); // Mevcut kullanıcı ID'sinin sütun adını kontrol et
+        // 1. Kabul edilmiş arkadaşlıkları çek (friendships tablosu)
+        const { data: friendships, error: friendshipsError } = await supabase
+            .from('friendships') // Tablo adı düzeltildi
+            .select('user_id_1, user_id_2') // İki kullanıcı ID'sini de al
+            .or(`user_id_1.eq.${currentUserId},user_id_2.eq.${currentUserId}`) // Kullanıcının dahil olduğu satırları bul
+            .eq('status', 'accepted'); // Sadece kabul edilmiş arkadaşlıklar
 
-        if (friendsError) throw friendsError;
+        if (friendshipsError) throw friendshipsError;
 
-        if (!friendRelations || friendRelations.length === 0) {
-            console.log('Arkadas bulunamadi.');
-            // TODO: Arayüzde "arkadaş yok" mesajını göster
+        if (!friendships || friendships.length === 0) {
+            console.log('Kabul edilmiş arkadaş bulunamadı.');
+            // TODO: Arayüzde "arkadaş yok" mesajını göster (online/offline listelerini temizle)
             return;
         }
 
-        const friendIds = friendRelations.map(relation => relation.friend_id);
+        // 2. Arkadaşların ID'lerini çıkar
+        const friendIds = friendships.map(friendship => {
+            return friendship.user_id_1 === currentUserId ? friendship.user_id_2 : friendship.user_id_1;
+        });
 
-        // 2. Arkadaş ID'leri ile profil bilgilerini çek (profiles tablosu varsayıldı)
+        // 3. Arkadaş ID'leri ile profil bilgilerini çek (profiles tablosu)
+        // DİKKAT: SQL çıktısına göre 'profiles' tablosunda avatar ve status sütunu yok.
         const { data: friendsProfiles, error: profilesError } = await supabase
-            .from('profiles') // 'profiles' tablo adını kontrol et
-            .select('id, username, avatar_url, status') // Gerekli sütunları kontrol et (status?) 
+            .from('profiles')
+            .select('id, username') // Avatar ve status sütunları kaldırıldı
             .in('id', friendIds);
 
         if (profilesError) throw profilesError;
 
-        console.log('Arkadas profilleri:', friendsProfiles);
+        console.log('Arkadas profilleri (avatar/status eksik):', friendsProfiles);
 
         // TODO: Çekilen friendsProfiles verisi ile HTML'deki arkadaş listesini (online/offline) güncelle.
-        //       - '.friends-list' veya ilgili konteyneri bul.
-        //       - Her bir profil için bir arkadaş kartı oluştur/güncelle.
-        //       - Online/Offline durumuna göre ayır.
+        //       - onlineFriends Set'ini kullanarak online/offline ayırımı yap.
+        //       - Her bir profil için bir arkadaş kartı oluştur/güncelle (varsayılan avatar kullanılacak).
+        //       - Status bilgisi olmadığı için UI'da durum gösterilemeyebilir.
 
     } catch (error) {
-        console.error('Arkadas listesi yuklenirken hata:', error.message);
+        if (error.message.includes('relation "public.friends" does not exist')) {
+            console.error("loadFriendsList Hatasi: Veritabaninda 'friends' tablosu bulunamadi. 'friendships' kullaniliyor olmali, kontrol ediniz.");
+        } else if (error.message.includes('relation "public.friendships" does not exist')) {
+            console.error("loadFriendsList Hatasi: Veritabaninda 'friendships' tablosu bulunamadi. Arkadaslik tablosunun adini kontrol ediniz.");
+        } else {
+            console.error('Arkadas listesi yuklenirken hata:', error.message);
+        }
         // TODO: Arayüzde hata mesajı göster
     }
 }
 
-// Sponsorlu sunucuları yükler ve arayüzü günceller
-async function loadSponsoredServers() {
-    console.log("Sponsorlu sunucular Supabase'den cekiliyor...");
-    try {
-        // Sponsorlu sunucu mantığını netleştir (is_sponsored sütunu yok)
-        // Şimdilik tüm public sunucuları çekiyor gibi varsayalım
-        // TODO: Sponsorlu sunucuları doğru şekilde filtrele
-        const { data: servers, error } = await supabase
-            .from('servers')
-            .select('id, name, description, avatar, memberIds') // icon_url -> avatar olarak düzeltildi, member_count -> memberIds varsayıldı?
-            // .eq('is_sponsored', true) // BU SÜTUN YOK - Filtreleme mantığını güncelle
-            .eq('isPublic', true) // Örnek: Sadece public sunucuları çekelim?
-            .order('name', { ascending: true }); // Sıralama (örneğin isme göre)
-
-        if (error) throw error;
-
-        console.log('Sunucular (Filtre Gerekli):', servers);
-
-        // TODO: memberIds dizisinin uzunluğunu kullanarak üye sayısını hesapla (eğer gerekiyorsa)
-        // TODO: Çekilen servers verisi ile HTML'deki sponsorlu sunucu listesini güncelle.
-        //       - '.sponsored-servers-list' veya ilgili konteyneri bul.
-        //       - Her bir sunucu için bir kart oluştur/güncelle.
-
-    } catch (error) {
-        console.error('Sunucular yuklenirken hata (sponsor filtresi eksik):', error.message);
-        // TODO: Arayüzde hata mesajı göster
-    }
-}
+// Sponsorlu sunucuları yükler ve arayüzü günceller (Şimdilik devre dışı)
+/*
+async function loadSponsoredServers() { ... } 
+*/
 
 // Okunmamış mesaj sayısını yükler ve arayüzü günceller (varsa)
 async function loadUnreadMessages() {
@@ -869,26 +860,160 @@ async function loadUnreadMessages() {
     }
     console.log('Okunmamis mesajlar kontrol ediliyor...');
     try {
-        // Varsayım: 'messages' tablosunda alıcı ID'si ve okundu durumu var
         const { count, error } = await supabase
-            .from('messages') // 'messages' tablo adını kontrol et
-            .select('*', { count: 'exact', head: true }) // Sadece sayıyı almak için head:true
-            .eq('receiver_id', currentUserId) // Alıcı ID sütununu kontrol et
-            .eq('is_read', false); // Okunmadı durumu sütununu kontrol et
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiverId', currentUserId) // Sütun adı düzeltildi
+            .eq('isRead', false); // Sütun adı düzeltildi
 
         if (error) throw error;
 
         console.log('Okunmamis mesaj sayisi:', count);
-        unreadCounts.total = count; // Global sayacı güncelle (eğer kullanılıyorsa)
+        unreadCounts.total = count; // Global sayacı güncelle
 
-        // TODO: Arayüzde okunmamış mesaj sayısını gösteren bir element varsa güncelle.
-        //       Örn: Bir bildirim balonu veya kenar çubuğundaki bir sayaç.
-
-        // TODO: Bireysel sohbetler için okunmamış sayıları da çekmek gerekebilir (daha karmaşık sorgu)
-        //       unreadCounts objesini { userId: count } şeklinde doldur.
+        // TODO: Arayüzde toplam okunmamış mesaj sayısını gösteren elementi güncelle (varsa).
+        // TODO: Bireysel sohbetler için okunmamış sayıları da çekmek ve unreadCounts objesini doldurmak.
 
     } catch (error) {
         console.error('Okunmamis mesajlar yuklenirken hata:', error.message);
     }
 }
 
+// --- Realtime Fonksiyonları ---
+
+// Kullanıcıların çevrimiçi durumunu takip eder
+function initializePresence() {
+    if (!currentUserId) {
+        console.error('initializePresence: Kullanici ID bulunamadi.');
+        return;
+    }
+    console.log('Realtime Presence başlatılıyor...');
+
+    // Benzersiz bir kanal adı kullanın
+    presenceChannel = supabase.channel('online-users', {
+        config: {
+            presence: {
+                key: currentUserId // Her istemciyi benzersiz şekilde tanımlar
+            }
+        }
+    });
+
+    presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+            console.log('Presence sync başladı.');
+            const newState = presenceChannel.presenceState();
+            console.log('Mevcut kullanıcılar:', newState);
+            // onlineFriends set'ini güncelle
+            onlineFriends.clear();
+            for (const id in newState) {
+                onlineFriends.add(id);
+            }
+            updateFriendStatusesUI(); // UI'ı güncelle
+        })
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+            console.log('Kullanıcı katıldı:', key, newPresences);
+            onlineFriends.add(key);
+            updateFriendStatusesUI(); // UI'ı güncelle
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+            console.log('Kullanıcı ayrıldı:', key, leftPresences);
+            onlineFriends.delete(key);
+            updateFriendStatusesUI(); // UI'ı güncelle
+        })
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('Presence kanalına abone olundu.');
+                // Kendi durumunu takip etmeye başla
+                const trackStatus = await presenceChannel.track({ online_at: new Date().toISOString() });
+                console.log('Track status:', trackStatus);
+            } else {
+                console.error('Presence kanalına abone olurken hata:', status);
+            }
+        });
+}
+
+// Yeni mesajları dinler
+function listenForMessages() {
+    if (!currentUserId) {
+        console.error('listenForMessages: Kullanici ID bulunamadi.');
+        return;
+    }
+    console.log('Yeni mesajlar dinleniyor...');
+
+    if (messageSubscription) {
+        messageSubscription.unsubscribe(); // Önceki aboneliği kaldır
+    }
+
+    messageSubscription = supabase
+        .channel('public:messages') // messages tablosunu dinle
+        .on('postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiverId=eq.${currentUserId}` },
+            (payload) => {
+                console.log('Yeni mesaj alındı:', payload.new);
+                const newMessage = payload.new;
+
+                // TODO: Yeni mesajı işle
+                if (newMessage.conversationId === currentConversationId) {
+                    // Aktif sohbete mesajı ekle
+                    appendMessageToChat(newMessage);
+                    // TODO: Mesajı okundu olarak işaretle?
+                } else {
+                    // Okunmamış sayısını artır ve UI'ı güncelle
+                    const senderId = newMessage.senderId;
+                    unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
+                    updateUnreadCountUI(senderId, unreadCounts[senderId]);
+                    playMessageSound(); // Bildirim sesi çal
+                }
+            }
+        )
+        .subscribe((status, err) => {
+            if (err) {
+                console.error('Mesaj aboneliği hatası:', err);
+            } else {
+                console.log('Mesaj kanalına abone olundu, durum:', status);
+            }
+        });
+}
+
+// --- Yardımcı UI Fonksiyonları (Taslak) ---
+
+// Arkadaş listesindeki durum ikonlarını günceller
+function updateFriendStatusesUI() {
+    console.log('Arkadaş durumları UI güncelleniyor. Online:', onlineFriends);
+    const friendRows = document.querySelectorAll('.friend-row[data-user-id]'); // Arkadaş satırlarını seç (data-user-id gerekli)
+    friendRows.forEach(row => {
+        const userId = row.dataset.userId;
+        const statusIndicator = row.querySelector('.friend-status'); // Durum göstergesi elementini bul
+
+        if (statusIndicator) {
+            if (onlineFriends.has(userId)) {
+                statusIndicator.classList.add('online');
+                statusIndicator.classList.remove('offline'); // veya diğer durumlar
+                // TODO: Durum metnini güncelle (varsa)
+            } else {
+                statusIndicator.classList.remove('online');
+                statusIndicator.classList.add('offline');
+                // TODO: Durum metnini güncelle (varsa)
+            }
+        }
+        // TODO: Online/Offline listeleri arasında arkadaşları taşıma mantığı eklenebilir.
+    });
+    // Not: 'profiles' tablosunda status sütunu olmadığı için detaylı durum (idle, dnd) gösterilemez.
+}
+
+// Yeni mesajı sohbet penceresine ekler (Taslak)
+function appendMessageToChat(message) {
+    console.log('Mesaj sohbete ekleniyor (Taslak):', message);
+    // TODO: Gerçek mesaj ekleme HTML/DOM manipülasyonunu buraya ekle.
+    //       - Mesajın kimden geldiğine göre (currentUserId vs message.senderId) stil uygula.
+    //       - '.chat-messages-list' veya benzeri bir konteynere ekle.
+    //       - Zaman damgasını formatla.
+}
+
+// Belirli bir kullanıcının okunmamış mesaj sayısını arayüzde günceller (Taslak)
+function updateUnreadCountUI(userId, count) {
+    console.log(`Kullanıcı ${userId} için okunmamış sayı güncelleniyor: ${count} (Taslak)`);
+    // TODO: İlgili arkadaş satırını veya DM listesi öğesini bul (data-user-id kullanarak).
+    //       - Okunmamış mesaj sayısını gösteren bir badge/elementi güncelle.
+    //       - Sayı 0 ise badge'i gizle.
+}
