@@ -861,12 +861,7 @@
     position: sticky;
     top: 0;
     z-index: 10000;
-    /* Header z-index değeri artırıldı - diğer elementlerin üzerinde görünecek */
     gap: 10px;
-    position: relative;
-    /* z-index'in çalışması için position gerekli olabilir */
-    z-index: 40;
-    /* Chat panelinin (z-index: 50) arkasında kalması için daha düşük bir değer */
 }
 
 /* Header sağ ve sol bölümleri için z-index değerleri eklendi */
