@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatlify - Community</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/community.css">
+    <link rel="stylesheet" href="css/bg-animation.css">
+    <script src="js/main.js" defer></script>
+</head>
+
+<body>
+    <!-- ARKA PLAN ANİMASYONU: Yıldızlı gökyüzü, hareketli bulutlar ve parıltılar içeren animasyon -->
+    <div class="bg-animation">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="clouds"></div>
+    </div>
+
+    <!-- HEADER BÖLÜMÜ: Logo, navigasyon linkleri ve hesap butonlarını içerir -->
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="images/BGChatlifyLogo.png" alt="Chatlify Logo" class="header-logo-img">
+                <span>CHATLIFY</span>
+            </div>
+            <!-- Navigasyon Menüsü -->
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="community.html" class="active">Community</a>
+                <a href="support.html">Support</a>
+                <a href="download.html">Download</a>
+            </div>
+            <!-- Giriş ve İndirme Butonları -->
+            <div class="nav-buttons">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="download.html" class="download-btn">Download Now</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- BAŞLIK BÖLÜMÜ: Community sayfasının başlığı, açıklaması ve arama kutusu -->
+        <section class="community-header">
+            <div class="header-content">
+                <h1>Explore Communities</h1>
+                <p>Connect with people who share your interests and passions. Choose from thousands of active
+                    communities or create your own.</p>
+                <div class="search-box">
+                    <input type="text" placeholder="Search communities...">
+                    <button class="search-button">Search</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- İSTATİSTİK BÖLÜMÜ: Topluluk istatistiklerini gösteren bölüm -->
+        <section class="community-stats">
+            <div class="stat-container">
+                <div class="stat-item">
+                    <div class="stat-value">15K+</div>
+                    <div class="stat-label">Active Communities</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3.8M+</div>
+                    <div class="stat-label">Messages / Day</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">950K+</div>
+                    <div class="stat-label">Online Users</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOPLULUK KATEGORİLERİ: Öne çıkan toplulukların listelendiği bölüm -->
+        <section class="community-categories">
+            <div class="section-title">
+                <h2>Featured Communities</h2>
+                <p>Our most popular and active communities</p>
+            </div>
+
+            <!-- Kategori Filtresi -->
+            <div class="categories-filter">
+                <button class="filter-button active">All</button>
+                <button class="filter-button">Gaming</button>
+                <button class="filter-button">Technology</button>
+                <button class="filter-button">Art</button>
+                <button class="filter-button">Music</button>
+                <button class="filter-button">Education</button>
+            </div>
+
+            <!-- Topluluk Kartları Grid Yapısı -->
+            <div class="community-grid">
+                <!-- Topluluk 1 - Gaming Hub -->
+                <div class="community-card">
+                    <div class="card-banner"
+                        style="background-image: url('https://via.placeholder.com/400x200/343a40/6c757d')"></div>
+                    <div class="card-content">
+                        <div class="card-avatar">
+                            <img src="https://via.placeholder.com/80/6a11cb/ffffff" alt="Gaming Hub">
+                        </div>
+                        <h3 class="card-title">Gaming Hub</h3>
+                        <p class="card-description">The ultimate community for games, e-sports and gamer meetups.</p>
+                        <div class="card-meta">
+                            <div class="meta-stats">
+                                <span><i class="fas fa-user"></i> 128K+</span>
+                                <span><i class="fas fa-circle online"></i> 3.2K online</span>
+                            </div>
+                        </div>
+                        <div class="card-tags">
+                            <span class="tag">Gaming</span>
+                            <span class="tag">E-Sports</span>
+                            <span class="tag">Multiplayer</span>
+                        </div>
+                        <a href="#" class="card-button">Join</a>
+                    </div>
+                </div>
+
+                <!-- Topluluk 2 - Code World -->
+                <div class="community-card">
+                    <div class="card-banner"
+                        style="background-image: url('https://via.placeholder.com/400x200/495057/adb5bd')"></div>
+                    <div class="card-content">
+                        <div class="card-avatar">
+                            <img src="https://via.placeholder.com/80/2575fc/ffffff" alt="Code World">
+                        </div>
+                        <h3 class="card-title">Code World</h3>
+                        <p class="card-description">Community for programmers, developers and software enthusiasts.
+                        </p>
+                        <div class="card-meta">
+                            <div class="meta-stats">
+                                <span><i class="fas fa-user"></i> 95K+</span>
+                                <span><i class="fas fa-circle online"></i> 2.4K online</span>
+                            </div>
+                        </div>
+                        <div class="card-tags">
+                            <span class="tag">Coding</span>
+                            <span class="tag">Web</span>
+                            <span class="tag">AI</span>
+                        </div>
+                        <a href="#" class="card-button">Join</a>
+                    </div>
+                </div>
+
+                <!-- Topluluk 3 - Music Club -->
+                <div class="community-card">
+                    <div class="card-banner"
+                        style="background-image: url('https://via.placeholder.com/400x200/1d3557/8ecae6')"></div>
+                    <div class="card-content">
+                        <div class="card-avatar">
+                            <img src="https://via.placeholder.com/80/8c52ff/ffffff" alt="Music Club">
+                        </div>
+                        <h3 class="card-title">Music Club</h3>
+                        <p class="card-description">Live concerts and music sharing for music lovers.</p>
+                        <div class="card-meta">
+                            <div class="meta-stats">
+                                <span><i class="fas fa-user"></i> 82K+</span>
+                                <span><i class="fas fa-circle online"></i> 1.8K online</span>
+                            </div>
+                        </div>
+                        <div class="card-tags">
+                            <span class="tag">Music</span>
+                            <span class="tag">Concerts</span>
+                            <span class="tag">Instruments</span>
+                        </div>
+                        <a href="#" class="card-button">Join</a>
+                    </div>
+                </div>
+
+                <!-- Topluluk 4 - Art Gallery -->
+                <div class="community-card">
+                    <div class="card-banner"
+                        style="background-image: url('https://via.placeholder.com/400x200/003049/eae2b7')"></div>
+                    <div class="card-content">
+                        <div class="card-avatar">
+                            <img src="https://via.placeholder.com/80/5700a3/ffffff" alt="Art Gallery">
+                        </div>
+                        <h3 class="card-title">Art Gallery</h3>
+                        <p class="card-description">Share and discuss digital and traditional artwork.</p>
+                        <div class="card-meta">
+                            <div class="meta-stats">
+                                <span><i class="fas fa-user"></i> 65K+</span>
+                                <span><i class="fas fa-circle online"></i> 1.2K online</span>
+                            </div>
+                        </div>
+                        <div class="card-tags">
+                            <span class="tag">Art</span>
+                            <span class="tag">Drawing</span>
+                            <span class="tag">Design</span>
+                        </div>
+                        <a href="#" class="card-button">Join</a>
+                    </div>
+                </div>
+
+                <!-- Topluluk 5 - Science Center -->
+                <div class="community-card">
+                    <div class="card-banner"
+                        style="background-image: url('https://via.placeholder.com/400x200/2c3e50/ecf0f1')"></div>
+                    <div class="card-content">
+                        <div class="card-avatar">
+                            <img src="https://via.placeholder.com/80/ff7e5f/ffffff" alt="Science Center">
+                        </div>
+                        <h3 class="card-title">Science Center</h3>
+                        <p class="card-description">Community for sharing and discussing Science, Astronomy, and
+                            Discoveries.</p>
+                        <div class="card-meta">
+                            <div class="meta-stats">
+                                <span><i class="fas fa-user"></i> 47K+</span>
+                                <span><i class="fas fa-circle online"></i> 980 online</span>
+                            </div>
+                        </div>
+                        <div class="card-tags">
+                            <span class="tag">Science</span>
+                            <span class="tag">Astronomy</span>
+                            <span class="tag">Physics</span>
+                        </div>
+                        <a href="#" class="card-button">Join</a>
+                    </div>
+                </div>
+
+                <!-- Topluluk 6 - Sports World -->
+                <div class="community-card">
+                    <div class="card-banner"
+                        style="background-image: url('https://via.placeholder.com/400x200/6c5ce7/ffeaa7')"></div>
+                    <div class="card-content">
+                        <div class="card-avatar">
+                            <img src="https://via.placeholder.com/80/00b894/ffffff" alt="Sports World">
+                        </div>
+                        <h3 class="card-title">Sports World</h3>
+                        <p class="card-description">Community for sharing information about sports, fitness, and healthy
+                            living.</p>
+                        <div class="card-meta">
+                            <div class="meta-stats">
+                                <span><i class="fas fa-user"></i> 52K+</span>
+                                <span><i class="fas fa-circle online"></i> 1.4K online</span>
+                            </div>
+                        </div>
+                        <div class="card-tags">
+                            <span class="tag">Sports</span>
+                            <span class="tag">Fitness</span>
+                            <span class="tag">Health</span>
+                        </div>
+                        <a href="#" class="card-button">Join</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daha Fazla Topluluk Keşfet Butonu -->
+            <div class="more-communities">
+                <a href="#" class="more-button">Discover More Communities <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </section>
+
+        <!-- ÇAĞRI BÖLÜMÜ (CTA): Kullanıcıları indirmeye yönlendiren eylem çağrısı -->
+        <section class="community-cta">
+            <div class="cta-content">
+                <h2>Discover the Community Experience</h2>
+                <p>Download Chatlify now and connect with thousands of communities.</p>
+                <div class="cta-buttons">
+                    <a href="download.html" class="cta-download">Download</a>
+                    <a href="#" class="cta-explore">Explore</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER BÖLÜMÜ: Site haritası, sosyal medya ve telif hakkı bilgileri -->
+    <footer>
+        <div class="footer-content">
+            <!-- Footer Logo -->
+            <div class="footer-logo">
+                <img src="images/BGChatlifyLogo.png" alt="Chatlify Logo" class="footer-logo-img">
+                <span>CHATLIFY</span>
+            </div>
+            <!-- Footer Linkleri - Site Haritası -->
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><a href="#">Voice Chat</a></li>
+                        <li><a href="#">Chatlify Premium</a></li>
+                        <li><a href="#">Communities</a></li>
+                        <li><a href="#">Integrations</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press Room</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                        <li><a href="#">Announcements</a></li>
+                        <li><a href="#">Developer API</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="legal/terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="legal/privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="legal/security.html">Security</a></li>
+                        <li><a href="legal/data-protection.html">Data Protection</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Alt Footer - Sosyal Medya ve Telif Hakkı -->
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://x.com/Chatlifyapp" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/chatlifyapp/" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-instagram"></i></a>
+                <a href="https://www.youtube.com/@Chatlify" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-youtube"></i></a>
+                <a href="https://www.tiktok.com/@chatlifyapp" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-tiktok"></i></a>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Chatlify Inc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

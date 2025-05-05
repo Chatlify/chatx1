@@ -1,0 +1,21 @@
+/* GIF Mesajları için Özel Stiller */
+
+/* Yedek çözüm için stil */
+.message-status {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+    text-align: center;
+}
+
+/* Yerel olarak gösterilen mesajlar */
+.message-group.local-message {
+    opacity: 0.9;
+}
+
+.message-group.local-message .message-content {
+    border: 1px dashed var(--text-muted);
+}

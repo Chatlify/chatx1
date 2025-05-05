@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatlify - Ayarlar</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/bg-animation.css">
+    <script src="js/main.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+    <script src="js/settings.js" defer></script>
+</head>
+
+<body class="settings-page">
+    <!-- ARKA PLAN ANİMASYONU: Yıldızlı gökyüzü, hareketli bulutlar ve parıltılar içeren animasyon -->
+    <div class="bg-animation">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="clouds"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Sunucu Kenar Çubuğu: Normalde sunucu listesini gösterir, ancak ayarlar sayfasında gizlidir -->
+        <!-- <div class="server-sidebar"> ... sidebar içeriği ... </div> -->
+
+        <!-- AYARLAR MENÜSÜ: Sol taraftaki kategori menüsü -->
+        <div class="settings-menu">
+            <!-- Ayarlar Başlığı -->
+            <div class="settings-header">
+                <div class="settings-header-title">
+                    Kullanıcı Ayarları
+                </div>
+                <div class="settings-close-btn" id="settingsCloseBtn">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <!-- Ayarlarda Arama Kutusu -->
+            <div class="settings-search">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Ayarlarda Ara">
+            </div>
+
+            <!-- Ayar Kategorileri Listesi -->
+            <div class="settings-categories">
+                <!-- Hesap Ayarları Kategorisi -->
+                <div class="settings-category active" data-target="account-settings">
+                    <i class="fas fa-user"></i>
+                    <span>Hesabım</span>
+                </div>
+                <!-- Görünüm Ayarları Kategorisi -->
+                <div class="settings-category" data-target="appearance-settings">
+                    <i class="fas fa-palette"></i>
+                    <span>Görünüm</span>
+                </div>
+                <!-- Bildirim Ayarları Kategorisi -->
+                <div class="settings-category" data-target="notification-settings">
+                    <i class="fas fa-bell"></i>
+                    <span>Bildirimler</span>
+                </div>
+                <!-- Gizlilik Ayarları Kategorisi -->
+                <div class="settings-category" data-target="privacy-settings">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Gizlilik & Güvenlik</span>
+                </div>
+                <!-- Güvenlik Ayarları Kategorisi -->
+                <div class="settings-category" data-target="security-settings">
+                    <i class="fas fa-lock"></i>
+                    <span>Güvenlik</span>
+                </div>
+                <!-- Ses ve Video Ayarları Kategorisi -->
+                <div class="settings-category" data-target="audio-video-settings">
+                    <i class="fas fa-volume-up"></i>
+                    <span>Ses & Video</span>
+                </div>
+                <!-- Klavye Kısayolları Kategorisi -->
+                <div class="settings-category" data-target="keyboard-shortcuts-settings">
+                    <i class="fas fa-keyboard"></i>
+                    <span>Klavye Kısayolları</span>
+                </div>
+                <!-- Dil ve Bölge Ayarları Kategorisi -->
+                <div class="settings-category" data-target="language-region-settings">
+                    <i class="fas fa-language"></i>
+                    <span>Dil & Bölge</span>
+                </div>
+                <!-- Cihaz Ayarları Kategorisi -->
+                <div class="settings-category" data-target="devices-settings">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Cihazlar</span>
+                </div>
+                <!-- Geliştirici Ayarları Kategorisi -->
+                <div class="settings-category" data-target="developer-settings">
+                    <i class="fas fa-code"></i>
+                    <span>Geliştirici</span>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Çıkış Butonu -->
+                <div class="settings-category danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Çıkış Yap</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANA İÇERİK ALANI: Sağ taraftaki ayar içeriği -->
+        <div class="settings-content">
+            <!-- HESAP AYARLARI BÖLÜMÜ: Profil bilgileri, şifre ayarları vb. -->
+            <div class="settings-section" id="account-settings">
+                <!-- Bölüm Başlığı -->
+                <div class="settings-section-header">
+                    <h2>Hesabım</h2>
+                    <p>Profil bilgilerinizi ve hesap ayarlarınızı yönetin</p>
+                </div>
+
+                <!-- Profil Kartı: Kullanıcı banner ve avatar gösterimi -->
+                <div class="settings-profile-card">
+                    <!-- Profil Banner Görüntüsü -->
+                    <div class="profile-banner">
+                        <div class="banner-overlay">
+                            <button class="banner-change-btn"><i class="fas fa-camera"></i> Banner Değiştir</button>
+                        </div>
+                    </div>
+                    <!-- Profil Bilgileri -->
+                    <div class="profile-info">
+                        <div class="profile-avatar">
+                            <img src="https://via.placeholder.com/200/3498db/ffffff?text=U" alt="Kullanıcı">
+                            <div class="avatar-overlay">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="profile-details">
+                            <h3>KullaniciAdi</h3>
+                            <div class="profile-status online">
+                                <i class="fas fa-circle"></i> Çevrimiçi
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ayarlar Formu -->
+                <div class="settings-form">
+                    <!-- Kullanıcı Bilgileri Bölümü -->
+                    <div class="settings-form-heading">
+                        <h3>Kullanıcı Bilgileri</h3>
+                    </div>
+                    <div class="settings-grid">
+                        <!-- Kullanıcı Adı Alanı -->
+                        <div class="settings-form-group">
+                            <label for="username">Kullanıcı Adı</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="username" value="KullaniciAdi">
+                            </div>
+                        </div>
+                        <!-- E-posta Alanı -->
+                        <div class="settings-form-group">
+                            <label for="email">E-posta</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="email" value="kullanici@email.com">
+                            </div>
+                        </div>
+                        <!-- Telefon Alanı -->
+                        <div class="settings-form-group">
+                            <label for="phone">Telefon</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-phone"></i>
+                                <input type="tel" id="phone" value="+90 555 123 4567">
+                            </div>
+                        </div>
+                        <!-- Doğum Tarihi Alanı -->
+                        <div class="settings-form-group">
+                            <label for="birthday">Doğum Tarihi</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-birthday-cake"></i>
+                                <input type="date" id="birthday" value="1990-01-01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hakkımda Alanı -->
+                    <div class="settings-form-group">
+                        <label for="bio">Hakkımda</label>
+                        <div class="input-with-icon textarea">
+                            <i class="fas fa-info-circle"></i>
+                            <textarea id="bio" rows="3"
+                                placeholder="Kendiniz hakkında bilgi verin...">Chatlify kullanıcısı! Yazılım ve teknoloji ile ilgileniyorum.</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Şifre ve Doğrulama Bölümü -->
+                    <div class="settings-form-heading">
+                        <h3>Şifre ve Doğrulama</h3>
+                    </div>
+                    <div class="settings-grid">
+                        <!-- Mevcut Şifre Alanı -->
+                        <div class="settings-form-group">
+                            <label for="current-password">Mevcut Şifre</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="current-password" placeholder="••••••••">
+                                <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <!-- Yeni Şifre Alanı -->
+                        <div class="settings-form-group">
+                            <label for="new-password">Yeni Şifre</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-key"></i>
+                                <input type="password" id="new-password" placeholder="••••••••">
+                                <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <!-- Şifre Tekrarlama Alanı -->
+                        <div class="settings-form-group">
+                            <label for="confirm-password">Şifreyi Tekrarla</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-check-circle"></i>
+                                <input type="password" id="confirm-password" placeholder="••••••••">
+                                <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- İki Faktörlü Doğrulama Bölümü -->
+                    <div class="settings-form-heading">
+                        <h3>İki Faktörlü Doğrulama</h3>
+                    </div>
+
+                    <!-- İki Faktörlü Doğrulama Seçeneği -->
+                    <div class="security-option">
+                        <div class="security-option-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="security-option-info">
+                            <div class="toggle-title">İki Faktörlü Doğrulama</div>
+                            <div class="toggle-description">Hesabınıza giriş yaparken ekstra güvenlik katmanı ekler
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Güvenlik Bildirimleri Seçeneği -->
+                    <div class="security-option">
+                        <div class="security-option-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="security-option-info">
+                            <div class="toggle-title">Güvenlik Bildirimleri</div>
+                            <div class="toggle-description">Hesabınızla ilgili şüpheli aktivitelerde bildirim alın</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Cihaz Doğrulama Seçeneği -->
+                    <div class="security-option">
+                        <div class="security-option-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="security-option-info">
+                            <div class="toggle-title">Cihaz Doğrulama</div>
+                            <div class="toggle-description">Yeni cihazlardan giriş yaparken e-posta onayı iste</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Kaydetme ve İptal Butonları -->
+                    <div class="settings-form-actions">
+                        <button class="cancel-btn">İptal</button>
+                        <button class="save-btn">Değişiklikleri Kaydet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diğer ayarlar sayfaları burada devam edecek -->
+            <!-- ... -->
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ayarlar sayfasını kapatma işlemi
+            const closeBtn = document.getElementById('settingsCloseBtn');
+
+            closeBtn.addEventListener('click', function () {
+                // Sayfa geçiş animasyonu
+                document.body.classList.add('settings-exit');
+
+                // Animasyon bitince dashboard'a yönlendir
+                setTimeout(function () {
+                    window.location.href = 'dashboard.html';
+                }, 500); // 500ms animasyon süresi
+            });
+        });
+    </script>
+</body>
+
+</html>

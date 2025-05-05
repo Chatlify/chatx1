@@ -1,0 +1,537 @@
+/* Auth.css - Login ve Register Sayfaları İçin Stil Dosyası */
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Reset ve Temel Stiller */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #9c27b0;
+    /* Ana mor renk */
+    --primary-dark: #7b1fa2;
+    /* Koyu mor */
+    --primary-light: #ce93d8;
+    /* Açık mor */
+    --accent-color: #6a11cb;
+    /* Vurgu moru */
+
+    --dark-bg: #121212;
+    /* Koyu arkaplan */
+    --card-bg: #1e1e1e;
+    /* Kart arkaplanı */
+    --input-bg: #2d2d2d;
+    /* Input arkaplanı */
+
+    --text-light: #ffffff;
+    /* Açık metin rengi */
+    --text-secondary: #b3b3b3;
+    /* İkincil metin rengi */
+    --text-muted: #757575;
+    /* Soluk metin rengi */
+
+    --border-color: #333333;
+    /* Sınır rengi */
+    --hover-bg: #333333;
+    /* Hover arkaplanı */
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    /* Gölge rengi */
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Nokta efekti */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 0;
+    opacity: 0.5;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.container {
+    display: flex;
+    width: 80%;
+    max-width: 1200px;
+    height: 90vh;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: var(--dark-bg);
+    position: relative;
+    z-index: 1;
+}
+
+/* Ana İçerik Alanı */
+.auth-container {
+    flex: 1;
+    padding: 2rem;
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+/* Bilgi Alanı */
+.auth-info {
+    flex: 1;
+    background: linear-gradient(135deg, #6a11cb, #9c27b0);
+    color: var(--text-light);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Arkaplan animasyonu */
+.auth-info::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(106, 17, 203, 0.4), rgba(37, 117, 252, 0));
+    animation: shimmer 8s infinite alternate;
+    z-index: 0;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(0deg);
+    }
+
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+.info-content {
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.info-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.info-content p {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+/* Özellikler Bölümü */
+.features {
+    margin-top: 2rem;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature i {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+.feature h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.feature p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin: 0;
+}
+
+/* Form Bölümü */
+.auth-header {
+    text-align: center;
+    margin-bottom: 1.8rem;
+}
+
+.logo {
+    width: 90px;
+    margin-bottom: 0.8rem;
+    filter: drop-shadow(0 0 8px rgba(156, 39, 176, 0.6));
+}
+
+.auth-header h1 {
+    font-size: 1.7rem;
+    margin-bottom: 0.4rem;
+    color: var(--primary-light);
+    text-shadow: 0 0 10px rgba(156, 39, 176, 0.3);
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-container .icon {
+    position: absolute;
+    left: 15px;
+    color: var(--text-muted);
+}
+
+.input-container input {
+    width: 100%;
+    padding: 0.7rem 0.8rem 0.7rem 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-color: var(--input-bg);
+    color: var(--text-light);
+}
+
+.input-container input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.2);
+}
+
+.input-container input::placeholder {
+    color: var(--text-muted);
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: var(--primary-light);
+}
+
+/* Şifre Gücü Göstergesi */
+.password-strength {
+    margin-top: 0.6rem;
+    width: 100%;
+}
+
+.strength-meter {
+    display: flex;
+    gap: 5px;
+    height: 4px;
+    margin-bottom: 6px;
+}
+
+.strength-segment {
+    flex: 1;
+    height: 100%;
+    background-color: var(--border-color);
+    border-radius: 3px;
+    transition: background-color 0.3s;
+}
+
+.strength-segment.filled {
+    background-color: var(--primary-color);
+}
+
+/* Şifre gücü renkleri */
+.strength-meter.strength-1 .strength-segment:nth-child(1) {
+    background-color: #f44336;
+    /* Zayıf - Kırmızı */
+}
+
+.strength-meter.strength-2 .strength-segment:nth-child(-n+2) {
+    background-color: #ff9800;
+    /* Orta - Turuncu */
+}
+
+.strength-meter.strength-3 .strength-segment:nth-child(-n+3) {
+    background-color: #4caf50;
+    /* İyi - Yeşil */
+}
+
+.strength-meter.strength-4 .strength-segment:nth-child(-n+4) {
+    background-color: #2196f3;
+    /* Mükemmel - Mavi */
+}
+
+.strength-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+#strength-value {
+    font-weight: 600;
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+}
+
+.remember-me input[type="checkbox"] {
+    margin-right: 6px;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    position: relative;
+    cursor: pointer;
+}
+
+.remember-me input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.remember-me input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 10px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.remember-me label {
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.remember-me label a {
+    color: var(--primary-light);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.remember-me label a:hover {
+    text-decoration: underline;
+    color: var(--primary-color);
+}
+
+.forgot-password {
+    color: var(--primary-light);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+    color: var(--primary-color);
+}
+
+.error-message {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    display: none;
+    border-left: 3px solid #ff6b6b;
+}
+
+.auth-button {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(45deg, var(--primary-dark), var(--accent-color));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: all 0.6s;
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+}
+
+.auth-button:hover::before {
+    left: 100%;
+}
+
+.auth-button:active {
+    transform: translateY(1px);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.2rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: var(--primary-light);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+    color: var(--primary-color);
+}
+
+.auth-footer-info {
+    text-align: center;
+    opacity: 0.7;
+    font-size: 0.85rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Yükleniyor Spinner */
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Tasarım */
+@media (max-width: 991px) {
+    .container {
+        width: 90%;
+        height: 95vh;
+        flex-direction: column;
+    }
+
+    .auth-info {
+        display: none;
+    }
+
+    .auth-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .auth-form {
+        padding: 0 0.8rem;
+    }
+
+    .auth-container {
+        padding: 1.2rem;
+    }
+}

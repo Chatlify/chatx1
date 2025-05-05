@@ -1,0 +1,88 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Arka plan -->
+  <rect width="800" height="600" fill="#1a1a2e" rx="10" ry="10" />
+  
+  <!-- Yan menü -->
+  <rect x="10" y="10" width="60" height="580" fill="#0f0f1a" rx="5" ry="5" />
+  
+  <!-- Sunucular -->
+  <circle cx="40" cy="50" r="20" fill="#6a11cb" />
+  <circle cx="40" cy="110" r="20" fill="#8c52ff" />
+  <circle cx="40" cy="170" r="20" fill="#5700a3" />
+  <circle cx="40" cy="230" r="20" fill="#2575fc" />
+  <circle cx="40" cy="290" r="20" fill="#6a11cb" />
+  
+  <!-- Kanallar menüsü -->
+  <rect x="80" y="10" width="200" height="580" fill="#16213e" rx="5" ry="5" />
+  
+  <!-- Kanal başlığı -->
+  <rect x="90" y="20" width="180" height="40" fill="#1a1a2e" rx="5" ry="5" />
+  <text x="110" y="45" font-family="Arial" font-size="16" fill="#ffffff">Chatlify</text>
+  
+  <!-- Kanallar -->
+  <rect x="90" y="70" width="180" height="30" fill="#1a1a2e" rx="5" ry="5" opacity="0.7" />
+  <text x="110" y="90" font-family="Arial" font-size="12" fill="#ffffff">💬 genel-sohbet</text>
+  
+  <rect x="90" y="110" width="180" height="30" fill="#6a11cb" rx="5" ry="5" />
+  <text x="110" y="130" font-family="Arial" font-size="12" fill="#ffffff">🎮 oyun-odası</text>
+  
+  <rect x="90" y="150" width="180" height="30" fill="#1a1a2e" rx="5" ry="5" opacity="0.7" />
+  <text x="110" y="170" font-family="Arial" font-size="12" fill="#ffffff">🎵 müzik-kanalı</text>
+  
+  <rect x="90" y="190" width="180" height="30" fill="#1a1a2e" rx="5" ry="5" opacity="0.7" />
+  <text x="110" y="210" font-family="Arial" font-size="12" fill="#ffffff">📢 duyurular</text>
+  
+  <!-- Ana içerik alanı -->
+  <rect x="290" y="10" width="500" height="580" fill="#0e0e18" rx="5" ry="5" />
+  
+  <!-- Kanal başlığı -->
+  <rect x="300" y="20" width="480" height="40" fill="#16213e" rx="5" ry="5" />
+  <text x="320" y="45" font-family="Arial" font-size="16" fill="#ffffff">🎮 oyun-odası</text>
+  
+  <!-- Mesajlar -->
+  <g transform="translate(320, 100)">
+    <circle cx="20" r="20" fill="#8c52ff" />
+    <text x="60" y="0" font-family="Arial" font-size="14" fill="#ffffff">MrOblivious</text>
+    <text x="60" y="25" font-family="Arial" font-size="12" fill="#cccccc">Arkadaşlar bu akşam kim Valorant oynayacak?</text>
+  </g>
+  
+  <g transform="translate(320, 170)">
+    <circle cx="20" r="20" fill="#2575fc" />
+    <text x="60" y="0" font-family="Arial" font-size="14" fill="#ffffff">CrazyGamer</text>
+    <text x="60" y="25" font-family="Arial" font-size="12" fill="#cccccc">Ben varım! Saat 8'de girerim</text>
+  </g>
+  
+  <g transform="translate(320, 240)">
+    <circle cx="20" r="20" fill="#5700a3" />
+    <text x="60" y="0" font-family="Arial" font-size="14" fill="#ffffff">ProPlayer</text>
+    <text x="60" y="25" font-family="Arial" font-size="12" fill="#cccccc">Beni de ekleyin, yeni karakteri deneyeceğim</text>
+  </g>
+  
+  <g transform="translate(320, 310)">
+    <circle cx="20" r="20" fill="#6a11cb" />
+    <text x="60" y="0" font-family="Arial" font-size="14" fill="#ffffff">GameQueen</text>
+    <text x="60" y="25" font-family="Arial" font-size="12" fill="#cccccc">Sesli kanala geçelim, daha kolay olur</text>
+  </g>
+  
+  <!-- Mesaj yazma alanı -->
+  <rect x="310" y="530" width="460" height="40" fill="#16213e" rx="20" ry="20" />
+  <text x="330" y="555" font-family="Arial" font-size="12" fill="#777777">#oyun-odası kanalına mesaj yaz...</text>
+  
+  <!-- Kullanıcı alanı -->
+  <rect x="300" y="490" width="480" height="1" fill="#333344" />
+  <circle cx="330" cy="510" r="15" fill="#6a11cb" />
+  <text x="355" y="515" font-family="Arial" font-size="14" fill="#ffffff">MrOblivious</text>
+  <circle cx="440" cy="510" r="8" fill="#43b581" />
+  
+  <!-- Efektler için gradyanlar -->
+  <defs>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6a11cb" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#2575fc" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Görsel efektler -->
+  <circle cx="700" cy="200" r="150" fill="url(#purpleGrad)" opacity="0.3" />
+  <circle cx="200" cy="450" r="100" fill="url(#purpleGrad)" opacity="0.2" />
+</svg> 
