@@ -54,18 +54,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadingScreen.style.display = 'none';
     }
 
-    // ... existing code ...
+    try {
+        // Kullanıcı oturumunu başlat
+        const userPanelUsernameElement = document.querySelector('.dm-user-name');
+        const userPanelAvatarElement = document.querySelector('.dm-user-avatar img');
 
-    // Sohbet başlığındaki sesli arama butonunu bul ve işlev ekle
-    const voiceCallBtn = document.querySelector('.chat-header-actions .chat-action-btn[title="Sesli Arama"]');
-    if (voiceCallBtn) {
-        voiceCallBtn.addEventListener('click', handleVoiceCallButtonClick);
+        await initializeUserSession({
+            userPanelUsernameElement,
+            userPanelAvatarElement
+        });
+
+        // Arkadaşları yükle
+        await loadFriends();
+
+        // Mesaj bildirim sesini yükle
+        loadNotificationSound();
+
+        // Realtime mesaj dinleyicisini başlat
+        subscribeToPresence();
+
+        // Arama ve sohbet dinleyicilerini ekle
+        addChatEventListeners();
+
+        // Sohbet başlığındaki sesli arama butonunu bul ve işlev ekle
+        const voiceCallBtn = document.querySelector('.chat-header-actions .chat-action-btn[title="Sesli Arama"]');
+        if (voiceCallBtn) {
+            voiceCallBtn.addEventListener('click', handleVoiceCallButtonClick);
+        }
+
+        // Arama paneli butonlarını ayarla
+        setupCallPanelButtons();
+
+        console.log('Dashboard başarıyla yüklendi');
+    } catch (error) {
+        console.error('Dashboard yüklenirken hata:', error);
+        showNotification('Bağlantı hatası: ' + error.message, 'error');
     }
-
-    // Arama paneli butonlarını ayarla
-    setupCallPanelButtons();
-
-    // ... existing code ...
 });
 
 // Arama panel butonlarını ayarla
@@ -723,23 +747,27 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
         }
 
         currentUserId = user.id;
+        console.log('Kullanıcı ID:', currentUserId);
 
         // Kullanıcı profil bilgilerini al
-        const { data: profile, error } = await supabase
+        const { data: profileData, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .limit(1); // .single() kullanmak yerine limit(1) kullanarak tek satır al
+            .limit(1);
 
         if (error) {
+            console.error('Profil verisi alınırken hata:', error);
             throw error;
         }
 
-        const userProfile = profile && profile.length > 0 ? profile[0] : null;
-
-        if (!userProfile) {
+        if (!profileData || profileData.length === 0) {
+            console.error('Profil verisi bulunamadı');
             throw new Error('Kullanıcı profili bulunamadı');
         }
+
+        const userProfile = profileData[0];
+        console.log('Kullanıcı profili yüklendi:', userProfile);
 
         // Kullanıcı arayüz elementlerini güncelle
         if (userPanelUsernameElement) {
@@ -751,16 +779,255 @@ async function initializeUserSession({ userPanelUsernameElement, userPanelAvatar
         }
 
         // Global değişkenleri güncelle
-        currentUserUsername = userProfile.username || user.user_metadata?.username;
-        currentUserAvatar = userProfile.avatar_url || defaultAvatar;
+        window.currentUserUsername = userProfile.username || user.user_metadata?.username;
+        window.currentUserAvatar = userProfile.avatar_url || defaultAvatar;
 
         // Sesli aramalar için dinleyici başlat
         listenForCalls();
 
+        return userProfile;
     } catch (error) {
         console.error('Kullanıcı profili alınamadı:', error.message);
+        showNotification('Kullanıcı profili yüklenemedi', 'error');
+        throw error;
     }
 }
 
-// ... existing code ...
+// Sohbet arkadaşlarını yükleme fonksiyonu
+async function loadFriends() {
+    try {
+        console.log('Arkadaşlar yükleniyor...');
+
+        if (!currentUserId) {
+            console.error('Arkadaşlar yüklenemedi: Kullanıcı kimliği bulunamadı');
+            return;
+        }
+
+        // Arkadaşları al - friends tablosu üzerinden
+        const { data: friendsData, error: friendsError } = await supabase
+            .from('friends')
+            .select(`
+                friend_id,
+                profiles:friend_id (
+                    id, 
+                    username, 
+                    avatar_url, 
+                    status
+                )
+            `)
+            .eq('user_id', currentUserId)
+            .eq('status', 'accepted');
+
+        if (friendsError) {
+            console.error('Arkadaşlar alınırken hata:', friendsError);
+            throw friendsError;
+        }
+
+        if (!friendsData || friendsData.length === 0) {
+            console.log('Henüz arkadaş eklenmemiş');
+            return;
+        }
+
+        console.log('Arkadaşlar başarıyla yüklendi:', friendsData);
+
+        // Arkadaşlar listesini oluştur
+        const friendsContainer = document.querySelector('#friends-group .dm-items');
+        if (!friendsContainer) {
+            console.error('Arkadaşlar konteyner elemanı bulunamadı');
+            return;
+        }
+
+        // Listeyi temizle
+        friendsContainer.innerHTML = '';
+
+        // Her arkadaş için liste elemanı oluştur
+        friendsData.forEach(friend => {
+            const friendProfile = friend.profiles;
+            if (!friendProfile) return;
+
+            const friendItem = document.createElement('div');
+            friendItem.className = 'dm-item';
+            friendItem.dataset.userId = friendProfile.id;
+
+            friendItem.innerHTML = `
+                <div class="dm-avatar">
+                    <img src="${friendProfile.avatar_url || defaultAvatar}" alt="${friendProfile.username}">
+                    <div class="dm-status ${friendProfile.status || 'offline'}"></div>
+                </div>
+                <div class="dm-info">
+                    <div class="dm-name">${friendProfile.username}</div>
+                    <div class="dm-activity">${friendProfile.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
+                </div>
+            `;
+
+            // Tıklama olayını ekle
+            friendItem.addEventListener('click', () => {
+                openConversation(friendProfile.id, friendProfile.username, friendProfile.avatar_url);
+            });
+
+            friendsContainer.appendChild(friendItem);
+        });
+
+    } catch (error) {
+        console.error('Arkadaşlar yüklenirken hata:', error);
+        showNotification('Arkadaşlar yüklenemedi', 'error');
+    }
+}
+
+// Bildirim sesini yükle
+function loadNotificationSound() {
+    try {
+        // Ses nesnesini oluştur
+        messageNotificationSound = new Audio('sounds/notification.mp3');
+        messageNotificationSound.volume = 0.5;
+        console.log('Bildirim sesi başarıyla yüklendi');
+    } catch (error) {
+        console.error('Bildirim sesi yüklenemedi:', error);
+    }
+}
+
+// Realtime Presence kanalına abone ol
+function subscribeToPresence() {
+    try {
+        if (!currentUserId) {
+            console.error('Presence kanalına abone olunamadı: Kullanıcı kimliği bulunamadı');
+            return;
+        }
+
+        console.log('Presence kanalına abone olunuyor...');
+
+        // Realtime presence kanalı için
+        presenceChannel = supabase.channel('online-users', {
+            config: {
+                presence: {
+                    key: currentUserId
+                }
+            }
+        });
+
+        // Presence olaylarını dinle
+        presenceChannel
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                console.log('Kullanıcılar çevrimiçi oldu:', newPresences);
+
+                // Yeni çevrimiçi kullanıcıları işle
+                newPresences.forEach(presence => {
+                    // Kendi ID'miz değilse ekle
+                    if (presence.user_id !== currentUserId) {
+                        onlineFriends.add(presence.user_id);
+                        updateFriendStatus(presence.user_id, 'online');
+                    }
+                });
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                console.log('Kullanıcılar çevrimdışı oldu:', leftPresences);
+
+                // Çevrimdışı olan kullanıcıları işle
+                leftPresences.forEach(presence => {
+                    onlineFriends.delete(presence.user_id);
+                    updateFriendStatus(presence.user_id, 'offline');
+                });
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    // Kendi durumumuzu gönder
+                    await presenceChannel.track({
+                        user_id: currentUserId,
+                        username: window.currentUserUsername,
+                        online_at: new Date().toISOString()
+                    });
+
+                    console.log('Presence kanalına başarıyla abone olundu');
+                }
+            });
+
+    } catch (error) {
+        console.error('Presence kanalına abone olunurken hata:', error);
+    }
+}
+
+// Arkadaşın çevrimiçi durumunu güncelle
+function updateFriendStatus(userId, status) {
+    const friendItem = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
+    if (!friendItem) return;
+
+    const statusElement = friendItem.querySelector('.dm-status');
+    const activityElement = friendItem.querySelector('.dm-activity');
+
+    if (statusElement) {
+        statusElement.className = `dm-status ${status}`;
+    }
+
+    if (activityElement) {
+        activityElement.textContent = status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı';
+    }
+}
+
+// Sohbet paneline olayları ekle
+function addChatEventListeners() {
+    try {
+        console.log('Sohbet olay dinleyicileri ekleniyor...');
+
+        // Çıkış butonu
+        const logoutBtn = document.querySelector('.logout-icon');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+
+        // Mesaj gönderme formu
+        const messageForm = document.querySelector('.message-input-form');
+        if (messageForm) {
+            messageForm.addEventListener('submit', handleSendMessage);
+        }
+
+        // GIF butonları
+        const gifButton = document.querySelector('.chat-action-btn[title="GIF"]');
+        if (gifButton) {
+            gifButton.addEventListener('click', toggleGifPanel);
+        }
+
+        console.log('Sohbet olay dinleyicileri başarıyla eklendi');
+    } catch (error) {
+        console.error('Sohbet olay dinleyicileri eklenirken hata:', error);
+    }
+}
+
+// Sohbeti aç
+function openConversation(userId, username, avatarUrl) {
+    // Bu fonksiyon implementasyonu daha sonra yapılacak
+    console.log(`${username} ile sohbet açılıyor...`);
+    // showNotification(`${username} ile sohbet özelliği henüz tamamlanmadı`, 'info');
+}
+
+// Çıkış işlemini yönet
+async function handleLogout() {
+    try {
+        // Oturumu kapat
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+            throw error;
+        }
+
+        // Ana sayfaya yönlendir
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Çıkış yapılırken hata:', error);
+        showNotification('Çıkış yapılamadı: ' + error.message, 'error');
+    }
+}
+
+// Mesaj göndermeyi yönet
+function handleSendMessage(event) {
+    event.preventDefault();
+    // Bu fonksiyon implementasyonu daha sonra yapılacak
+    console.log('Mesaj gönderme fonksiyonu çağrıldı');
+}
+
+// GIF panelini aç/kapat
+function toggleGifPanel() {
+    // Bu fonksiyon implementasyonu daha sonra yapılacak
+    console.log('GIF paneli aç/kapa fonksiyonu çağrıldı');
+    showNotification('GIF özelliği henüz tamamlanmadı', 'info');
+}
 
