@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.addEventListener('click', (event) => { // Değişiklik: (event) parametresi eklendi
                 // Tüm sekmeleri sıfırla
                 tabs.forEach(t => t.classList.remove('active'));
 
@@ -175,18 +175,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tabName = tab.textContent.trim();
                 showSection(tabName, tabContents);
 
-                // "Bekleyen" sekmesi için özel işlem
+                // Eğer "Bekleyen" sekmesiyse, bekleyen istekleri yükle.
+                // Bu hem kullanıcı tıklamasında (ilk etki) hem de sentetik tıklamada (ikinci etki) çalışır.
                 if (tabName === 'Bekleyen') {
-                    console.log("Bekleyen sekmesine tıklandı");
-
-                    // Bir kez yükle
                     loadPendingFriendRequests();
+                }
 
-                    // 200ms sonra tekrar yükle (çift tıklama etkisi)
+                // Sadece kullanıcı tarafından yapılan gerçek bir tıklama ise
+                // ve sekme "Bekleyen" ise, ikinci (sentetik) tıklamayı simüle et.
+                if (tabName === 'Bekleyen' && event.isTrusted) { // Değişiklik: event.isTrusted kontrolü eklendi
                     setTimeout(() => {
-                        console.log("Bekleyen sekmesi - ikinci yükleme");
-                        loadPendingFriendRequests();
-                    }, 200);
+                        const syntheticClickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                            // Bu olay için event.isTrusted false olacaktır
+                        });
+                        // Bu sentetik tıklama, bu event listener'ı tekrar çalıştıracak.
+                        // Ancak event.isTrusted false olacağı için, bu if bloğuna (setTimeout bloğu)
+                        // tekrar girilmeyecek ve sonsuz döngü önlenecek.
+                        tab.dispatchEvent(syntheticClickEvent);
+                    }, 10); // Çok kısa bir gecikme ile ikinci tıklamayı tetikle
                 }
             });
         });
