@@ -80,10 +80,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Emoji picker dinleyicisini kur - chatEmojiBtn kullanımı değiştirildi
         if (chatEmojiBtn && chatTextarea) {
-            console.log('Emoji picker hazırlanıyor...');
-            setupEmojiPicker(chatEmojiBtn, chatTextarea, emojiPicker);
+            console.log('Emoji butonu hazırlanıyor...');
+            // Emoji butonuna tıklama dinleyicisi ekle
+            chatEmojiBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Emoji butonu tıklandı');
+                toggleEmojiPanel(); // Yeni emoji paneli sistemini aç/kapat
+            });
         } else {
-            console.warn('Emoji picker kurulumu için gerekli elementler eksik:',
+            console.warn('Emoji butonu için gerekli elementler eksik:',
                 { chatEmojiBtn: !!chatEmojiBtn, chatTextarea: !!chatTextarea });
         }
 
@@ -2460,19 +2466,19 @@ function setupGifPicker(gifButton, textarea) {
     const gifModalHtml = `
         <div class="gif-picker-modal">
             <div class="gif-picker-header">
-                <div class="gif-search-container">
-                    <input type="text" class="gif-search-input" placeholder="GIF ara...">
+                    <div class="gif-search-container">
+                        <input type="text" class="gif-search-input" placeholder="GIF ara...">
                     <button class="gif-search-button"><i class="fas fa-search"></i></button>
-            </div>
+                    </div>
                 <button class="gif-close-button"><i class="fas fa-times"></i></button>
-                </div>
+                        </div>
             <div class="gif-categories">
                 <button class="gif-category active" data-category="trending">Trend</button>
                 <button class="gif-category" data-category="reactions">Tepkiler</button>
                 <button class="gif-category" data-category="memes">Meme</button>
                 <button class="gif-category" data-category="gaming">Oyun</button>
                 <button class="gif-category" data-category="anime">Anime</button>
-                </div>
+                    </div>
             <div class="gif-results">
                 <div class="gif-loading">
                     <div class="spinner"></div>
@@ -2481,9 +2487,9 @@ function setupGifPicker(gifButton, textarea) {
                 <div class="gif-error" style="display: none;">
                     GIF yüklenirken bir hata oluştu. Lütfen tekrar deneyin.
         </div>
-                    </div>
-                    </div>
-                `;
+                </div>
+            </div>
+        `;
 
     // GIF modal elementini sayfaya ekle
     const gifModalElement = document.createElement('div');
@@ -2839,3 +2845,248 @@ function setupAddFriendModal() {
 }
 
 // ... existing code ...
+
+// Emoji panelini açıp kapatan fonksiyon
+function toggleEmojiPanel() {
+    // Mevcut emoji panelini kontrol et
+    let emojiPanel = document.getElementById('emoji-panel');
+    // Emoji butonunu bul
+    const emojiButton = document.querySelector('.emoji-btn');
+
+    // Panel yoksa oluştur
+    if (!emojiPanel) {
+        console.log('Emoji paneli oluşturuluyor...');
+        createEmojiPanel();
+        if (emojiButton) emojiButton.classList.add('active');
+    } else {
+        // Panel varsa durumunu değiştir (aç/kapat)
+        if (emojiPanel.classList.contains('open')) {
+            emojiPanel.classList.remove('open');
+            emojiPanel.classList.add('closing');
+            // Buton aktif durumunu kaldır
+            if (emojiButton) emojiButton.classList.remove('active');
+
+            // Animasyon sonunda tamamen gizle
+            setTimeout(() => {
+                emojiPanel.classList.remove('closing');
+                emojiPanel.style.display = 'none';
+            }, 500);
+        } else {
+            emojiPanel.style.display = 'block';
+            // Buton aktif durumuna getir
+            if (emojiButton) emojiButton.classList.add('active');
+
+            // Kısa bir gecikme sonra açılma efektini başlat
+            setTimeout(() => {
+                emojiPanel.classList.add('open');
+            }, 10);
+        }
+    }
+}
+
+// Emoji panelini oluşturan fonksiyon
+function createEmojiPanel() {
+    console.log('Yeni emoji paneli oluşturuluyor...');
+
+    // Ana emoji panel elementini oluştur
+    const emojiPanel = document.createElement('div');
+    emojiPanel.id = 'emoji-panel';
+    emojiPanel.className = 'emoji-panel';
+
+    // Emoji kategorileri ve veriler
+    const emojiCategories = [
+        { id: 'faces', name: 'Yüzler', icon: 'fa-smile', emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😠', '😡'] },
+        { id: 'hands', name: 'Eller', icon: 'fa-hand', emojis: ['👋', '🤚', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '💪', '👂', '👃', '👀', '👅', '👄'] },
+        { id: 'animals', name: 'Hayvanlar', icon: 'fa-paw', emojis: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🦆', '🐓', '🐦', '🐧', '🐢', '🐍', '🦎', '🐙', '🦑', '🦞', '🦀', '🐠', '🐬', '🐋', '🦓', '🦍', '🐘', '🦛', '🦒', '🦘'] },
+        { id: 'food', name: 'Yiyecek', icon: 'fa-utensils', emojis: ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🌽', '🥕', '🧄', '🧅', '🥔', '🍠', '🧀', '🍗', '🍖', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🧆', '🌮', '🌯', '🥗', '🥘', '🍝', '🍜', '🍲', '🍛', '🍣', '🍥', '🥠', '🦪', '🥧', '🍦', '🍩', '🍪', '🍰'] },
+        { id: 'travel', name: 'Seyahat', icon: 'fa-plane', emojis: ['🚗', '🚕', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚚', '🚛', '🚜', '🛴', '🚲', '🛵', '🏍', '🚂', '🚊', '🚀', '✈️', '🛫', '🛬', '🚁', '⛵️', '🚤', '🚢', '⚓️', '🚧', '🚏', '🗿', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲️', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺️', '🏠', '🏡', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩'] },
+        { id: 'symbols', name: 'Semboller', icon: 'fa-heart', emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚️', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕️', '🛑'] },
+        { id: 'flags', name: 'Bayraklar', icon: 'fa-flag', emojis: ['🇹🇷', '🇦🇿', '🇩🇪', '🇬🇧', '🇺🇸', '🇯🇵', '🇰🇷', '🇷🇺', '🇨🇳', '🇧🇷', '🇮🇳', '🇵🇰', '🇫🇷', '🇪🇸', '🇮🇹', '🇵🇹', '🇳🇱', '🇧🇪', '🇬🇷', '🇨🇭', '🇸🇪', '🇩🇰', '🇳🇴', '🇫🇮', '🇦🇹', '🇮🇪', '🇨🇿', '🇵🇱', '🇭🇺', '🇺🇦', '🇧🇬', '🇷🇴', '🇦🇺', '🇨🇦', '🇲🇽', '🇸🇦', '🇦🇪', '🇶🇦', '🇰🇼', '🇮🇷', '🇮🇶', '🇪🇬', '🇿🇦'] }
+    ];
+
+    // Panel içeriğini oluştur
+    emojiPanel.innerHTML = `
+        <div class="emoji-panel-header">
+            <h3>Emojiler</h3>
+            <button class="emoji-panel-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="emoji-panel-content">
+            <div class="emoji-search">
+                <input type="text" placeholder="Emoji ara...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="emoji-categories">
+                ${emojiCategories.map((category, index) => `
+                    <button class="emoji-category ${index === 0 ? 'active' : ''}" data-category="${category.id}">
+                        <i class="fas ${category.icon}"></i>
+                    </button>
+                `).join('')}
+            </div>
+            <div class="emoji-list" id="emoji-list">
+                ${emojiCategories[0].emojis.map(emoji => `
+                    <div class="emoji-item" data-emoji="${emoji}">${emoji}</div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    // Paneli chat-panel'e ekle
+    const chatPanel = document.querySelector('.chat-panel');
+    if (chatPanel) {
+        chatPanel.appendChild(emojiPanel);
+    } else {
+        document.body.appendChild(emojiPanel);
+        console.warn('Chat panel bulunamadı, emoji paneli body\'ye eklendi');
+    }
+
+    // Kapatma butonuna tıklama olayı ekle
+    const closeButton = emojiPanel.querySelector('.emoji-panel-close');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            closeEmojiPanel(emojiPanel);
+        });
+    }
+
+    // Emoji kategorilerine tıklama olayı ekle
+    const categoryButtons = emojiPanel.querySelectorAll('.emoji-category');
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Aktif kategoriyi değiştir
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // Seçilen kategorinin emojilerini göster
+            const categoryId = button.getAttribute('data-category');
+            const category = emojiCategories.find(cat => cat.id === categoryId);
+            if (category) {
+                const emojiList = emojiPanel.querySelector('#emoji-list');
+                emojiList.innerHTML = category.emojis.map(emoji => `
+                    <div class="emoji-item" data-emoji="${emoji}">${emoji}</div>
+                `).join('');
+
+                // Yeni eklenen emoji öğelerine tıklama olayı ekle
+                addEmojiClickEvents(emojiList);
+            }
+        });
+    });
+
+    // Emoji arama işlevi
+    const searchInput = emojiPanel.querySelector('.emoji-search input');
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        if (searchTerm.length === 0) {
+            // Arama boşsa aktif kategoriyi göster
+            const activeButton = emojiPanel.querySelector('.emoji-category.active');
+            activeButton.click();
+            return;
+        }
+
+        // Tüm kategorilerde ara
+        const allEmojis = [];
+        emojiCategories.forEach(category => {
+            category.emojis.forEach(emoji => {
+                allEmojis.push(emoji);
+            });
+        });
+
+        // Basit eşleşme (gelecekte iyileştirilebilir)
+        const filteredEmojis = allEmojis.filter(emoji => emoji.includes(searchTerm));
+
+        // Sonuçları göster
+        const emojiList = emojiPanel.querySelector('#emoji-list');
+        if (filteredEmojis.length === 0) {
+            emojiList.innerHTML = '<div class="no-results">Sonuç bulunamadı</div>';
+        } else {
+            emojiList.innerHTML = filteredEmojis.map(emoji => `
+                <div class="emoji-item" data-emoji="${emoji}">${emoji}</div>
+            `).join('');
+
+            // Yeni eklenen emoji öğelerine tıklama olayı ekle
+            addEmojiClickEvents(emojiList);
+        }
+    });
+
+    // İlk emoji öğeleri için tıklama olayı ekle
+    addEmojiClickEvents(emojiPanel.querySelector('#emoji-list'));
+
+    // Panelin dışına tıklanınca kapatılması için olay dinleyicisi ekle
+    document.addEventListener('click', function closeOnClickOutside(e) {
+        // Eğer panel kapalıysa, dinleyiciyi kaldır
+        const panel = document.getElementById('emoji-panel');
+        if (!panel || panel.style.display === 'none') {
+            document.removeEventListener('click', closeOnClickOutside);
+            return;
+        }
+
+        // Tıklama emoji butonuna veya panelin kendisine değilse kapat
+        const emojiButton = document.querySelector('.emoji-btn');
+        if (e.target !== emojiButton &&
+            !emojiButton?.contains(e.target) &&
+            !panel.contains(e.target)) {
+            closeEmojiPanel(panel);
+        }
+    });
+
+    // Paneli ilk açılışta göster
+    emojiPanel.style.display = 'block';
+    // Kısa bir gecikme sonra açılma efektini başlat
+    setTimeout(() => {
+        emojiPanel.classList.add('open');
+    }, 10);
+
+    // Yardımcı fonksiyon: emoji öğelerine tıklama olayı ekler
+    function addEmojiClickEvents(container) {
+        const emojiItems = container.querySelectorAll('.emoji-item');
+        emojiItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const emoji = item.getAttribute('data-emoji');
+                insertEmojiToTextarea(emoji);
+            });
+        });
+    }
+
+    // Emoji'yi metin alanına ekleme
+    function insertEmojiToTextarea(emoji) {
+        const textarea = document.querySelector('.chat-textbox textarea');
+        if (!textarea) {
+            console.error('Emoji eklemek için textarea bulunamadı');
+            return;
+        }
+
+        // İmleç pozisyonuna emojiyi ekle
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+
+        // Emojiyi metin arasına yerleştir
+        textarea.value = text.substring(0, start) + emoji + text.substring(end);
+
+        // İmleci emoji sonrasına taşı
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+
+        // Textarea'ya odaklan
+        textarea.focus();
+    }
+}
+
+// Emoji panelini kapatan yardımcı fonksiyon
+function closeEmojiPanel(panel) {
+    const emojiButton = document.querySelector('.emoji-btn');
+
+    // Panel nesnesi verilmediyse, ID ile ara
+    if (!panel) {
+        panel = document.getElementById('emoji-panel');
+        if (!panel) return;
+    }
+
+    panel.classList.remove('open');
+    panel.classList.add('closing');
+    // Buton aktif durumunu kaldır
+    if (emojiButton) emojiButton.classList.remove('active');
+
+    // Animasyon sonunda tamamen gizle
+    setTimeout(() => {
+        panel.classList.remove('closing');
+        panel.style.display = 'none';
+    }, 500);
+}
