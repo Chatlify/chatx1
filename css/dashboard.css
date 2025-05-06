@@ -8035,3 +8035,59 @@ emoji-picker {
 .profile-panel.closing .profile-panel-content {
     animation: scaleOut 0.3s ease forwards;
 }
+
+/* Emoji Picker Stilleri */
+.emoji-picker-container {
+    position: absolute;
+    bottom: 60px;
+    right: 10px;
+    z-index: 1000;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    max-width: 350px;
+    width: 100%;
+    overflow: hidden;
+    animation: scaleIn 0.2s ease forwards;
+}
+
+.emoji-picker-container.closing {
+    animation: scaleOut 0.2s ease forwards;
+}
+
+.emoji-mart {
+    width: 100% !important;
+    height: 320px;
+    border: none !important;
+    background: var(--card-bg) !important;
+    border-radius: 12px !important;
+    color: var(--text-color) !important;
+}
+
+.emoji-mart-bar {
+    border-color: var(--border-color) !important;
+}
+
+.emoji-mart-search input {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+.emoji-mart-category-label span {
+    background-color: var(--card-bg) !important;
+    color: var(--text-muted) !important;
+}
+
+.emoji-mart-emoji:hover::before {
+    background-color: var(--hover-bg) !important;
+}
+
+/* Chat input emoji alignment */
+.chat-input-area .emoji-btn {
+    position: relative;
+}
+
+.emoji-btn.active {
+    color: var(--primary-color);
+}
