@@ -938,83 +938,6 @@ async function updatePendingRequestsCount() {
 
 // Sunucu panelini kurma
 function setupServerPanel() {
-    // Sunucu Ekle butonu için tıklama olayı ve animasyon 
-    const addServerButton = document.querySelector('.server-add-icon');
-    const serverModal = document.getElementById('server-modal');
-
-    if (addServerButton && serverModal) {
-        // Sunucu ekle butonuna tıklama olayı ekle
-        addServerButton.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            // "+" ikonunu 45 derece döndür (animasyon)
-            const plusIcon = this.querySelector('.fa-plus');
-            if (plusIcon) {
-                plusIcon.classList.add('rotate-icon');
-
-                // Animasyon sonrası sınıfı temizle
-                setTimeout(() => {
-                    plusIcon.classList.remove('rotate-icon');
-                }, 300);
-            }
-
-            // Server modal'ı göster
-            showModal(serverModal);
-        });
-
-        // Modal'ı kapatma butonuna tıklama olayı ekle
-        const closeServerModalBtn = serverModal.querySelector('.close-server-modal-btn');
-        if (closeServerModalBtn) {
-            closeServerModalBtn.addEventListener('click', () => {
-                hideModal(serverModal);
-            });
-        }
-
-        // Modal dışına tıklandığında kapat
-        serverModal.addEventListener('click', (e) => {
-            if (e.target === serverModal) {
-                hideModal(serverModal);
-            }
-        });
-
-        // Sunucu Oluştur ve Sunucuya Katıl seçenekleri işlevleri
-        const createServerOption = document.getElementById('server-option-create');
-        const joinServerOption = document.getElementById('server-option-join');
-        const createServerForm = document.getElementById('server-create-form');
-        const joinServerForm = document.getElementById('server-join-form');
-        const backButtons = document.querySelectorAll('.back-to-options-btn');
-
-        // Form görünürlük yönetimi
-        const showServerOptionsContainer = () => {
-            document.querySelector('.server-options-container').style.display = 'block';
-            createServerForm.style.display = 'none';
-            joinServerForm.style.display = 'none';
-        };
-
-        // Sunucu Oluştur seçeneğine tıklama
-        if (createServerOption && createServerForm) {
-            createServerOption.addEventListener('click', () => {
-                document.querySelector('.server-options-container').style.display = 'none';
-                createServerForm.style.display = 'block';
-                joinServerForm.style.display = 'none';
-            });
-        }
-
-        // Sunucuya Katıl seçeneğine tıklama
-        if (joinServerOption && joinServerForm) {
-            joinServerOption.addEventListener('click', () => {
-                document.querySelector('.server-options-container').style.display = 'none';
-                createServerForm.style.display = 'none';
-                joinServerForm.style.display = 'block';
-            });
-        }
-
-        // Geri butonlarına tıklama
-        backButtons.forEach(button => {
-            button.addEventListener('click', showServerOptionsContainer);
-        });
-    }
-
     // Ayarlar butonu için animasyonlu geçiş ekle
     const settingsButton = document.querySelector('.server-settings-icon');
     if (settingsButton) {
@@ -1044,6 +967,67 @@ function setupServerPanel() {
             setTimeout(() => {
                 window.location.href = 'shop.html';
             }, 300);
+        });
+    }
+
+    // Sunucu Ekle butonu için modal gösterimi ekle
+    const addServerButton = document.querySelector('.server-add-icon');
+    const serverModal = document.getElementById('server-modal');
+
+    if (addServerButton && serverModal) {
+        addServerButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            showModal(serverModal);
+        });
+
+        // Modal kapatma butonları için dinleyiciler
+        const closeServerModalBtn = serverModal.querySelector('.close-server-modal-btn');
+        if (closeServerModalBtn) {
+            closeServerModalBtn.addEventListener('click', () => {
+                hideModal(serverModal);
+            });
+        }
+
+        // Modal dışına tıklama ile kapatma
+        serverModal.addEventListener('click', (event) => {
+            if (event.target === serverModal) {
+                hideModal(serverModal);
+            }
+        });
+
+        // Sunucu oluşturma ve katılma seçenekleri
+        const createServerOption = document.getElementById('server-option-create');
+        const joinServerOption = document.getElementById('server-option-join');
+        const createServerForm = document.getElementById('server-create-form');
+        const joinServerForm = document.getElementById('server-join-form');
+        const backButtons = serverModal.querySelectorAll('.back-to-options-btn');
+
+        if (createServerOption && joinServerOption && createServerForm && joinServerForm) {
+            // Sunucu oluştur seçeneğine tıklanınca
+            createServerOption.addEventListener('click', () => {
+                document.querySelector('.server-options-container').style.display = 'none';
+                createServerForm.style.display = 'block';
+            });
+
+            // Sunucuya katıl seçeneğine tıklanınca
+            joinServerOption.addEventListener('click', () => {
+                document.querySelector('.server-options-container').style.display = 'none';
+                joinServerForm.style.display = 'block';
+            });
+
+            // Geri butonları için olay dinleyicileri
+            backButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    createServerForm.style.display = 'none';
+                    joinServerForm.style.display = 'none';
+                    document.querySelector('.server-options-container').style.display = 'block';
+                });
+            });
+        }
+    } else {
+        console.warn('Sunucu Ekle buton veya modal elementleri bulunamadı:', {
+            addServerButton: !addServerButton,
+            serverModal: !serverModal
         });
     }
 }
