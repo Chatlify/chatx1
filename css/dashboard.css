@@ -456,6 +456,7 @@
 .server-add-icon i {
     font-size: 20px;
     color: var(--success-color);
+    position: relative;
     transition: color 0.2s ease, transform 0.3s ease;
 }
 
@@ -465,7 +466,7 @@
 
 .server-item:hover .server-add-icon i {
     color: white;
-    transform: rotate(45deg);
+    animation: single-spin 0.5s ease forwards;
 }
 
 .server-item:hover .server-settings-icon i {
@@ -7603,4 +7604,131 @@ emoji-picker {
         right: 10px;
         left: 10px;
     }
+}
+
+/* "+" Tuşu Animasyonu */
+@keyframes rotateIcon {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(45deg);
+    }
+}
+
+.rotate-icon {
+    animation: rotateIcon 0.3s ease forwards;
+}
+
+/* Zaten var olan server-add-icon stil tanımını bulun ve aşağıdaki gibi transition ekleyin */
+.server-add-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #a9b1bd;
+    transition: color 0.2s ease;
+}
+
+.server-add-icon i {
+    font-size: 24px;
+    transition: transform 0.3s ease;
+}
+
+/* Server add icon hover stil güncelleme */
+.server-add-icon:hover {
+    color: #ffffff;
+    background-color: #3ca374;
+}
+
+/* Server modal özel stilleri */
+#server-modal .modal-container {
+    max-width: 500px;
+}
+
+.server-options-container {
+    padding: 16px;
+}
+
+.server-options-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #e6e6e6;
+    font-size: 18px;
+}
+
+.server-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.server-option {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #2d2d3f;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.server-option:hover {
+    background: #3a3a4f;
+}
+
+.server-option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: #1e1e2d;
+    border-radius: 50%;
+    margin-right: 16px;
+}
+
+.server-option-icon i {
+    font-size: 22px;
+    color: #3ca374;
+}
+
+.server-option-text h4 {
+    color: #e6e6e6;
+    margin: 0 0 6px 0;
+    font-size: 16px;
+}
+
+.server-option-text p {
+    color: #a9b1bd;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Server form still eri */
+.server-form {
+    padding: 16px;
+}
+
+.back-button-container {
+    margin-bottom: 20px;
+}
+
+.back-to-options-btn {
+    background: transparent;
+    border: none;
+    color: #a9b1bd;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+
+.back-to-options-btn:hover {
+    color: #e6e6e6;
 }
