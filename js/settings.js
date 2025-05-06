@@ -384,80 +384,106 @@ document.addEventListener('DOMContentLoaded', async () => {
         category.addEventListener('click', function () {
             // Çıkış Yap kategorisini özel olarak işle
             if (category.querySelector('span').textContent === 'Çıkış Yap') {
-                // Mevcut Supabase oturumunu sonlandır
-                supabase.auth.signOut()
-                    .then(() => {
-                        showNotification('Başarıyla çıkış yapıldı.', 'success');
-                        // Oturum bilgilerini temizle (isteğe bağlı)
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        // Kısa bir gecikme sonra ana sayfaya yönlendir
-                        setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 1500);
-                    })
-                    .catch((error) => {
-                        console.error('Çıkış yapma hatası:', error);
-                        showNotification(`Çıkış yapılırken hata oluştu: ${error.message}`, 'error');
-                    });
-                return; // Fonksiyondan çık
-            }
-
-            // Zaten aktif olan kategoriye tıklanırsa bir şey yapma
-            if (category.classList.contains('active')) {
-                return;
-            }
-
-            // Hedef bölüm ID'sini al
-            const targetSectionId = category.getAttribute('data-target');
-            const targetSectionElement = targetSectionId ? document.getElementById(targetSectionId) : null;
-
-            // Eğer hedef bölüm bulunamazsa uyarı ver ve çık
-            if (!targetSectionElement) {
-                console.warn(`Hedef bölüm bulunamadı: #${targetSectionId}`);
-                showNotification('İstenen ayar bölümü bulunamadı.', 'warning');
+                showNotification('Çıkış yapılıyor...', 'info');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
                 return;
             }
 
             // Aktif kategoriyi güncelle
-            const currentActiveCategory = document.querySelector('.settings-category.active');
-            if (currentActiveCategory) {
-                currentActiveCategory.classList.remove('active');
-            }
+            document.querySelector('.settings-category.active').classList.remove('active');
             category.classList.add('active');
 
-            // Aktif bölümü bul (animasyon için)
-            let currentActiveSection = null;
+            // Aktif bölümü belirle
+            let activeSection = null;
             settingsSections.forEach(section => {
                 if (!section.classList.contains('hidden')) {
-                    currentActiveSection = section;
+                    activeSection = section;
                 }
             });
 
-            // Eğer mevcut aktif bölüm varsa, çıkış animasyonu ile gizle
-            if (currentActiveSection && currentActiveSection !== targetSectionElement) {
-                currentActiveSection.classList.add('changing'); // Çıkış animasyonu sınıfı
-                currentActiveSection.addEventListener('animationend', () => {
-                    currentActiveSection.classList.add('hidden');
-                    currentActiveSection.classList.remove('changing');
+            // Tüm bölümleri gizlemeden önce çıkış animasyonu uygula
+            if (activeSection) {
+                activeSection.classList.add('changing');
+                setTimeout(() => {
+                    // Tüm bölümleri gizle
+                    settingsSections.forEach(section => {
+                        section.classList.add('hidden');
+                        section.classList.remove('changing');
+                    });
 
-                    // Yeni bölümü giriş animasyonu ile göster
-                    targetSectionElement.classList.remove('hidden');
-                    targetSectionElement.classList.add('changing-in'); // Giriş animasyonu sınıfı
-                    targetSectionElement.addEventListener('animationend', () => {
-                        targetSectionElement.classList.remove('changing-in');
-                    }, { once: true });
+                    // Data-target özelliğine göre ilgili bölümü göster
+                    const targetSection = category.getAttribute('data-target');
+                    if (targetSection) {
+                        const sectionElement = document.getElementById(targetSection);
+                        if (sectionElement) {
+                            sectionElement.classList.remove('hidden');
+                            sectionElement.classList.add('changing-in');
+                            setTimeout(() => {
+                                sectionElement.classList.remove('changing-in');
+                            }, 300);
+                            return;
+                        }
+                    }
 
-                }, { once: true }); // Olay dinleyiciyi bir kere çalıştıktan sonra kaldır
+                    // Kategori adına göre bölüm eşleştirme (data-target olmayan durumlar için)
+                    const categoryText = category.querySelector('span').textContent;
+                    let targetSectionElement;
+
+                    switch (categoryText) {
+                        case 'Hesabım':
+                            targetSectionElement = document.getElementById('account-settings');
+                            break;
+                        case 'Görünüm':
+                            targetSectionElement = document.getElementById('appearance-settings');
+                            break;
+                        case 'Dil & Bölge':
+                            targetSectionElement = document.getElementById('language-region-settings');
+                            break;
+                        default:
+                            // Henüz oluşturulmamış bölümler için 
+                            showNotification(`${categoryText} ayarları yakında eklenecek`, 'warning');
+                            targetSectionElement = document.getElementById('account-settings');
+                    }
+
+                    if (targetSectionElement) {
+                        targetSectionElement.classList.remove('hidden');
+                        targetSectionElement.classList.add('changing-in');
+                        setTimeout(() => {
+                            targetSectionElement.classList.remove('changing-in');
+                        }, 300);
+                    }
+                }, 200);
             } else {
-                // Eğer mevcut aktif bölüm yoksa veya aynı bölüme tıklanmışsa (ki başta kontrol ettik ama yine de), direkt göster
-                settingsSections.forEach(section => section.classList.add('hidden')); // Önce hepsini gizle
-                targetSectionElement.classList.remove('hidden');
-                // İsteğe bağlı: Burada da giriş animasyonu eklenebilir
-                targetSectionElement.classList.add('changing-in');
-                targetSectionElement.addEventListener('animationend', () => {
-                    targetSectionElement.classList.remove('changing-in');
-                }, { once: true });
+                // Eğer hiçbir aktif bölüm yoksa, direkt yeni bölümü göster
+                // Data-target özelliğine göre ilgili bölümü göster
+                const targetSection = category.getAttribute('data-target');
+                if (targetSection) {
+                    const sectionElement = document.getElementById(targetSection);
+                    if (sectionElement) {
+                        sectionElement.classList.remove('hidden');
+                        return;
+                    }
+                }
+
+                // Kategori adına göre bölüm eşleştirme (data-target olmayan durumlar için)
+                const categoryText = category.querySelector('span').textContent;
+                switch (categoryText) {
+                    case 'Hesabım':
+                        document.getElementById('account-settings').classList.remove('hidden');
+                        break;
+                    case 'Görünüm':
+                        document.getElementById('appearance-settings').classList.remove('hidden');
+                        break;
+                    case 'Dil & Bölge':
+                        document.getElementById('language-region-settings').classList.remove('hidden');
+                        break;
+                    default:
+                        // Henüz oluşturulmamış bölümler için 
+                        showNotification(`${categoryText} ayarları yakında eklenecek`, 'warning');
+                        document.getElementById('account-settings').classList.remove('hidden');
+                }
             }
         });
     });
