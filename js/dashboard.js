@@ -2858,6 +2858,7 @@ function displayGifMessage(message) {
 
 // Profil görüntüleme işlevi
 async function openProfilePanel(userId, username, avatar) {
+    console.log(`openProfilePanel çağrıldı - ID: ${userId}, KullanıcıAdı: ${username}, Avatar: ${avatar}`); // YENİ EKLENEN LOG
     console.log(`Profil paneli açılıyor: ${username} (${userId})`);
 
     // Profile panel elementlerini al
