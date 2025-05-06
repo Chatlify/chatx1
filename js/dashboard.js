@@ -838,7 +838,26 @@ async function loadAllFriends({ onlineList, offlineList, dmList, onlineSection, 
                 <div class="friend-name">${username}</div>
                 <div class="friend-status">Çevrimdışı</div>
                     </div>
+                    <div class="friend-actions">
+                        <button class="friend-action-btn message-btn" title="Mesaj Gönder">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                    </div>
                 `;
+
+        // Mesaj gönder butonuna tıklama olayı ekle
+        const messageBtn = friendElement.querySelector('.message-btn');
+        if (messageBtn) {
+            messageBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Event'in ana elemana geçmesini engelle
+                openChatPanel(userId, username, avatar);
+            });
+        }
+
+        // Tüm satıra tıklanınca da sohbet panelini aç
+        friendElement.addEventListener('click', () => {
+            openChatPanel(userId, username, avatar);
+        });
 
         return friendElement;
     }
@@ -1215,6 +1234,7 @@ async function openChatPanel(userId, username, avatar) {
     const chatMessagesContainer = chatPanel?.querySelector('.chat-messages');
     const friendsPanelContainer = document.querySelector('.friends-panel-container');
     const sponsorSidebar = document.querySelector('.sponsor-sidebar');
+    const dashboardContainer = document.querySelector('.dashboard-container');
 
     // Elementlerin varlığını kontrol et
     if (!chatPanel || !chatHeaderUser || !chatMessagesContainer || !friendsPanelContainer) {
@@ -1264,6 +1284,11 @@ async function openChatPanel(userId, username, avatar) {
     if (sponsorSidebar) sponsorSidebar.style.display = 'none';
     chatPanel.classList.remove('hidden');
 
+    // Dashboard container'a chat-open sınıfını ekle - geniş mod için
+    if (dashboardContainer) {
+        dashboardContainer.classList.add('chat-open');
+    }
+
     // Aktif sohbetin user ID'sini panele ekle (durum güncellemesi için)
     chatPanel.dataset.activeChatUserId = userId;
 
@@ -1275,6 +1300,37 @@ async function openChatPanel(userId, username, avatar) {
 
     // Realtime aboneliği GERÇEK sohbet ID'si ile başlat
     subscribeToMessages(currentConversationId);
+}
+
+// Sohbet panelini kapatma
+function closeChatPanel() {
+    const chatPanel = document.querySelector('.chat-panel');
+    const friendsPanelContainer = document.querySelector('.friends-panel-container');
+    const sponsorSidebar = document.querySelector('.sponsor-sidebar');
+    const dashboardContainer = document.querySelector('.dashboard-container');
+
+    if (!chatPanel || !friendsPanelContainer) return;
+
+    // Paneli gizle
+    chatPanel.classList.add('hidden');
+    friendsPanelContainer.classList.remove('hidden');
+
+    // Sponsor sidebar'ı göster (eğer varsa)
+    if (sponsorSidebar) sponsorSidebar.style.display = '';
+
+    // Dashboard container'dan chat-open sınıfını kaldır
+    if (dashboardContainer) {
+        dashboardContainer.classList.remove('chat-open');
+    }
+
+    // Aktif DM stilini kaldır
+    document.querySelectorAll('.dm-item.active').forEach(item => item.classList.remove('active'));
+
+    // Aktif sohbet ID'sini temizle
+    currentConversationId = null;
+
+    // Realtime aboneliğini sonlandır
+    unsubscribeFromMessages();
 }
 
 // Sohbet paneli header butonlarını ayarlama
@@ -1305,31 +1361,6 @@ function setupChatHeaderActions(userId, username, avatar) {
             openProfilePanel(userId, username, avatar);
         });
     }
-}
-
-// Sohbet panelini kapatma
-function closeChatPanel() {
-    const chatPanel = document.querySelector('.chat-panel');
-    const friendsPanelContainer = document.querySelector('.friends-panel-container');
-    const sponsorSidebar = document.querySelector('.sponsor-sidebar');
-
-    if (!chatPanel || !friendsPanelContainer) return;
-
-    // Paneli gizle
-    chatPanel.classList.add('hidden');
-    friendsPanelContainer.classList.remove('hidden');
-
-    // Sponsor sidebar'ı göster (eğer varsa)
-    if (sponsorSidebar) sponsorSidebar.style.display = '';
-
-    // Aktif DM stilini kaldır
-    document.querySelectorAll('.dm-item.active').forEach(item => item.classList.remove('active'));
-
-    // Aktif sohbet ID'sini temizle
-    currentConversationId = null;
-
-    // Realtime aboneliğini sonlandır
-    unsubscribeFromMessages();
 }
 
 // Kullanıcının mesajlarını yükleme

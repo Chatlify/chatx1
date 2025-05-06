@@ -7259,7 +7259,7 @@ emoji-picker {
     left: calc(var(--server-sidebar-width) + var(--dm-sidebar-width));
     width: calc(100% - var(--server-sidebar-width) - var(--dm-sidebar-width));
     height: 100vh;
-    z-index: 10000000;
+    z-index: 10;
     background-color: var(--main-bg);
     animation: slideInRight 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
