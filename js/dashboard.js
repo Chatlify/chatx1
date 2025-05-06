@@ -1886,1256 +1886,371 @@ async function findOrCreateConversation(userId1, userId2) {
 function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
     console.log('🔄 Emoji sistemi tamamen yenileniyor...');
 
-    // Mevcut emoji picker'ları temizle
-    const oldContainer = document.getElementById('emoji-picker-container');
-    if (oldContainer) {
-        oldContainer.remove();
+    // Mevcut emoji panelini temizle
+    const oldPanel = document.getElementById('emoji-panel');
+    if (oldPanel) {
+        oldPanel.remove();
     }
 
-    // Emoji container oluştur
-    const emojiContainer = document.createElement('div');
-    emojiContainer.id = 'emoji-picker-container';
-    emojiContainer.className = 'emoji-picker-container';
-    emojiContainer.style.display = 'none';
+    // Emoji kategorileri ve emojileri
+    const emojiCategories = [
+        {
+            name: 'Yüzler',
+            icon: 'fa-face-smile',
+            emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '🥲', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😮‍💨', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🫣', '🤔', '🫡', '🤗', '🫢', '🤭', '🫠', '🥴', '🤢']
+        },
+        {
+            name: 'Eller',
+            icon: 'fa-hand',
+            emojis: ['👋', '🤚', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦵', '🦿', '🦶', '👣', '👂', '🦻', '👃', '🫀', '🫁', '🧠', '🦷', '🦴', '👀', '👅', '👄', '🫦']
+        },
+        {
+            name: 'Hayvanlar',
+            icon: 'fa-paw',
+            emojis: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐻‍❄️', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🪿', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🪱', '🐛', '🦋', '🐌', '🐞', '🐜', '🪰', '🪲', '🪳', '🦟', '🦗', '🕷️', '🕸️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀']
+        },
+        {
+            name: 'Yiyecek',
+            icon: 'fa-utensils',
+            emojis: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🦴', '🌭', '🍔', '🍟', '🍕', '🫓', '🥪', '🥙', '🧆', '🌮', '🌯', '🫔', '🥗', '🥘', '🫕', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪']
+        },
+        {
+            name: 'Etkinlik',
+            icon: 'fa-cake-candles',
+            emojis: ['🎉', '🎊', '🎈', '🎂', '🎀', '🎁', '🎄', '🎃', '🎗️', '🎟️', '🎫', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '⚽', '⚾', '🥎', '🏀', '🏐', '🏈', '🏉', '🎾', '🥏', '🎳', '🏏', '🏑', '🏒', '🥍', '🏓', '🏸', '🥊', '🥋', '🥅', '⛳', '⛸️', '🎣', '🤿', '🎽', '🎿', '🛷', '🥌', '🎯', '🪀', '🪁', '🎮', '🎰', '🎲', '🧩', '🎭', '🎨', '🧵', '🪡', '🧶', '🪢']
+        },
+        {
+            name: 'Seyahat',
+            icon: 'fa-car',
+            emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍️', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩️', '💺', '🛰️', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥️', '🛳️', '⛴️', '🚢', '⚓', '🪝', '⛽', '🚧', '🚦', '🚥', '🚏', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛲', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️']
+        },
+        {
+            name: 'Semboller',
+            icon: 'fa-icons',
+            emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔']
+        },
+        {
+            name: 'Bayraklar',
+            icon: 'fa-flag',
+            emojis: ['🇹🇷', '🇦🇿', '🇩🇪', '🇬🇧', '🇺🇸', '🇯🇵', '🇰🇷', '🇷🇺', '🇨🇳', '🇧🇷', '🇮🇳', '🇵🇰', '🇫🇷', '🇪🇸', '🇮🇹', '🇵🇹', '🇳🇱', '🇧🇪', '🇬🇷', '🇨🇭', '🇸🇪', '🇩🇰', '🇳🇴', '🇫🇮', '🇦🇹', '🇮🇪', '🇨🇿', '🇵🇱', '🇭🇺', '🇺🇦', '🇧🇬', '🇷🇴', '🇦🇺', '🇨🇦', '🇲🇽', '🇸🇦', '🇦🇪', '🇶🇦', '🇰🇼', '🇮🇷', '🇮🇶', '🇪🇬', '🇿🇦', '🇳🇬', '🇯🇴', '🇱🇧', '🇸🇾', '🇮🇱', '🇩🇿', '🇱🇾', '🇹🇳', '🇲🇦', '🇸🇳', '🇨🇮', '🇬🇭', '🇨🇲', '🇰🇪', '🇪🇹']
+        }
+    ];
 
-    // Emoji container'ı chat input alanına ekle
+    // Ana emoji panel elementini oluştur
+    const emojiPanel = document.createElement('div');
+    emojiPanel.id = 'emoji-panel';
+    emojiPanel.className = 'emoji-panel';
+
+    // Panel içeriğini oluştur
+    emojiPanel.innerHTML = `
+        <div class="emoji-panel-header">
+            <div class="emoji-panel-title">Emojiler</div>
+            <button class="emoji-panel-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="emoji-search">
+            <input type="text" class="emoji-search-input" placeholder="Emoji ara...">
+            <span class="emoji-search-icon"><i class="fas fa-search"></i></span>
+        </div>
+        <div class="emoji-panel-tabs"></div>
+        <div class="emoji-container"></div>
+        <div class="emoji-panel-footer">
+            <div class="emoji-panel-info">Chatlify Emoji Sistemi</div>
+        </div>
+    `;
+
+    // Emoji paneli chat-input-area'ya ekle
     const messageInputContainer = findTextareaContainer(textareaElement);
     if (messageInputContainer) {
-        messageInputContainer.appendChild(emojiContainer);
+        messageInputContainer.appendChild(emojiPanel);
         messageInputContainer.style.position = 'relative';
     } else {
-        // Alternatif olarak body'ye ekle
-        document.body.appendChild(emojiContainer);
+        document.body.appendChild(emojiPanel);
     }
 
-    // Emoji Mart Picker'ını oluştur
+    // Emoji tab'larını oluştur
+    const tabsContainer = emojiPanel.querySelector('.emoji-panel-tabs');
+
+    emojiCategories.forEach((category, index) => {
+        const tab = document.createElement('button');
+        tab.className = `emoji-tab ${index === 0 ? 'active' : ''}`;
+        tab.dataset.category = category.name;
+        tab.innerHTML = `<i class="fas ${category.icon}"></i>`;
+        tab.title = category.name;
+
+        tab.addEventListener('click', () => {
+            // Aktif tab'ı güncelle
+            emojiPanel.querySelectorAll('.emoji-tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            tab.classList.add('active');
+
+            // Emoji container'ı güncelle
+            renderEmojis(category);
+        });
+
+        tabsContainer.appendChild(tab);
+    });
+
+    // Emojileri render et
+    function renderEmojis(category, searchTerm = '') {
+        const emojiContainer = emojiPanel.querySelector('.emoji-container');
+        emojiContainer.innerHTML = '';
+
+        // Eğer arama terimi varsa tüm kategorileri ara
+        if (searchTerm) {
+            let foundEmojis = [];
+            emojiCategories.forEach(cat => {
+                const filteredEmojis = cat.emojis.filter(emoji => {
+                    // Basit bir arama algoritması
+                    // Gerçek uygulamada emoji adları, anahtar kelimeler vs. ile eşleştirme yapılabilir
+                    return emoji.includes(searchTerm);
+                });
+
+                if (filteredEmojis.length > 0) {
+                    foundEmojis.push({
+                        name: cat.name,
+                        emojis: filteredEmojis
+                    });
+                }
+            });
+
+            if (foundEmojis.length === 0) {
+                emojiContainer.innerHTML = '<div class="emoji-category-title">Sonuç bulunamadı</div>';
+                return;
+            }
+
+            // Bulunan emojileri kategorilere göre göster
+            foundEmojis.forEach(result => {
+                // Kategori başlığını ekle
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'emoji-category-title';
+                categoryTitle.textContent = result.name;
+                emojiContainer.appendChild(categoryTitle);
+
+                // Emojileri ekle
+                result.emojis.forEach(emoji => {
+                    addEmojiToContainer(emoji, emojiContainer);
+                });
+            });
+        } else {
+            // Normal kategori görünümü
+            category.emojis.forEach(emoji => {
+                addEmojiToContainer(emoji, emojiContainer);
+            });
+        }
+    }
+
+    // Container'a emoji ekle
+    function addEmojiToContainer(emoji, container) {
+        const emojiElement = document.createElement('div');
+        emojiElement.className = 'emoji-item';
+        emojiElement.textContent = emoji;
+        emojiElement.title = emoji;
+
+        emojiElement.addEventListener('click', () => {
+            insertEmoji(emoji);
+            // İsteğe bağlı: Emoji seçildiğinde paneli kapat
+            // hideEmojiPanel();
+        });
+
+        container.appendChild(emojiElement);
+    }
+
+    // Emoji search işlevselliği
+    const searchInput = emojiPanel.querySelector('.emoji-search-input');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', () => {
+        // Input değişikliğinde gecikme ile ara (performans için)
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = searchInput.value.trim();
+
+            if (searchTerm) {
+                renderEmojis(null, searchTerm);
+            } else {
+                // Boş arama ise aktif kategoriye dön
+                const activeTab = emojiPanel.querySelector('.emoji-tab.active');
+                const categoryName = activeTab.dataset.category;
+                const category = emojiCategories.find(c => c.name === categoryName);
+
+                if (category) {
+                    renderEmojis(category);
+                } else {
+                    renderEmojis(emojiCategories[0]);
+                }
+            }
+        }, 300);
+    });
+
+    // İlk kategoriyi göster
+    renderEmojis(emojiCategories[0]);
+
+    // Emoji paneli göster fonksiyonu
+    function showEmojiPanel() {
+        // Panel konumunu ayarla
+        positionEmojiPanel();
+
+        // Paneli göster
+        emojiPanel.style.display = 'block';
+        emojiButton.classList.add('active');
+
+        // İlk sekmeyi aktif et
+        const firstTab = emojiPanel.querySelector('.emoji-tab');
+        if (firstTab) {
+            firstTab.click();
+        }
+
+        // Input'a odaklan (isteğe bağlı)
+        // searchInput.focus();
+    }
+
+    // Emoji paneli gizle fonksiyonu 
+    function hideEmojiPanel() {
+        emojiPanel.classList.add('closing');
+
+        setTimeout(() => {
+            emojiPanel.style.display = 'none';
+            emojiPanel.classList.remove('closing');
+            emojiButton.classList.remove('active');
+        }, 200);
+    }
+
+    // Paneli konumlandır
+    function positionEmojiPanel() {
+        const buttonRect = emojiButton.getBoundingClientRect();
+        const chatInputArea = emojiButton.closest('.chat-input-area');
+
+        if (chatInputArea) {
+            // Chat input alanına göre konumlandır
+            emojiPanel.style.bottom = '60px';
+            emojiPanel.style.right = '10px';
+        } else {
+            // Genel konumlandırma
+            const bottom = window.innerHeight - buttonRect.top;
+            emojiPanel.style.bottom = `${bottom + 10}px`;
+            emojiPanel.style.right = '10px';
+        }
+    }
+
+    // Emojiyi metin alanına ekle
+    function insertEmoji(emoji) {
+        const textarea = textareaElement || getMessageTextarea();
+        if (!textarea) {
+            console.error('❌ Emoji eklemek için textarea bulunamadı!');
+            return;
+        }
+
+        try {
+            // Emoji ekleme işlemi
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end, text.length);
+
+            // Emojiyi ekle
+            textarea.value = before + emoji + after;
+
+            // İmleci emoji sonrasına taşı
+            const newPosition = start + emoji.length;
+            textarea.selectionStart = textarea.selectionEnd = newPosition;
+
+            // Değişikliği tetiklemek için input event gönder
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+            // Odaklanmayı garantile
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(newPosition, newPosition);
+            }, 10);
+
+            console.log('✅ Emoji başarıyla eklendi:', emoji);
+        } catch (error) {
+            console.error('❌ Emoji eklenirken hata oluştu:', error);
+        }
+    }
+
+    // Emoji butonuna tıklama olayı
     emojiButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        // Aktif textarea'yı bul
-        const activeTextarea = textareaElement || getMessageTextarea();
-        if (!activeTextarea) {
-            console.error('❌ Aktif textarea bulunamadı!');
-            return;
-        }
-
-        // Toggle emoji picker görünürlüğü
-        const isVisible = emojiContainer.style.display === 'block';
+        const isVisible = emojiPanel.style.display === 'block';
 
         if (isVisible) {
-            hideEmojiPicker(emojiContainer);
+            hideEmojiPanel();
         } else {
-            // Emoji Mart Picker'ı oluştur ve ekle
-            emojiContainer.innerHTML = '';
-            showEmojiPicker(emojiContainer, activeTextarea);
-
-            // Buton aktif sınıfını ekle
-            emojiButton.classList.add('active');
-
-            // Konum ayarla
-            positionEmojiPicker(emojiContainer, emojiButton);
+            showEmojiPanel();
         }
     });
 
-    // Dışarı tıklandığında emoji picker'ı kapat
+    // Kapatma butonuna tıklama olayı
+    emojiPanel.querySelector('.emoji-panel-close').addEventListener('click', () => {
+        hideEmojiPanel();
+    });
+
+    // Dışarı tıklandığında emoji paneli kapat
     document.addEventListener('click', (e) => {
-        if (emojiContainer.style.display === 'block' &&
+        if (emojiPanel.style.display === 'block' &&
             e.target !== emojiButton &&
-            !emojiContainer.contains(e.target)) {
-            hideEmojiPicker(emojiContainer);
-            emojiButton.classList.remove('active');
+            !emojiPanel.contains(e.target)) {
+            hideEmojiPanel();
         }
     });
 
-    console.log('✅ Yeni emoji sistemi kurulumu tamamlandı');
-}
-
-// Emoji Picker'ı konumlandırma
-function positionEmojiPicker(container, button) {
-    const buttonRect = button.getBoundingClientRect();
-    const chatInputArea = button.closest('.chat-input-area');
-
-    if (chatInputArea) {
-        // Chat input alanına göre konumlandır
-        container.style.bottom = '60px';
-        container.style.right = '10px';
-    } else {
-        // Genel konumlandırma
-        const bottom = window.innerHeight - buttonRect.top;
-        container.style.bottom = `${bottom + 10}px`;
-        container.style.right = '10px';
-    }
-}
-
-// Emoji Picker'ı göster
-function showEmojiPicker(container, textarea) {
-    // EmojiMart Picker'ını oluştur
-    const pickerOptions = {
-        onEmojiSelect: (emoji) => insertEmoji(emoji, textarea),
-        theme: 'dark',
-        maxFrequentRows: 2,
-        perLine: 8
-    };
-
-    const picker = new EmojiMart.Picker(pickerOptions);
-    container.appendChild(picker);
-    container.style.display = 'block';
-}
-
-// Emoji Picker'ı gizle
-function hideEmojiPicker(container) {
-    container.classList.add('closing');
-    setTimeout(() => {
-        container.style.display = 'none';
-        container.classList.remove('closing');
-    }, 200);
-}
-
-// Emojiyi textarea'ya ekle
-function insertEmoji(emoji, textarea) {
-    if (!textarea) {
-        console.error('❌ Emoji eklemek için textarea bulunamadı!');
-        return;
-    }
-
-    try {
-        // Emoji ekleme işlemi
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        const before = text.substring(0, start);
-        const after = text.substring(end, text.length);
-
-        // Seçilen emojiyi ekle (native karakteri kullan)
-        textarea.value = before + emoji.native + after;
-
-        // İmleci emoji sonrasına taşı
-        const newPosition = start + emoji.native.length;
-        textarea.selectionStart = textarea.selectionEnd = newPosition;
-
-        // Değişikliği tetiklemek için input event gönder
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-
-        // Odaklanmayı garantile
-        setTimeout(() => {
-            textarea.focus();
-            textarea.setSelectionRange(newPosition, newPosition);
-        }, 10);
-
-        console.log('✅ Emoji başarıyla eklendi:', emoji.native);
-    } catch (error) {
-        console.error('❌ Emoji eklenirken hata oluştu:', error);
-    }
-}
-
-// Mesaj alanı referansını doğru alma
-function getMessageTextarea() {
-    // "Bir mesaj yazın..." placeholder'ı ile ara
-    const allTextareas = document.querySelectorAll('textarea');
-    for (let textarea of allTextareas) {
-        if (textarea.placeholder && (
-            textarea.placeholder.includes('mesaj yazın') ||
-            textarea.placeholder.includes('Bir mesaj')
-        )) {
-            return textarea;
-        }
-    }
-
-    // Aktif sohbet panelinde ara
-    const chatPanel = document.querySelector('.chat-panel.active') || document.querySelector('.chat-panel');
-    if (chatPanel) {
-        const textarea = chatPanel.querySelector('textarea');
-        if (textarea) {
-            return textarea;
-        }
-    }
-
-    // Son çare: sayfadaki son textarea
-    return document.querySelector('textarea:last-of-type');
-}
-
-// Yardımcı fonksiyon - Textarea konteynırını bul
-function findTextareaContainer(textarea) {
-    if (!textarea) return null;
-
-    // Textarea'nın ebeveyn elementlerini kontrol et
-    let parent = textarea.parentElement;
-    while (parent && parent !== document.body) {
-        // Form, div veya benzer bir konteyner olabilir
-        if (parent.classList.contains('message-input') ||
-            parent.classList.contains('chat-input') ||
-            parent.classList.contains('chat-input-area') ||
-            parent.classList.contains('input-container')) {
-            return parent;
-        }
-        parent = parent.parentElement;
-    }
-
-    // En yakın ebeveyn div'i bul
-    return textarea.closest('div');
-}
-
-// Modal gösterme fonksiyonu
-function showModal(modalElement) {
-    if (modalElement) {
-        console.log('Modal açılıyor:', modalElement.id);
-
-        // Modal görünürlük ve animasyon ayarları
-        modalElement.style.display = 'flex';
-        modalElement.style.opacity = '0';
-        modalElement.classList.add('show-modal');
-
-        // Modal içeriği için animasyon
-        const modalContainer = modalElement.querySelector('.modal-container');
-        if (modalContainer) {
-            modalContainer.classList.add('show-modal');
-            modalContainer.style.transform = 'scale(0.95)';
-            modalContainer.style.opacity = '0';
-        }
-
-        // Animasyon sonrası tam görünürlük
-        setTimeout(() => {
-            modalElement.style.opacity = '1';
-            if (modalContainer) {
-                modalContainer.style.transform = 'scale(1)';
-                modalContainer.style.opacity = '1';
+    // Yardımcı fonksiyonlar
+    function getMessageTextarea() {
+        // "Bir mesaj yazın..." placeholder'ı ile ara
+        const allTextareas = document.querySelectorAll('textarea');
+        for (let textarea of allTextareas) {
+            if (textarea.placeholder && (
+                textarea.placeholder.includes('mesaj yazın') ||
+                textarea.placeholder.includes('Bir mesaj')
+            )) {
+                return textarea;
             }
-        }, 10);
-    } else {
-        console.error('Modal elementi bulunamadı');
-    }
-}
-
-// Modal gizleme fonksiyonu
-function hideModal(modalElement) {
-    if (modalElement) {
-        console.log('Modal kapatılıyor:', modalElement.id);
-
-        // Kapanma animasyonu için closing sınıfını ekle
-        modalElement.classList.add('closing');
-
-        // Modal içeriği animasyonu
-        const modalContainer = modalElement.querySelector('.modal-container');
-
-        // Animasyon için zaman tanı
-        setTimeout(() => {
-            modalElement.style.opacity = '0';
-            modalElement.style.display = 'none';
-            modalElement.classList.remove('show-modal', 'closing');
-
-            // Modal içeriği animasyonu sıfırla
-            if (modalContainer) {
-                modalContainer.classList.remove('show-modal');
-            }
-        }, 300); // 300ms animasyon süresi
-    }
-}
-
-// Arkadaş Ekle modalını kur
-function setupAddFriendModal() {
-    console.log('Arkadaş Ekle modal kurulumu başladı');
-    const addFriendButton = document.getElementById('add-friend-button');
-    const addFriendModal = document.getElementById('addFriendModal');
-    const closeModalButton = addFriendModal?.querySelector('.close-modal-btn');
-    const addFriendForm = addFriendModal?.querySelector('#add-friend-form');
-    const usernameInput = addFriendModal?.querySelector('#add-friend-username-input');
-    const messageArea = addFriendModal?.querySelector('.modal-message-area');
-
-    if (!addFriendButton || !addFriendModal || !closeModalButton || !addFriendForm || !usernameInput || !messageArea) {
-        console.warn('Arkadaş Ekle modal elementleri bulunamadı. Buton işlevsiz olabilir.');
-        console.warn('Eksik elementler:', {
-            addFriendButton: !addFriendButton,
-            addFriendModal: !addFriendModal,
-            closeModalButton: !closeModalButton,
-            addFriendForm: !addFriendForm,
-            usernameInput: !usernameInput,
-            messageArea: !messageArea
-        });
-        return;
-    }
-
-    console.log('Arkadaş Ekle modal elementleri bulundu');
-
-    // Show modal when Add Friend button is clicked
-    addFriendButton.addEventListener('click', (event) => {
-        console.log('Arkadaş Ekle butonuna tıklandı');
-        event.preventDefault();
-        event.stopPropagation();
-        showModal(addFriendModal);
-        usernameInput.focus();
-        // Clear previous messages
-        messageArea.style.display = 'none';
-        messageArea.textContent = '';
-        messageArea.className = 'modal-message-area';
-    });
-
-    // Hide modal when close button is clicked
-    closeModalButton.addEventListener('click', () => {
-        hideModal(addFriendModal);
-    });
-
-    // Hide modal when clicking outside the modal content
-    addFriendModal.addEventListener('click', (event) => {
-        if (event.target === addFriendModal) {
-            hideModal(addFriendModal);
-        }
-    });
-
-    // Handle form submission
-    addFriendForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const username = usernameInput.value.trim();
-        const submitButton = addFriendForm.querySelector('.modal-submit-button');
-
-        if (!username) {
-            displayModalMessage('Lütfen bir kullanıcı adı girin.', 'error', messageArea);
-            return;
         }
 
-        if (submitButton) submitButton.disabled = true;
-        displayModalMessage('Arkadaşlık isteği gönderiliyor...', 'info', messageArea);
-
-        try {
-            // 1. Find the user by username
-            const { data: users, error: findError } = await supabase
-                .from('users')
-                .select('id')
-                .eq('username', username)
-                .neq('id', currentUserId);
-
-            if (findError) throw new Error(`Kullanıcı aranırken hata: ${findError.message}`);
-            if (!users || users.length === 0) {
-                throw new Error(`'${username}' kullanıcısı bulunamadı.`);
+        // Aktif sohbet panelinde ara
+        const chatPanel = document.querySelector('.chat-panel.active') || document.querySelector('.chat-panel');
+        if (chatPanel) {
+            const textarea = chatPanel.querySelector('textarea');
+            if (textarea) {
+                return textarea;
             }
-            if (users.length > 1) {
-                throw new Error(`'${username}' ile eşleşen birden fazla kullanıcı bulundu. Lütfen daha belirgin bir kullanıcı adı deneyin.`);
-            }
-
-            const friendId = users[0].id;
-
-            // 2. Check if already friends or request pending - SORGU DÜZELTİLDİ
-            console.log('Arkadaşlık kontrolü yapılıyor:', currentUserId, friendId);
-
-            // Önceki hatalı sorgu:
-            // .or(`user_id_1.eq.${currentUserId},and(user_id_2.eq.${friendId}),user_id_1.eq.${friendId},and(user_id_2.eq.${currentUserId})`)
-
-            // Düzeltilmiş sorgu - OR içindeki tüm kombinasyonları doğru şekilde kontrol eder
-            const { data: existingFriendship, error: checkError } = await supabase
-                .from('friendships')
-                .select('id, status')
-                .or(`and(user_id_1.eq.${currentUserId},user_id_2.eq.${friendId}),and(user_id_1.eq.${friendId},user_id_2.eq.${currentUserId})`)
-                .maybeSingle();
-
-            console.log('Arkadaşlık sorgu sonucu:', existingFriendship);
-
-            if (checkError) throw new Error(`Arkadaşlık durumu kontrol edilirken hata: ${checkError.message}`);
-
-            if (existingFriendship) {
-                if (existingFriendship.status === 'accepted') {
-                    throw new Error(`'${username}' ile zaten arkadaşsınız.`);
-                } else if (existingFriendship.status === 'pending') {
-                    throw new Error(`'${username}' kullanıcısına zaten bir istek gönderilmiş veya ondan bir istek var.`);
-                } else if (existingFriendship.status === 'blocked') {
-                    throw new Error(`Bu kullanıcıyla etkileşim kuramazsınız.`);
-                }
-            }
-
-            // 3. Send friend request
-            const { error: insertError } = await supabase
-                .from('friendships')
-                .insert({
-                    user_id_1: currentUserId,
-                    user_id_2: friendId,
-                    status: 'pending'
-                });
-
-            if (insertError) throw new Error(`Arkadaşlık isteği gönderilirken hata: ${insertError.message}`);
-
-            displayModalMessage(`'${username}' kullanıcısına arkadaşlık isteği gönderildi!`, 'success', messageArea);
-            usernameInput.value = '';
-
-        } catch (error) {
-            console.error('Arkadaş ekleme hatası:', error);
-            displayModalMessage(error.message || 'Bir hata oluştu.', 'error', messageArea);
-        } finally {
-            if (submitButton) submitButton.disabled = false;
-        }
-    });
-}
-
-// Helper function to display messages inside the modal
-function displayModalMessage(message, type, messageAreaElement) {
-    if (messageAreaElement) {
-        messageAreaElement.textContent = message;
-        // Reset classes and add the new type
-        messageAreaElement.className = 'modal-message-area'; // Base class
-        messageAreaElement.classList.add(type); // 'success', 'error', or 'info'
-        messageAreaElement.style.display = 'flex'; // Show the message area
-    }
-}
-
-// Belirli bir kullanıcı için okunmamış mesaj sayısını UI'da günceller
-function updateUnreadCountUI(userId, count) {
-    const dmItem = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
-    if (!dmItem) return;
-
-    const notificationBadge = dmItem.querySelector('.dm-notification');
-    if (!notificationBadge) return;
-
-    console.log(`Okunmamış UI Güncelle: Kullanıcı ${userId}, Sayı: ${count}`);
-
-    if (count > 0) {
-        notificationBadge.textContent = count > 99 ? '99+' : count; // Limitleme ekleyebiliriz
-        notificationBadge.style.display = 'flex';
-    } else {
-        notificationBadge.style.display = 'none';
-        notificationBadge.textContent = ''; // İçeriği temizle
-    }
-}
-
-// Arkadaşlıktan çıkarma onay modalını gösterme
-function showRemoveFriendConfirmation(userId, username, avatar) {
-    // Daha önce modal oluşturulduysa kaldır
-    let confirmModal = document.getElementById('removeFriendModal');
-    if (confirmModal) {
-        document.body.removeChild(confirmModal);
-    }
-
-    // Yeni modal oluştur
-    confirmModal = document.createElement('div');
-    confirmModal.id = 'removeFriendModal';
-    confirmModal.className = 'modal-overlay';
-    confirmModal.style.display = 'none';
-
-    confirmModal.innerHTML = `
-        <div class="modal-container">
-            <div class="modal-header">
-                <div class="modal-icon"><i class="fas fa-user-times"></i></div>
-                <h3>Arkadaş Silme</h3>
-                <button class="close-modal-btn" title="Kapat">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-content">
-                <div class="remove-friend-info">
-                    <img src="${avatar}" alt="${username}" class="remove-friend-avatar" onerror="this.src='${defaultAvatar}'">
-                    <p class="remove-friend-text">
-                        <strong>${username}</strong> adlı kullanıcıyı arkadaşlıktan çıkarmak istediğinize emin misiniz?
-                    </p>
-                </div>
-                <p class="modal-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Bu işlem geri alınamaz ve yeniden arkadaş olmak için tekrar istek göndermeniz gerekecektir.
-                </p>
-                <div class="modal-actions">
-                    <button class="cancel-button">İptal</button>
-                    <button class="confirm-button danger">Arkadaşlıktan Çıkar</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(confirmModal);
-
-    // Modalı göster
-    showModal(confirmModal);
-
-    // Kapatma butonuna event listener ekle
-    const closeBtn = confirmModal.querySelector('.close-modal-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            hideModal(confirmModal);
-        });
-    }
-
-    // İptal butonuna event listener ekle
-    const cancelBtn = confirmModal.querySelector('.cancel-button');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            hideModal(confirmModal);
-        });
-    }
-
-    // Onay butonuna event listener ekle
-    const confirmBtn = confirmModal.querySelector('.confirm-button');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', async () => {
-            // Butonu devre dışı bırak
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> İşleniyor...';
-
-            try {
-                await removeFriend(userId, username);
-
-                // İşlem başarılı mesajı göster
-                const modalContent = confirmModal.querySelector('.modal-content');
-                modalContent.innerHTML = `
-                    <div class="success-message">
-                        <i class="fas fa-check-circle"></i>
-                        <p><strong>${username}</strong> arkadaşlarınızdan çıkarıldı.</p>
-                    </div>
-                `;
-
-                // 2 saniye sonra modalı kapat
-                setTimeout(() => {
-                    hideModal(confirmModal);
-
-                    // UI'dan arkadaşı kaldır
-                    removeFriendFromUI(userId);
-                }, 2000);
-            } catch (error) {
-                console.error('Arkadaşlık silinirken hata:', error);
-
-                // Hata mesajı göster
-                const modalContent = confirmModal.querySelector('.modal-content');
-                modalContent.innerHTML = `
-                    <div class="error-message">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Arkadaşlıktan çıkarma işlemi sırasında bir hata oluştu:</p>
-                        <p class="error-details">${error.message || 'Bilinmeyen hata'}</p>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="close-button">Kapat</button>
-                    </div>
-                `;
-
-                // Kapat butonuna event listener ekle
-                const closeButton = modalContent.querySelector('.close-button');
-                if (closeButton) {
-                    closeButton.addEventListener('click', () => {
-                        hideModal(confirmModal);
-                    });
-                }
-            }
-        });
-    }
-
-    // Modal dışına tıklayınca kapat
-    confirmModal.addEventListener('click', (event) => {
-        if (event.target === confirmModal) {
-            hideModal(confirmModal);
-        }
-    });
-}
-
-// Arkadaşlığı veritabanından silme
-async function removeFriend(userId, username) {
-    if (!currentUserId || !userId) {
-        throw new Error('Kullanıcı bilgileri eksik');
-    }
-
-    try {
-        console.log('Arkadaşlıktan çıkarma işlemi başlatılıyor:', currentUserId, userId);
-
-        // Arkadaşlık kaydını bul - Düzeltilmiş sorgu sözdizimi
-        const { data: friendship, error: findError } = await supabase
-            .from('friendships')
-            .select('id')
-            .or(`and(user_id_1.eq.${currentUserId},user_id_2.eq.${userId}),and(user_id_1.eq.${userId},user_id_2.eq.${currentUserId})`)
-            .eq('status', 'accepted');
-
-        console.log('Arkadaşlık sorgu sonucu:', friendship);
-
-        if (findError) {
-            throw new Error(`Arkadaşlık kaydı aranırken hata: ${findError.message}`);
         }
 
-        if (!friendship || friendship.length === 0) {
-            throw new Error(`'${username}' ile arkadaşlık kaydı bulunamadı.`);
+        // Son çare: sayfadaki son textarea
+        return document.querySelector('textarea:last-of-type');
+    }
+
+    function findTextareaContainer(textarea) {
+        if (!textarea) return null;
+
+        // Textarea'nın ebeveyn elementlerini kontrol et
+        let parent = textarea.parentElement;
+        while (parent && parent !== document.body) {
+            // Form, div veya benzer bir konteyner olabilir
+            if (parent.classList.contains('message-input') ||
+                parent.classList.contains('chat-input') ||
+                parent.classList.contains('chat-input-area') ||
+                parent.classList.contains('input-container')) {
+                return parent;
+            }
+            parent = parent.parentElement;
         }
 
-        // Birden fazla kayıt gelebilir, ilkini kullan
-        const friendshipRecord = Array.isArray(friendship) ? friendship[0] : friendship;
-        console.log('Silinecek arkadaşlık kaydı:', friendshipRecord);
-
-        // Arkadaşlık kaydını sil
-        const { error: deleteError } = await supabase
-            .from('friendships')
-            .delete()
-            .eq('id', friendshipRecord.id);
-
-        if (deleteError) {
-            throw new Error(`Arkadaşlık silinirken hata: ${deleteError.message}`);
-        }
-
-        console.log(`Arkadaşlık silindi: ${friendshipRecord.id} (${username})`);
-        return true;
-    } catch (error) {
-        console.error('removeFriend fonksiyonunda hata:', error);
-        throw error;
-    }
-}
-
-// UI'dan arkadaşı kaldırma
-function removeFriendFromUI(userId) {
-    // Arkadaş satırını bul ve kaldır
-    const friendRow = document.querySelector(`.friend-row[data-user-id="${userId}"]`);
-    if (friendRow) {
-        friendRow.classList.add('fade-out');
-        setTimeout(() => {
-            friendRow.remove();
-            updateFriendCounters(); // Sayaçları güncelle
-        }, 500);
+        // En yakın ebeveyn div'i bul
+        return textarea.closest('div');
     }
 
-    // DM listesinden de kaldır
-    const dmItem = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
-    if (dmItem) {
-        dmItem.classList.add('fade-out');
-        setTimeout(() => {
-            dmItem.remove();
-        }, 500);
-    }
-}
-
-// GIF picker'ı kuran fonksiyon
-function setupGifPicker(gifButton, textareaElement) {
-    console.log('GIF seçici kurulumu başladı', gifButton);
-
-    // GIF picker modal elementi oluştur
-    let gifPickerModal = document.getElementById('gifPickerModal');
-
-    // GIF picker modal yoksa oluştur
-    if (!gifPickerModal) {
-        gifPickerModal = document.createElement('div');
-        gifPickerModal.id = 'gifPickerModal';
-        gifPickerModal.className = 'modal-overlay';
-        gifPickerModal.style.display = 'none';
-
-        gifPickerModal.innerHTML = `
-            <div class="modal-container gif-picker-container">
-                <div class="modal-header">
-                    <h3>GIF Seçin</h3>
-                    <button class="close-modal-btn" title="Kapat">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-content">
-                    <div class="gif-search-container">
-                        <input type="text" class="gif-search-input" placeholder="GIF ara...">
-                        <button class="gif-search-btn"><i class="fas fa-search"></i></button>
-                    </div>
-                    <div class="gif-results-container">
-                        <div class="gif-trending">
-                            <div class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> GIF'ler yükleniyor...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(gifPickerModal);
-
-        // GIF arama girdisini al
-        const gifSearchInput = gifPickerModal.querySelector('.gif-search-input');
-        const gifSearchButton = gifPickerModal.querySelector('.gif-search-btn');
-        const gifResultsContainer = gifPickerModal.querySelector('.gif-results-container');
-        const closeModalButton = gifPickerModal.querySelector('.close-modal-btn');
-
-        // Kapatma düğmesine tıklandığında modalı kapat
-        closeModalButton.addEventListener('click', () => {
-            hideModal(gifPickerModal);
-        });
-
-        // Modal dışına tıklandığında modalı kapat
-        gifPickerModal.addEventListener('click', (event) => {
-            if (event.target === gifPickerModal) {
-                hideModal(gifPickerModal);
-            }
-        });
-
-        // GIF arama butonuna tıklandığında
-        gifSearchButton.addEventListener('click', () => {
-            const searchTerm = gifSearchInput.value.trim();
-            if (searchTerm) {
-                searchGifs(searchTerm, gifResultsContainer);
-            }
-        });
-
-        // Enter tuşuna basıldığında
-        gifSearchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const searchTerm = gifSearchInput.value.trim();
-                if (searchTerm) {
-                    searchGifs(searchTerm, gifResultsContainer);
-                }
-            }
-        });
-
-        // Sayfa yüklendiğinde trend GIF'leri göster
-        loadTrendingGifs(gifResultsContainer);
-    }
-
-    // GIF butonuna tıklama olayı ekle
-    const existingClickHandler = gifButton.onclick;
-
-    // Butonun mevcut davranışını koru ama GIF modalını da aç
-    gifButton.onclick = function (e) {
-        console.log('GIF butonu tıklandı!');
-        e.preventDefault(); // Formun gönderilmesini engelle
-        e.stopPropagation(); // Diğer event listener'ları durdur
-
-        // GIF modalını göster
-        showModal(gifPickerModal);
-
-        // Orijinal işlevi çağırma (eğer varsa ve istersen)
-        // if (existingClickHandler) existingClickHandler.call(this, e);
-
-        return false; // Event'i durdur
+    console.log('✅ Özel emoji sistemi kurulumu tamamlandı');
+    return {
+        show: showEmojiPanel,
+        hide: hideEmojiPanel,
+        insert: insertEmoji
     };
 }
 
-// Trend GIF'leri yükle
-async function loadTrendingGifs(container) {
-    try {
-        container.innerHTML = '<div class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> Trend GIF\'ler yükleniyor...</div>';
-
-        const response = await fetch(`https://tenor.googleapis.com/v2/featured?key=${TENOR_API_KEY}&limit=20&client_key=chatlify_web`);
-        const data = await response.json();
-
-        displayGifs(data.results, container);
-    } catch (error) {
-        console.error('Trend GIF\'ler yüklenirken hata:', error);
-        container.innerHTML = '<div class="error-placeholder">GIF\'ler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.</div>';
-    }
-}
-
-// GIF arama
-async function searchGifs(searchTerm, container) {
-    try {
-        container.innerHTML = '<div class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> GIF\'ler aranıyor...</div>';
-
-        const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${TENOR_API_KEY}&limit=20&client_key=chatlify_web`);
-        const data = await response.json();
-
-        if (data.results && data.results.length > 0) {
-            displayGifs(data.results, container);
-        } else {
-            container.innerHTML = `<div class="empty-placeholder">\"${searchTerm}\" ile ilgili GIF bulunamadı.</div>`;
-        }
-    } catch (error) {
-        console.error('GIF\'ler aranırken hata:', error);
-        container.innerHTML = '<div class="error-placeholder">GIF\'ler aranırken bir hata oluştu. Lütfen tekrar deneyin.</div>';
-    }
-}
-
-// GIF'leri görüntüle
-function displayGifs(gifs, container) {
-    if (!gifs || gifs.length === 0) {
-        container.innerHTML = '<div class="empty-placeholder">Hiç GIF bulunamadı.</div>';
-        return;
-    }
-
-    // Container'ı temizle
-    container.innerHTML = '';
-
-    // GIF grid oluştur
-    const gifGrid = document.createElement('div');
-    gifGrid.className = 'gif-grid';
-
-    // Her GIF için
-    gifs.forEach(gif => {
-        const gifItem = document.createElement('div');
-        gifItem.className = 'gif-item';
-
-        // Ön izleme (preview) görüntüsünü kullan - daha küçük boyutlu
-        const previewUrl = gif.media_formats.tinygif.url || gif.media_formats.gif.url;
-        const originalUrl = gif.media_formats.gif.url;
-
-        gifItem.innerHTML = `<img src="${previewUrl}" alt="${gif.content_description || 'GIF'}" loading="lazy">`;
-
-        // GIF'e tıklandığında mesaj olarak gönder
-        gifItem.addEventListener('click', () => {
-            sendGifMessage(originalUrl);
-            // Modal'ı kapat
-            const gifModal = document.getElementById('gifPickerModal');
-            if (gifModal) {
-                hideModal(gifModal);
-            }
-        });
-
-        gifGrid.appendChild(gifItem);
-    });
-
-    container.appendChild(gifGrid);
-}
-
-// GIF mesajı gönder
-async function sendGifMessage(gifUrl) {
-    if (!currentConversationId) {
-        console.warn('GIF göndermek için geçerli bir sohbet ID\'si gerekli.');
-        alert('Aktif bir sohbet bulunamadı. Lütfen önce bir kişi seçin.');
-        return;
-    }
-
-    if (!currentUserId) {
-        console.error('GIF göndermek için oturum açmanız gerekiyor.');
-        alert('Oturum bilgileriniz eksik. Lütfen sayfayı yenileyip tekrar deneyin.');
-        return;
-    }
-
-    try {
-        console.log(`GIF gönderiliyor: ${gifUrl}`);
-        console.log(`Sohbet ID: ${currentConversationId}, Gönderen ID: ${currentUserId}`);
-
-        // Veritabanında conversationId'nin geçerli olup olmadığını kontrol et
-        const { data: convExists, error: convError } = await supabase
-            .from('conversations')
-            .select('id')
-            .eq('id', currentConversationId)
-            .maybeSingle();
-
-        if (convError || !convExists) { /* ... error handling ... */
-            console.error('Sohbet kontrolünde hata veya sohbet bulunamadı:', convError);
-            alert('Sohbet kontrolü sırasında bir hata oluştu veya sohbet bulunamadı.');
-            return;
-        }
-
-        // GIF mesajı oluştur (JSON formatında)
-        const gifMessageContent = JSON.stringify({
-            type: 'gif',
-            url: gifUrl
-        });
-        const gifMessage = {
-            content: gifMessageContent,
-            senderId: currentUserId,
-            conversationId: currentConversationId
-        };
-        console.log('GIF Mesaj verisi:', gifMessage);
-
-        // Mesajı veritabanına ekle
-        const { data, error } = await supabase
-            .from('messages')
-            .insert([gifMessage])
-            .select();
-
-        if (error) {
-            // ... (existing error handling) ...
-            console.error('GIF mesajı gönderilirken hata:', JSON.stringify(error));
-            alert('GIF gönderilemedi. Hata: ' + (error.message || 'Bilinmeyen hata'));
-            fallbackDisplayGif(gifUrl);
-            return;
-        }
-
-        // Başarıyla gönderildiyse ekranda göster (displayMessage kullanarak)
-        if (data && data.length > 0) {
-            console.log('GIF mesajı başarıyla gönderildi:', data[0]);
-            displayMessage(data[0]); // displayGifMessage yerine displayMessage çağır
-        } else {
-            console.warn('GIF mesajı gönderildi ancak veri dönmedi.');
-            fallbackDisplayGif(gifUrl);
-        }
-    } catch (error) {
-        // ... (existing error handling) ...
-        console.error('GIF gönderilirken hata:', error ? JSON.stringify(error) : 'Bilinmeyen hata');
-        alert('GIF gönderilirken bir hata oluştu: ' + (error && error.message ? error.message : 'Bilinmeyen hata'));
-        fallbackDisplayGif(gifUrl);
-    }
-}
-
-// Yedek çözüm: GIF'i doğrudan ekranda göster (veritabanına kaydetmeden)
-function fallbackDisplayGif(gifUrl) {
-    console.log('🎬 Yedek GIF gösterme fonksiyonu çalıştırılıyor:', gifUrl);
-
-    if (!gifUrl) {
-        console.error('❌ fallbackDisplayGif: GIF URL\'i geçersiz.');
-        return;
-    }
-
-    const chatMessagesContainer = document.querySelector('.chat-panel .chat-messages');
-    if (!chatMessagesContainer) {
-        console.error('❌ Sohbet mesajları konteyneri bulunamadı.');
-        return;
-    }
-
-    try {
-        // Kendi avatarımızı al
-        let displayAvatar = defaultAvatar;
-        const userAvatarElement = document.querySelector('.dm-footer .dm-user-avatar img');
-        if (userAvatarElement) {
-            displayAvatar = userAvatarElement.src;
-        }
-
-        // JSON formatında gifUrl olabilir - kontrol et
-        let finalGifUrl = gifUrl;
-        try {
-            const contentData = JSON.parse(gifUrl);
-            if (contentData && (contentData.type === 'gif' || contentData.messageType === 'gif') && contentData.url) {
-                console.log('🎯 GIF JSON formatı algılandı:', contentData);
-                finalGifUrl = contentData.url;
-            } else if (contentData && contentData.media && contentData.media.url) {
-                console.log('🎯 Yeni JSON format algılandı:', contentData);
-                finalGifUrl = contentData.media.url;
-            }
-        } catch (e) {
-            // JSON parse hatası - doğrudan URL olarak kullan
-            console.log('ℹ️ JSON parse edilemedi, doğrudan URL kullanılıyor');
-        }
-
-        // GIF mesaj öğesini oluştur
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message-group own-message';
-        messageElement.setAttribute('data-sender-id', currentUserId || 'local-user');
-        messageElement.setAttribute('data-local-message', 'true'); // Yerel olarak oluşturulmuş bir mesaj olduğunu belirt
-
-        // HTML şablonu oluştur
-        messageElement.innerHTML = `
-            <div class="message-group-avatar">
-                <img src="${displayAvatar}" alt="Sen" onerror="this.src='${defaultAvatar}'">
-        </div>
-            <div class="message-group-content">
-                <div class="message-group-header">
-                    <span class="message-author">Sen</span>
-                    <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-                <div class="message-content gif-message">
-                    <img src="${finalGifUrl}" alt="GIF" class="message-gif" loading="lazy">
-                </div>
-            </div>
-        `;
-
-        // Mesaj öğesini chat konteynırına ekle
-        chatMessagesContainer.appendChild(messageElement);
-
-        // Sohbetin en altına kaydır
-        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-
-        console.log('✅ GIF yerel olarak başarıyla gösterildi. URL:', finalGifUrl);
-    } catch (error) {
-        console.error('❌ Yedek GIF gösterme başarısız:', error);
-        alert('GIF gösterilirken bir hata oluştu.');
-    }
-}
-
-// displayGifMessage fonksiyonu artık kullanılmıyor, kaldırılabilir veya yorum satırı yapılabilir.
-/*
-function displayGifMessage(message) {
-    // Bu fonksiyonun içeriği artık displayMessage içinde
-}
-*/
-
-// Profil görüntüleme işlevi
-async function openProfilePanel(userId, username, avatar) {
-    console.log(`openProfilePanel çağrıldı - ID: ${userId}, KullanıcıAdı: ${username}, Avatar: ${avatar}`); // YENİ EKLENEN LOG
-    console.log(`Profil paneli açılıyor: ${username} (${userId})`);
-
-    // Profile panel elementlerini al
-    const profilePanel = document.querySelector('.profile-panel');
-    const profileContent = profilePanel?.querySelector('.profile-panel-content');
-
-    // Profil paneli yoksa erken çık
-    if (!profilePanel || !profileContent) {
-        console.error('Profil paneli elementleri bulunamadı');
-        return;
-    }
-
-    // Profil panelini temizle ve yeni içeriği oluştur
-    if (!profileContent.querySelector('.profile-left-section')) {
-        profileContent.innerHTML = `
-            <button class="profile-close-btn">
-            <i class="fas fa-times"></i>
-            </button>
-            
-            <div class="profile-left-section">
-                <div class="profile-cover"></div>
-                <div class="profile-overlay"></div>
-                <div class="profile-left-content">
-                    <div class="profile-avatar-large">
-                        <img src="${avatar || defaultAvatar}" alt="${username}" onerror="this.src='${defaultAvatar}'">
-                        <div class="profile-status-indicator ${onlineFriends && onlineFriends.has(userId) ? 'online' : 'offline'}"></div>
-                    </div>
-                    <h2 class="profile-username">${username}</h2>
-                    <div class="profile-discord-tag">@${username.toLowerCase().replace(/\s+/g, '')}</div>
-                    <div class="profile-status-text">
-                        <i class="fas fa-circle ${onlineFriends && onlineFriends.has(userId) ? 'online' : 'offline'}"></i>
-                        ${onlineFriends && onlineFriends.has(userId) ? 'Çevrimiçi' : 'Çevrimdışı'}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="profile-right-section">
-                <div class="profile-tabs">
-                    <div class="profile-tab active" data-tab="user-info">Kullanıcı Bilgileri</div>
-                    <div class="profile-tab" data-tab="mutual-servers">Ortak Sunucular</div>
-                    <div class="profile-tab" data-tab="mutual-friends">Ortak Arkadaşlar</div>
-                </div>
-                
-                <div class="profile-section active" id="user-info-section">
-                    <div class="profile-section-header">
-                        <i class="fas fa-info-circle"></i>
-                        <h3 class="profile-section-title">Kullanıcı Bilgileri</h3>
-                    </div>
-                    
-                    <div class="profile-info-grid">
-                        <div class="profile-info-item">
-                            <div class="profile-info-label">
-                                <i class="fas fa-calendar-alt"></i>
-                                Katılma Tarihi
-                            </div>
-                            <div class="profile-info-value">Yükleniyor...</div>
-                        </div>
-                        
-                        <div class="profile-info-item">
-                            <div class="profile-info-label">
-                                <i class="fas fa-award"></i>
-                                Rozetler
-                            </div>
-                            <div class="profile-badges-container">
-                                <div class="profile-badge">
-                                    <i class="fas fa-user-alt"></i>
-                                    <span>Yeni Üye</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="profile-note-container">
-                        <textarea class="profile-note-textarea" placeholder="Bu kullanıcı hakkında kişisel not ekle..."></textarea>
-                    </div>
-                    
-                    <div class="profile-action-buttons">
-                        <button class="profile-action-btn message-btn">
-                            <i class="fas fa-comment"></i>
-                            Mesaj Gönder
-                        </button>
-                        
-                        <button class="profile-action-btn block-btn">
-                            <i class="fas fa-ban"></i>
-                            Engelle
-                        </button>
-                        
-                        <button class="profile-action-btn remove-btn">
-                            <i class="fas fa-user-times"></i>
-                            Arkadaşlıktan Çıkar
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="profile-section" id="mutual-servers-section">
-                    <div class="profile-section-header">
-                        <i class="fas fa-server"></i>
-                        <h3 class="profile-section-title">Ortak Sunucular</h3>
-                    </div>
-                    <div class="profile-info-value">Henüz ortak sunucu bulunmamaktadır.</div>
-                </div>
-                
-                <div class="profile-section" id="mutual-friends-section">
-                    <div class="profile-section-header">
-                        <i class="fas fa-users"></i>
-                        <h3 class="profile-section-title">Ortak Arkadaşlar</h3>
-                    </div>
-                    <div class="profile-info-value">Henüz ortak arkadaş bulunmamaktadır.</div>
-                </div>
-        </div>
-    `;
-
-        // Profil sekmeleri için event listener'ları ekle
-        setupProfileTabControls(profileContent);
-    } else {
-        // Eğer panel zaten oluşturulmuşsa, sadece içeriği güncelle
-        const profileUsernameElement = profileContent.querySelector('.profile-username');
-        const profileAvatarElement = profileContent.querySelector('.profile-avatar-large img');
-        const profileStatusIndicator = profileContent.querySelector('.profile-status-indicator');
-        const profileStatusText = profileContent.querySelector('.profile-status-text');
-
-        if (profileUsernameElement) profileUsernameElement.textContent = username;
-        if (profileAvatarElement) {
-            profileAvatarElement.src = avatar || defaultAvatar;
-            profileAvatarElement.onerror = () => {
-                profileAvatarElement.src = defaultAvatar;
-            };
-        }
-
-        // Çevrimiçi durumu güncelle
-        const isOnline = onlineFriends && onlineFriends.has(userId);
-        if (profileStatusIndicator) {
-            profileStatusIndicator.className = `profile-status-indicator ${isOnline ? 'online' : 'offline'}`;
-        }
-        if (profileStatusText) {
-            profileStatusText.innerHTML = `
-                <i class="fas fa-circle ${isOnline ? 'online' : 'offline'}"></i>
-                ${isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
-            `;
-        }
-    }
-
-    // Kullanıcı bilgilerini güncelle (gerektiğinde API'den yükle)
-    try {
-        console.log(`Profil bilgileri yükleniyor: ${userId}`);
-
-        // Katılma tarihini API'den al - sadece createdAt sütununu sorguluyoruz
-        const { data: userData, error } = await supabase
-            .from('users')
-            .select('createdAt') // Sadece createdAt sütununu sorgula
-            .eq('id', userId)
-            .maybeSingle();
-
-        console.log('Supabase yanıtı:', userData, error);
-
-        if (error) {
-            console.error('Kullanıcı bilgileri alınırken hata:', error);
-            return;
-        }
-
-        if (userData) {
-            const joinDateElement = profileContent.querySelector('#user-info-section .profile-info-item:nth-child(1) .profile-info-value');
-            console.log('DOM Element bulundu:', joinDateElement, 'createdAt değeri:', userData.createdAt);
-
-            if (joinDateElement && userData.createdAt) {
-                const joinDate = new Date(userData.createdAt);
-                console.log('Tarih nesnesi oluşturuldu:', joinDate);
-
-                joinDateElement.textContent = joinDate.toLocaleDateString('tr-TR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-                console.log('Tarih metni ayarlandı:', joinDateElement.textContent);
-            } else {
-                // Fallback olarak geçici tarih göster
-                if (joinDateElement) {
-                    joinDateElement.textContent = "Bilinmiyor";
-                    console.log('Tarih bilgisi bulunamadı, varsayılan değer kullanılıyor');
-                }
-            }
-
-            // Rozetler kısmını ekleyecek kod buraya gelecek (İleri aşamalarda implement edilecek)
-            // Şimdilik sadece "Yeni Üye" rozetini gösteriyoruz
-        } else {
-            console.warn(`${userId} için kullanıcı verisi bulunamadı`);
-            const joinDateElement = profileContent.querySelector('#user-info-section .profile-info-item:nth-child(1) .profile-info-value');
-            if (joinDateElement) {
-                joinDateElement.textContent = "Bilinmiyor";
-            }
-        }
-    } catch (error) {
-        console.error('Kullanıcı bilgileri yüklenirken hata:', error);
-        const joinDateElement = profileContent.querySelector('#user-info-section .profile-info-item:nth-child(1) .profile-info-value');
-        if (joinDateElement) {
-            joinDateElement.textContent = "Bilinmiyor";
-        }
-    }
-
-    // Profil panelinin kapatma butonuna tıklama eventi ekle
-    const closeBtn = profileContent.querySelector('.profile-close-btn');
-    if (closeBtn) {
-        // Eski event listener'ları temizle
-        const newCloseBtn = closeBtn.cloneNode(true);
-        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-
-        // Yeni event listener ekle
-        newCloseBtn.addEventListener('click', () => {
-            closeProfilePanel();
-        });
-    }
-
-    // Mesaj gönder butonuna tıklama eventi ekle
-    const messageBtn = profileContent.querySelector('.profile-action-btn.message-btn');
-    if (messageBtn) {
-        // Eski event listener'ları temizle
-        const newMessageBtn = messageBtn.cloneNode(true);
-        messageBtn.parentNode.replaceChild(newMessageBtn, messageBtn);
-
-        // Yeni event listener ekle
-        newMessageBtn.addEventListener('click', () => {
-            closeProfilePanel();
-            openChatPanel(userId, username, avatar);
-        });
-    }
-
-    // Arkadaşlıktan çıkar butonuna tıklama eventi ekle
-    const removeBtn = profileContent.querySelector('.profile-action-btn.remove-btn');
-    if (removeBtn) {
-        // Eski event listener'ları temizle
-        const newRemoveBtn = removeBtn.cloneNode(true);
-        removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
-
-        // Yeni event listener ekle
-        newRemoveBtn.addEventListener('click', () => {
-            closeProfilePanel();
-            showRemoveFriendConfirmation(userId, username, avatar);
-        });
-    }
-
-    // Click dışındaki alana tıklandığında profil panelini kapat
-    profilePanel.addEventListener('click', (e) => {
-        if (e.target === profilePanel) {
-            closeProfilePanel();
-        }
-    });
-
-    // Profil panelini göster
-    profilePanel.classList.add('show');
-
-    // ESC tuşuna basıldığında profil panelini kapat
-    const handleEscKey = (e) => {
-        if (e.key === 'Escape') {
-            closeProfilePanel();
-            document.removeEventListener('keydown', handleEscKey);
-        }
-    };
-    document.addEventListener('keydown', handleEscKey);
-}
-
-// Profil panelini kapatma
-function closeProfilePanel() {
-    const profilePanel = document.querySelector('.profile-panel');
-    if (profilePanel) {
-        // Kapanma animasyonu için closing sınıfını ekle
-        profilePanel.classList.add('closing');
-
-        // Animasyon tamamlandıktan sonra show sınıfını kaldır
-        setTimeout(() => {
-            profilePanel.classList.remove('show', 'closing');
-        }, 300); // 300ms animasyon süresi
-    }
-}
-
-// Profil paneli sekme kontrollerini ayarla
-function setupProfileTabControls(profileContent) {
-    const tabs = profileContent.querySelectorAll('.profile-tab');
-    const sections = profileContent.querySelectorAll('.profile-section');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Aktif sekmeyi değiştir
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            // İlgili içerik bölümünü göster
-            const targetTab = tab.dataset.tab;
-            sections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === `${targetTab}-section`) {
-                    section.classList.add('active');
-                }
-            });
-        });
-    });
-}
-
-// Uygulamanın başlatıldığı ana fonksiyon (DOMContentLoaded'da çağrılıyor)
-document.addEventListener('DOMContentLoaded', function () {
-    // ... existing code ...
-
-    // Sohbet panelindeki profil butonuna tıklanınca profil panelini açma
-    const chatHeaderProfileBtn = document.querySelector('.chat-panel .chat-header .profile-btn');
-    if (chatHeaderProfileBtn) {
-        chatHeaderProfileBtn.addEventListener('click', function () {
-            // Aktif sohbet kullanıcısının bilgilerini al
-            const userId = currentConversationId; // DM sisteminde conversationId genellikle karşı kullanıcının ID'si
-
-            // Chat header'dan kullanıcı bilgilerini al
-            const chatHeader = document.querySelector('.chat-panel .chat-header');
-            const username = chatHeader?.querySelector('.chat-username')?.textContent || 'Kullanıcı';
-            const avatarImg = chatHeader?.querySelector('.chat-avatar img');
-            const avatar = avatarImg ? avatarImg.src : defaultAvatar;
-
-            // Profil panelini aç
-            openProfilePanel(userId, username, avatar);
-        });
-    }
-
-    // ... existing code ...
-});
+// ... existing code ...
