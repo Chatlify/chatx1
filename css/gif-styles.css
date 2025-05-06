@@ -1,5 +1,214 @@
 /* GIF Mesajları için Özel Stiller */
 
+/* GIF Seçici Stilleri */
+.gif-picker-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gif-picker-container.show {
+    opacity: 1;
+}
+
+.gif-picker-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 480px;
+    height: auto;
+    max-height: 80vh;
+    background-color: var(--dm-bg);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.gif-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.gif-search-container {
+    display: flex;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.gif-search-input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid var(--divider-color);
+    background-color: var(--main-bg);
+    color: var(--text-color);
+    border-radius: var(--border-radius-md);
+    outline: none;
+    transition: border-color var(--animation-speed) ease;
+}
+
+.gif-search-button {
+    padding: 0 15px;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--animation-speed) ease;
+    margin-left: 8px;
+}
+
+.gif-search-button:hover {
+    background-color: var(--primary-light);
+}
+
+.gif-close-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 10px;
+}
+
+.gif-close-button:hover {
+    color: var(--text-color);
+}
+
+.gif-categories {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.gif-category {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    margin-right: 8px;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.gif-category:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.gif-category.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.gif-results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    position: relative;
+    min-height: 300px;
+    max-height: 50vh;
+}
+
+.gif-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.gif-item {
+    position: relative;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.05);
+    aspect-ratio: 1 / 1;
+}
+
+.gif-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.gif-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.gif-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(26, 32, 54, 0.8);
+    z-index: 2;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s linear infinite;
+}
+
+.gif-error,
+.no-results {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+}
+
+/* GIF Mesaj Stilleri */
+.message-content.gif-message {
+    padding: 0;
+    background-color: transparent;
+    max-width: 320px;
+    overflow: hidden;
+    border-radius: var(--border-radius-md);
+    margin-top: 5px;
+    position: relative;
+}
+
+.message-gif {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+}
+
 /* Yedek çözüm için stil */
 .message-status {
     display: block;

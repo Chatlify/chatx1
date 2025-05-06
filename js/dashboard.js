@@ -2254,3 +2254,226 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
 }
 
 // ... existing code ...
+
+// GIF seçici fonksiyonu tanımı
+function setupGifPicker(gifButton, textarea) {
+    // GIF modal oluşturma
+    const gifModalHtml = `
+        <div class="gif-picker-modal">
+            <div class="gif-picker-header">
+                <div class="gif-search-container">
+                    <input type="text" class="gif-search-input" placeholder="GIF ara...">
+                    <button class="gif-search-button"><i class="fas fa-search"></i></button>
+                </div>
+                <button class="gif-close-button"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="gif-categories">
+                <button class="gif-category active" data-category="trending">Trend</button>
+                <button class="gif-category" data-category="reactions">Tepkiler</button>
+                <button class="gif-category" data-category="memes">Meme</button>
+                <button class="gif-category" data-category="gaming">Oyun</button>
+                <button class="gif-category" data-category="anime">Anime</button>
+            </div>
+            <div class="gif-results">
+                <div class="gif-loading">
+                    <div class="spinner"></div>
+                </div>
+                <div class="gif-grid"></div>
+                <div class="gif-error" style="display: none;">
+                    GIF yüklenirken bir hata oluştu. Lütfen tekrar deneyin.
+                </div>
+            </div>
+        </div>
+    `;
+
+    // GIF modal elementini sayfaya ekle
+    const gifModalElement = document.createElement('div');
+    gifModalElement.innerHTML = gifModalHtml;
+    gifModalElement.classList.add('gif-picker-container');
+    document.body.appendChild(gifModalElement);
+
+    // Elemanları seç
+    const gifModal = document.querySelector('.gif-picker-container');
+    const gifSearchInput = document.querySelector('.gif-search-input');
+    const gifSearchButton = document.querySelector('.gif-search-button');
+    const gifCloseButton = document.querySelector('.gif-close-button');
+    const gifCategories = document.querySelectorAll('.gif-category');
+    const gifGrid = document.querySelector('.gif-grid');
+    const gifLoading = document.querySelector('.gif-loading');
+    const gifError = document.querySelector('.gif-error');
+
+    // GIF butonuna tıklama olayı
+    gifButton.addEventListener('click', () => {
+        showGifModal();
+        loadTrendingGifs();
+    });
+
+    // GIF arama
+    gifSearchButton.addEventListener('click', () => {
+        const searchTerm = gifSearchInput.value.trim();
+        if (searchTerm) {
+            searchGifs(searchTerm);
+        }
+    });
+
+    // Enter tuşuna basıldığında arama
+    gifSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const searchTerm = gifSearchInput.value.trim();
+            if (searchTerm) {
+                searchGifs(searchTerm);
+            }
+        }
+    });
+
+    // Kategoriye tıklama
+    gifCategories.forEach(category => {
+        category.addEventListener('click', () => {
+            // Aktif kategoriyi güncelle
+            gifCategories.forEach(cat => cat.classList.remove('active'));
+            category.classList.add('active');
+
+            // Kategori için GIF'leri yükle
+            const categoryName = category.getAttribute('data-category');
+            if (categoryName === 'trending') {
+                loadTrendingGifs();
+            } else {
+                searchGifs(categoryName);
+            }
+        });
+    });
+
+    // Kapatma düğmesi
+    gifCloseButton.addEventListener('click', hideGifModal);
+
+    // GIF modalını göster
+    function showGifModal() {
+        gifModal.style.display = 'block';
+        setTimeout(() => {
+            gifModal.classList.add('show');
+            // Modal dışına tıklama ile kapatma
+            document.addEventListener('click', handleOutsideClick);
+        }, 10);
+    }
+
+    // GIF modalını gizle
+    function hideGifModal() {
+        gifModal.classList.remove('show');
+        setTimeout(() => {
+            gifModal.style.display = 'none';
+            // Dışarı tıklama olayını kaldır
+            document.removeEventListener('click', handleOutsideClick);
+        }, 300);
+    }
+
+    // Dışarıya tıklama işlemi
+    function handleOutsideClick(e) {
+        if (gifModal.contains(e.target) || gifButton.contains(e.target)) {
+            return;
+        }
+        hideGifModal();
+    }
+
+    // Trend GIF'leri yükle
+    async function loadTrendingGifs() {
+        showLoadingState();
+        try {
+            const response = await fetch(`https://tenor.googleapis.com/v2/featured?key=${TENOR_API_KEY}&limit=20`);
+            const data = await response.json();
+            displayGifs(data.results);
+        } catch (error) {
+            console.error('Trend GIF yükleme hatası:', error);
+            showErrorState();
+        }
+    }
+
+    // GIF ara
+    async function searchGifs(query) {
+        showLoadingState();
+        try {
+            const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=20`);
+            const data = await response.json();
+            displayGifs(data.results);
+        } catch (error) {
+            console.error('GIF arama hatası:', error);
+            showErrorState();
+        }
+    }
+
+    // GIF'leri göster
+    function displayGifs(gifs) {
+        hideLoadingState();
+        hideErrorState();
+
+        if (!gifs || gifs.length === 0) {
+            gifGrid.innerHTML = '<div class="no-results">Hiçbir GIF bulunamadı.</div>';
+            return;
+        }
+
+        gifGrid.innerHTML = '';
+        gifs.forEach(gif => {
+            const gifItem = document.createElement('div');
+            gifItem.classList.add('gif-item');
+
+            // Ana görüntüyü al (tinyGif formatı)
+            const gifMedia = gif.media_formats.tinygif || gif.media_formats.gif;
+
+            if (gifMedia) {
+                const gifImg = document.createElement('img');
+                gifImg.src = gifMedia.url;
+                gifImg.alt = gif.title || 'GIF';
+                gifImg.loading = 'lazy';
+
+                gifItem.appendChild(gifImg);
+                gifGrid.appendChild(gifItem);
+
+                // GIF seçme olayı
+                gifItem.addEventListener('click', () => {
+                    selectGif(gif);
+                });
+            }
+        });
+    }
+
+    // GIF seçimi
+    function selectGif(gif) {
+        // Sohbet alanına GIF'i ekle
+        const gifUrl = gif.media_formats.gif.url;
+        const gifMessage = `[GIF: ${gif.title || 'Chatlify GIF'}](${gifUrl})`;
+
+        // Mevcut metni koru ve GIF referansını ekle
+        const currentText = textarea.value;
+        textarea.value = currentText ? `${currentText} ${gifMessage}` : gifMessage;
+
+        // Modalı kapat
+        hideGifModal();
+
+        // Textarea'ya odaklanma
+        textarea.focus();
+    }
+
+    // Yükleme durumunu göster
+    function showLoadingState() {
+        gifLoading.style.display = 'flex';
+        gifGrid.innerHTML = '';
+        gifError.style.display = 'none';
+    }
+
+    // Yükleme durumunu gizle
+    function hideLoadingState() {
+        gifLoading.style.display = 'none';
+    }
+
+    // Hata durumunu göster
+    function showErrorState() {
+        gifError.style.display = 'block';
+        gifGrid.innerHTML = '';
+    }
+
+    // Hata durumunu gizle
+    function hideErrorState() {
+        gifError.style.display = 'none';
+    }
+}
+
+// ... existing code ...
