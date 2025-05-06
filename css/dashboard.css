@@ -7970,3 +7970,68 @@ emoji-picker {
 }
 
 /* ... existing code ... */
+
+/* Modal'lar için büyüyerek açılma ve küçülerek kapanma animasyonları */
+@keyframes scaleIn {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+}
+
+/* Server Modal animasyonları */
+#server-modal .modal-container {
+    transform-origin: center;
+    animation: scaleIn 0.3s ease forwards;
+}
+
+#server-modal.closing .modal-container {
+    animation: scaleOut 0.3s ease forwards;
+}
+
+/* Arkadaş Ekle Modal animasyonları */
+#addFriendModal .modal-container {
+    transform-origin: center;
+    animation: scaleIn 0.3s ease forwards;
+}
+
+#addFriendModal.closing .modal-container {
+    animation: scaleOut 0.3s ease forwards;
+}
+
+/* Arkadaş Silme Modal animasyonları */
+#removeFriendModal .modal-container {
+    transform-origin: center;
+    animation: scaleIn 0.3s ease forwards;
+}
+
+#removeFriendModal.closing .modal-container {
+    animation: scaleOut 0.3s ease forwards;
+}
+
+/* Profil Paneli Animasyonları */
+.profile-panel .profile-panel-content {
+    transform-origin: center;
+    animation: scaleIn 0.3s ease forwards;
+}
+
+.profile-panel.closing .profile-panel-content {
+    animation: scaleOut 0.3s ease forwards;
+}

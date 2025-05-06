@@ -2211,26 +2211,23 @@ function hideModal(modalElement) {
     if (modalElement) {
         console.log('Modal kapatılıyor:', modalElement.id);
 
-        // Önce opacity'yi azalt (animasyon etkisi için)
-        modalElement.style.opacity = '0';
+        // Kapanma animasyonu için closing sınıfını ekle
+        modalElement.classList.add('closing');
 
         // Modal içeriği animasyonu
         const modalContainer = modalElement.querySelector('.modal-container');
-        if (modalContainer) {
-            modalContainer.style.transform = 'scale(0.95)';
-            modalContainer.style.opacity = '0';
-        }
 
         // Animasyon için zaman tanı
         setTimeout(() => {
+            modalElement.style.opacity = '0';
             modalElement.style.display = 'none';
-            modalElement.classList.remove('show-modal');
+            modalElement.classList.remove('show-modal', 'closing');
 
             // Modal içeriği animasyonu sıfırla
             if (modalContainer) {
                 modalContainer.classList.remove('show-modal');
             }
-        }, 300);
+        }, 300); // 300ms animasyon süresi
     }
 }
 
@@ -3184,7 +3181,13 @@ async function openProfilePanel(userId, username, avatar) {
 function closeProfilePanel() {
     const profilePanel = document.querySelector('.profile-panel');
     if (profilePanel) {
-        profilePanel.classList.remove('show');
+        // Kapanma animasyonu için closing sınıfını ekle
+        profilePanel.classList.add('closing');
+
+        // Animasyon tamamlandıktan sonra show sınıfını kaldır
+        setTimeout(() => {
+            profilePanel.classList.remove('show', 'closing');
+        }, 300); // 300ms animasyon süresi
     }
 }
 
@@ -3235,3 +3238,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ... existing code ...
 });
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    // Kapanma animasyonu için closing sınıfını ekle
+    modal.classList.add('closing');
+
+    // Animasyon tamamlandıktan sonra modalı gizle
+    setTimeout(() => {
+        modal.classList.remove('show-modal', 'closing');
+        modal.style.display = 'none';
+    }, 300); // 300ms animasyon süresi
+}
+
+// ... existing code ...
+
+// Server modal kapat fonksiyonu
+function closeServerModal() {
+    const modal = document.getElementById('server-modal');
+    if (!modal) return;
+
+    // Kapanma animasyonu için closing sınıfını ekle
+    modal.classList.add('closing');
+
+    // Animasyon tamamlandıktan sonra modalı gizle
+    setTimeout(() => {
+        modal.classList.remove('open', 'closing');
+        modal.style.display = 'none';
+    }, 300); // 300ms animasyon süresi
+}
+
+// ... existing code ...
+
+// Arkadaş silme modalını kapat
+function closeRemoveFriendModal() {
+    const modal = document.getElementById('removeFriendModal');
+    if (!modal) return;
+
+    // Kapanma animasyonu için closing sınıfını ekle
+    modal.classList.add('closing');
+
+    // Animasyon tamamlandıktan sonra modalı gizle
+    setTimeout(() => {
+        modal.classList.remove('show-modal', 'closing');
+        modal.style.display = 'none';
+    }, 300); // 300ms animasyon süresi
+}
+
+// ... existing code ...
