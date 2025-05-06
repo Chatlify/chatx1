@@ -2477,3 +2477,166 @@ function setupGifPicker(gifButton, textarea) {
 }
 
 // ... existing code ...
+
+/**
+ * Arkadaş Ekle modülünü kurar
+ */
+function setupAddFriendModal() {
+    const addFriendButton = document.getElementById('add-friend-button');
+    const addFriendModal = document.getElementById('addFriendModal');
+    const closeModalBtn = addFriendModal?.querySelector('.close-modal-btn');
+    const addFriendForm = document.getElementById('add-friend-form');
+    const usernameInput = document.getElementById('add-friend-username-input');
+    const messageArea = addFriendModal?.querySelector('.modal-message-area');
+
+    if (!addFriendButton || !addFriendModal || !closeModalBtn || !addFriendForm || !usernameInput || !messageArea) {
+        console.error('Arkadaş Ekle modalı için gerekli elementler bulunamadı');
+        return;
+    }
+
+    // Modalı açma fonksiyonu
+    function openAddFriendModal() {
+        addFriendModal.style.display = 'flex';
+        // Animasyon için zamanlama
+        setTimeout(() => {
+            addFriendModal.classList.add('open');
+            usernameInput.focus();
+        }, 10);
+    }
+
+    // Modalı kapatma fonksiyonu
+    function closeAddFriendModal() {
+        addFriendModal.classList.remove('open');
+        // Animasyon bittikten sonra display:none yap
+        setTimeout(() => {
+            addFriendModal.style.display = 'none';
+            // Formu sıfırla
+            addFriendForm.reset();
+            messageArea.style.display = 'none';
+            messageArea.className = 'modal-message-area';
+            messageArea.innerHTML = '';
+        }, 300);
+    }
+
+    // Arkadaşlık isteği gönderme fonksiyonu
+    async function sendFriendRequest(username) {
+        if (!username || username.length < 3) {
+            showMessage('Lütfen geçerli bir kullanıcı adı girin', 'error');
+            return;
+        }
+
+        try {
+            // Girilen kullanıcı adını ve mevcut kullanıcı ID'sini alıyoruz
+            const { data: targetUser, error: userError } = await supabase
+                .from('profiles')
+                .select('id, username')
+                .eq('username', username)
+                .single();
+
+            if (userError || !targetUser) {
+                showMessage(`${username} adlı kullanıcı bulunamadı`, 'error');
+                return;
+            }
+
+            // Kullanıcı kendine istek göndermeye çalışıyorsa
+            if (targetUser.id === currentUserId) {
+                showMessage('Kendinize arkadaşlık isteği gönderemezsiniz', 'error');
+                return;
+            }
+
+            // Zaten arkadaşlık durumu var mı kontrol et
+            const { data: existingFriendship, error: checkError } = await supabase
+                .from('friendships')
+                .select('*')
+                .or(`(user_id1.eq.${currentUserId},user_id2.eq.${targetUser.id}),(user_id1.eq.${targetUser.id},user_id2.eq.${currentUserId})`)
+                .single();
+
+            if (!checkError && existingFriendship) {
+                if (existingFriendship.status === 'accepted') {
+                    showMessage(`${username} zaten arkadaş listenizde`, 'error');
+                } else if (existingFriendship.status === 'pending') {
+                    if (existingFriendship.user_id1 === currentUserId) {
+                        showMessage(`${username} kullanıcısına zaten bir istek gönderdiniz`, 'error');
+                    } else {
+                        showMessage(`${username} size zaten bir arkadaşlık isteği göndermiş`, 'error');
+                    }
+                }
+                return;
+            }
+
+            // Yeni arkadaşlık isteği oluştur
+            const { data: newRequest, error: insertError } = await supabase
+                .from('friendships')
+                .insert({
+                    user_id1: currentUserId,
+                    user_id2: targetUser.id,
+                    status: 'pending',
+                    created_at: new Date()
+                })
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('Arkadaşlık isteği gönderme hatası:', insertError);
+                showMessage('Arkadaşlık isteği gönderilirken bir hata oluştu', 'error');
+                return;
+            }
+
+            showMessage(`${username} kullanıcısına arkadaşlık isteği gönderildi`, 'success');
+
+            // Form inputunu temizle ama modalı kapatma
+            usernameInput.value = '';
+
+        } catch (error) {
+            console.error('Arkadaşlık isteği hatası:', error);
+            showMessage('Bir hata oluştu, lütfen tekrar deneyin', 'error');
+        }
+    }
+
+    // Mesaj gösterme fonksiyonu
+    function showMessage(message, type = 'info') {
+        messageArea.innerHTML = message;
+        messageArea.className = 'modal-message-area ' + type;
+        messageArea.style.display = 'block';
+
+        // 5 saniye sonra mesajı kaldır (başarı mesajı ise)
+        if (type === 'success') {
+            setTimeout(() => {
+                messageArea.classList.add('fade-out');
+                setTimeout(() => {
+                    if (messageArea.classList.contains('fade-out')) {
+                        messageArea.style.display = 'none';
+                        messageArea.classList.remove('fade-out');
+                    }
+                }, 300);
+            }, 5000);
+        }
+    }
+
+    // Event Listeners
+    addFriendButton.addEventListener('click', openAddFriendModal);
+    closeModalBtn.addEventListener('click', closeAddFriendModal);
+
+    // Modal dışı tıklamada kapatma
+    addFriendModal.addEventListener('click', (e) => {
+        if (e.target === addFriendModal) {
+            closeAddFriendModal();
+        }
+    });
+
+    // Form gönderimini yakala
+    addFriendForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = usernameInput.value.trim();
+        sendFriendRequest(username);
+    });
+
+    // ESC tuşu ile kapatma
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addFriendModal.style.display === 'flex') {
+            closeAddFriendModal();
+        }
+    });
+}
+
+// ... existing code ...
