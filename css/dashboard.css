@@ -456,7 +456,6 @@
 .server-add-icon i {
     font-size: 20px;
     color: var(--success-color);
-    position: relative;
     transition: color 0.2s ease, transform 0.3s ease;
 }
 
@@ -466,7 +465,7 @@
 
 .server-item:hover .server-add-icon i {
     color: white;
-    animation: single-spin 0.5s ease forwards;
+    transform: rotate(45deg);
 }
 
 .server-item:hover .server-settings-icon i {
