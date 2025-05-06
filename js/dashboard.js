@@ -36,7 +36,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sponsorSidebar = document.querySelector('.sponsor-sidebar');
         const settingsButtonContainer = document.querySelector('.server-sidebar .server-item:has(.server-settings-icon)');
         const chatCloseBtn = chatPanel?.querySelector('.chat-close-btn');
-        const chatEmojiBtn = chatPanel?.querySelector('.emoji-btn');
+
+        // Emoji butonu seçimi güncellendi - .emoji-btn ile arama kaldırıldı
+        const chatEmojiBtn = document.querySelector('.chat-input-area .chat-attachment-btn:nth-child(2)');
+        if (chatEmojiBtn) {
+            // Emoji butonu bulunduğunda, içeriğini ve sınıfını güncelle
+            chatEmojiBtn.title = "Emoji ekle";
+            chatEmojiBtn.classList.add('emoji-btn');
+            chatEmojiBtn.innerHTML = '<i class="fas fa-smile"></i>';
+            console.log('Emoji butonu güncellendi ve hazır:', chatEmojiBtn);
+        } else {
+            console.warn('Emoji butonu bulunamadı, chat-attachment-btn olarak aranacak...');
+        }
 
         // Ekranda görülen "button.chat-attachment-btn" ID'li butonu seç
         const chatGifBtn = document.querySelector('button.chat-attachment-btn');
@@ -67,9 +78,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Mesaj göndermesi için gerekli dinleyicileri ekle
         setupMessageSending(chatTextarea);
 
-        // Emoji picker dinleyicisini kur
-        if (chatEmojiBtn && chatTextarea && emojiPicker) {
+        // Emoji picker dinleyicisini kur - chatEmojiBtn kullanımı değiştirildi
+        if (chatEmojiBtn && chatTextarea) {
+            console.log('Emoji picker hazırlanıyor...');
             setupEmojiPicker(chatEmojiBtn, chatTextarea, emojiPicker);
+        } else {
+            console.warn('Emoji picker kurulumu için gerekli elementler eksik:',
+                { chatEmojiBtn: !!chatEmojiBtn, chatTextarea: !!chatTextarea });
         }
 
         // GIF picker dinleyicisini kur
@@ -1884,7 +1899,7 @@ async function findOrCreateConversation(userId1, userId2) {
 
 // Eski emoji picker'ı kuran fonksiyon (kaldırılacak)
 function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
-    console.log('🔄 Emoji sistemi tamamen yenileniyor...');
+    console.log('🔄 Emoji sistemi başlatılıyor...', emojiButton);
 
     // Mevcut emoji panelini temizle
     const oldPanel = document.getElementById('emoji-panel');
@@ -1963,8 +1978,10 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
     if (messageInputContainer) {
         messageInputContainer.appendChild(emojiPanel);
         messageInputContainer.style.position = 'relative';
+        console.log('Emoji paneli eklendi:', messageInputContainer);
     } else {
         document.body.appendChild(emojiPanel);
+        console.log('Emoji paneli body\'ye eklendi, container bulunamadı');
     }
 
     // Emoji tab'larını oluştur
@@ -2092,7 +2109,7 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
         positionEmojiPanel();
 
         // Paneli göster
-        emojiPanel.style.display = 'block';
+        emojiPanel.style.display = 'flex';
         emojiButton.classList.add('active');
 
         // İlk sekmeyi aktif et
@@ -2101,8 +2118,7 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
             firstTab.click();
         }
 
-        // Input'a odaklan (isteğe bağlı)
-        // searchInput.focus();
+        console.log('📣 Emoji paneli gösteriliyor');
     }
 
     // Emoji paneli gizle fonksiyonu 
