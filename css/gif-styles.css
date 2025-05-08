@@ -24,12 +24,18 @@
     left: 50%;
     transform: translate(-50%, -50%);
     width: 90%;
-    max-width: 480px;
+    max-width: 520px;
+    /* Increased max-width */
     height: auto;
-    max-height: 80vh;
+    max-height: 85vh;
+    /* Increased max-height */
     background-color: var(--dm-bg);
-    border-radius: var(--border-radius-md);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    border-radius: var(--border-radius-lg);
+    /* Slightly larger radius */
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.35);
+    /* Enhanced shadow */
+    border: 1px solid var(--divider-color-light);
+    /* Added subtle border */
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -39,29 +45,48 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 15px;
+    padding: 16px 20px;
+    /* Increased padding */
     border-bottom: 1px solid var(--divider-color);
+}
+
+/* New style for the GIF picker title */
+.gif-picker-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-right: auto;
+    /* Pushes search and close button to the right */
 }
 
 .gif-search-container {
     display: flex;
     flex: 1;
-    margin-right: 10px;
+    /* margin-right: 10px; Removed, title will push it */
 }
 
 .gif-search-input {
     flex-grow: 1;
-    padding: 10px 15px;
+    padding: 12px 18px;
+    /* Increased padding */
     border: 1px solid var(--divider-color);
-    background-color: var(--main-bg);
+    background-color: var(--input-bg);
+    /* Use a specific input background */
     color: var(--text-color);
     border-radius: var(--border-radius-md);
     outline: none;
-    transition: border-color var(--animation-speed) ease;
+    transition: border-color var(--animation-speed) ease, box-shadow var(--animation-speed) ease;
+    font-size: 14px;
+}
+
+.gif-search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-translucent);
 }
 
 .gif-search-button {
-    padding: 0 15px;
+    padding: 0 18px;
+    /* Increased padding */
     border: none;
     background-color: var(--primary-color);
     color: white;
@@ -71,7 +96,10 @@
     align-items: center;
     justify-content: center;
     transition: background-color var(--animation-speed) ease;
-    margin-left: 8px;
+    margin-left: 10px;
+    /* Increased margin */
+    font-size: 16px;
+    /* Added font size for icon */
 }
 
 .gif-search-button:hover {
@@ -79,78 +107,126 @@
 }
 
 .gif-close-button {
-    background: none;
+    background: transparent;
+    /* Explicitly transparent */
     border: none;
     color: var(--text-secondary);
-    font-size: 16px;
+    font-size: 20px;
+    /* Increased size */
     cursor: pointer;
-    padding: 4px;
-    margin-left: 10px;
+    padding: 8px;
+    /* Increased padding for easier click */
+    margin-left: 12px;
+    /* Increased margin */
+    border-radius: 50%;
+    transition: color var(--animation-speed) ease, background-color var(--animation-speed) ease;
 }
 
 .gif-close-button:hover {
     color: var(--text-color);
+    background-color: var(--hover-bg);
+    /* Subtle background on hover */
 }
 
 .gif-categories {
     display: flex;
     overflow-x: auto;
-    padding: 10px 15px;
+    padding: 12px 20px;
+    /* Increased padding */
     border-bottom: 1px solid var(--divider-color);
+    background-color: var(--main-bg-darker);
+    /* Slightly different background for categories section */
 }
+
+/* Hide scrollbar for categories but keep scrollability */
+.gif-categories::-webkit-scrollbar {
+    display: none;
+}
+
+.gif-categories {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
 
 .gif-category {
     flex-shrink: 0;
-    background: none;
-    border: none;
+    background-color: var(--button-secondary-bg);
+    /* Use a button background */
+    border: 1px solid var(--button-secondary-border);
     color: var(--text-secondary);
-    padding: 8px 12px;
-    margin-right: 8px;
-    border-radius: var(--border-radius-md);
+    padding: 8px 16px;
+    /* Adjusted padding */
+    margin-right: 10px;
+    /* Increased margin */
+    border-radius: var(--border-radius-lg);
+    /* Larger radius */
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
+    /* Added font weight */
     transition: all 0.2s ease;
 }
 
 .gif-category:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--button-secondary-hover-bg);
+    border-color: var(--button-secondary-hover-border);
     color: var(--text-color);
 }
 
 .gif-category.active {
     background-color: var(--primary-color);
     color: white;
+    border-color: var(--primary-color);
 }
 
 .gif-results {
     flex: 1;
     overflow-y: auto;
-    padding: 15px;
+    padding: 20px;
+    /* Increased padding */
     position: relative;
     min-height: 300px;
-    max-height: 50vh;
+    /* Kept min-height */
+    max-height: calc(85vh - 150px);
+    /* Adjusted max-height based on other elements */
+    background-color: var(--main-bg);
+    /* Ensure results area has a background */
 }
 
 .gif-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    /* Slightly larger items */
+    gap: 12px;
+    /* Increased gap */
 }
 
 .gif-item {
     position: relative;
     cursor: pointer;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--border-radius-md);
+    /* Consistent radius */
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--surface-color);
+    /* Use a surface color */
     aspect-ratio: 1 / 1;
+    /* Maintained for now, can be revisited */
+    border: 1px solid transparent;
+    /* For hover effect */
 }
 
 .gif-item:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    z-index: 1;
+    transform: scale(1.08);
+    /* Slightly more pronounced hover */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+    /* Enhanced shadow */
+    z-index: 10;
+    /* Ensure it's above others */
+    border-color: var(--primary-color-translucent);
 }
 
 .gif-item img {

@@ -2466,12 +2466,13 @@ function setupGifPicker(gifButton, textarea) {
     const gifModalHtml = `
         <div class="gif-picker-modal">
             <div class="gif-picker-header">
-                    <div class="gif-search-container">
-                        <input type="text" class="gif-search-input" placeholder="GIF ara...">
+                <div class="gif-picker-title">GIF Seçin</div>
+                <div class="gif-search-container">
+                    <input type="text" class="gif-search-input" placeholder="GIF ara...">
                     <button class="gif-search-button"><i class="fas fa-search"></i></button>
-                    </div>
+                </div>
                 <button class="gif-close-button"><i class="fas fa-times"></i></button>
-                        </div>
+            </div>
             <div class="gif-categories">
                 <button class="gif-category active" data-category="trending">Trend</button>
                 <button class="gif-category" data-category="reactions">Tepkiler</button>
