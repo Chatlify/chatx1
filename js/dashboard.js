@@ -2554,7 +2554,7 @@ function setupGifPicker(gifButton, textarea) {
 
     // GIF modalını göster
     function showGifModal() {
-        gifModal.style.display = 'block';
+        gifModal.style.display = 'flex'; // Changed from 'block' to 'flex'
         setTimeout(() => {
             gifModal.classList.add('show');
             // Modal dışına tıklama ile kapatma
