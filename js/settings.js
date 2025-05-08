@@ -380,8 +380,446 @@ document.addEventListener('DOMContentLoaded', async () => {
     const settingsCategories = document.querySelectorAll('.settings-category');
     const settingsSections = document.querySelectorAll('.settings-section');
 
+    // Sayfa yüklendiğinde ayarlar bölümlerini oluştur
+    createSettingPanels();
+
+    // Sayfa yüklendiğinde varsayılan kategoriyi aktif et ve göster
+    function initializeSettingsPage() {
+        console.log('Ayarlar sayfası başlatılıyor...');
+
+        // Tüm ayar bölümlerini oluştur (eğer HTML'de yoklarsa)
+        createSettingPanels();
+
+        // İlk kategoriyi (Hesabım) aktif et
+        const defaultCategory = document.querySelector('.settings-category[data-target="account-settings"]');
+        if (defaultCategory) {
+            defaultCategory.classList.add('active');
+            console.log('Varsayılan kategori aktif edildi:', defaultCategory.getAttribute('data-target'));
+        } else {
+            console.error('Varsayılan kategori bulunamadı!');
+        }
+
+        // Hesap ayarları bölümünü göster, diğerlerini gizle
+        settingsSections.forEach(section => {
+            if (section.id === 'account-settings') {
+                section.classList.remove('hidden');
+                console.log('Gösterilen bölüm:', section.id);
+            } else {
+                section.classList.add('hidden');
+                console.log('Gizlenen bölüm:', section.id);
+            }
+        });
+
+        // CSS sınıflarını stillerde tanımla
+        addSettingStyles();
+
+        console.log('Mevcut ayar bölümleri:', [...settingsSections].map(s => s.id).join(', '));
+    }
+
+    // Eksik ayar bölümlerini oluştur
+    function createSettingPanels() {
+        console.log('Ayar bölümleri oluşturuluyor...');
+
+        // Tüm kategorileri al
+        const categories = document.querySelectorAll('.settings-category');
+        const settingsContent = document.querySelector('.settings-content');
+
+        if (!settingsContent) {
+            console.error('Ayarlar içerik alanı bulunamadı');
+            return;
+        }
+
+        // Tüm mevcut panelleri bul
+        const existingPanels = {};
+        document.querySelectorAll('.settings-section').forEach(panel => {
+            existingPanels[panel.id] = true;
+            console.log('Mevcut panel bulundu:', panel.id);
+        });
+
+        // Her kategori için panel oluştur
+        categories.forEach(category => {
+            // Çıkış kategorisini atla
+            if (category.querySelector('span').textContent === 'Çıkış Yap') {
+                return;
+            }
+
+            const categoryText = category.querySelector('span').textContent.trim();
+            const targetId = category.getAttribute('data-target');
+
+            // Panel ID'si belirle
+            const panelId = targetId || categoryText.toLowerCase().replace(/\s+/g, '-').replace(/[&]/g, '-and-') + '-settings';
+
+            // Panel zaten varsa oluşturma
+            if (existingPanels[panelId]) {
+                console.log('Panel zaten var, atlanıyor:', panelId);
+                return;
+            }
+
+            console.log('Yeni panel oluşturuluyor:', panelId, 'kategorisi için:', categoryText);
+
+            // Yeni panel içeriği oluştur (burada her panel için özel içerik eklenebilir)
+            let panelContent = '';
+
+            switch (categoryText) {
+                case 'Görünüm':
+                    panelContent = `
+                        <div class="settings-section-header">
+                            <h2>Görünüm</h2>
+                            <p>Arayüz görünümünü ve tema ayarlarınızı özelleştirin</p>
+                        </div>
+                        <div class="appearance-settings-content">
+                            <div class="appearance-section">
+                                <h3>Tema Seçimi</h3>
+                                <div class="theme-cards">
+                                    <div class="theme-card active">
+                                        <div class="theme-preview dark"></div>
+                                        <div class="theme-name">Koyu Tema</div>
+                                    </div>
+                                    <div class="theme-card">
+                                        <div class="theme-preview light"></div>
+                                        <div class="theme-name">Açık Tema</div>
+                                    </div>
+                                    <div class="theme-card">
+                                        <div class="theme-preview amoled"></div>
+                                        <div class="theme-name">AMOLED</div>
+                                    </div>
+                                    <div class="theme-card">
+                                        <div class="theme-preview custom"></div>
+                                        <div class="theme-name">Özel Tema</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="appearance-section">
+                                <h3>Renk Paleti</h3>
+                                <div class="color-palette">
+                                    <div class="color-item active" style="--accent-color: #7289da;"></div>
+                                    <div class="color-item" style="--accent-color: #43b581;"></div>
+                                    <div class="color-item" style="--accent-color: #faabdd;"></div>
+                                    <div class="color-item" style="--accent-color: #faa61a;"></div>
+                                    <div class="color-item" style="--accent-color: #ed4245;"></div>
+                                    <div class="color-item custom">+</div>
+                                </div>
+                            </div>
+                            
+                            <div class="appearance-option-group">
+                                <h3>Yazı Tipi</h3>
+                                <div class="setting-row">
+                                    <label for="fontSelect">Yazı Tipi Ailesi</label>
+                                    <select id="fontSelect" class="settings-select">
+                                        <option value="Poppins, sans-serif" selected>Poppins</option>
+                                        <option value="Roboto, sans-serif">Roboto</option>
+                                        <option value="Open Sans, sans-serif">Open Sans</option>
+                                        <option value="Montserrat, sans-serif">Montserrat</option>
+                                        <option value="Arial, sans-serif">Arial</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="appearance-option-group">
+                                <h3>Yazı Tipi Boyutu</h3>
+                                <div class="font-size-slider">
+                                    <span class="size-label">A</span>
+                                    <input type="range" id="fontSizeSlider" min="12" max="20" value="16">
+                                    <span class="size-label">A</span>
+                                </div>
+                            </div>
+                            
+                            <div class="appearance-option-group">
+                                <h3>Animasyonlar</h3>
+                                <div class="setting-row">
+                                    <div class="setting-label">Animasyonları Etkinleştir</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="appearance-option-group">
+                                <h3>Arka Plan</h3>
+                                <div class="setting-row">
+                                    <div class="setting-label">Arka Plan Animasyonu</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-form-actions">
+                                <button class="cancel-button">İptal</button>
+                                <button class="save-button">Değişiklikleri Kaydet</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'Bildirimler':
+                    panelContent = `
+                        <div class="settings-section-header">
+                            <h2>Bildirimler</h2>
+                            <p>Bildirim tercihlerinizi ve rahatsız etme modunu ayarlayın</p>
+                        </div>
+                        <div class="notification-settings-content">
+                            <div class="notification-option-group">
+                                <div class="notification-option">
+                                    <div class="option-title">Tüm Bildirimleri Etkinleştir</div>
+                                    <div class="option-description">Ana açma/kapama düğmesi</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="master-notification-toggle" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="notification-option">
+                                    <div class="option-title">Mesaj Bildirimleri</div>
+                                    <div class="option-description">Yeni mesaj aldığınızda bildirim alın</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="notification-option">
+                                    <div class="option-title">Ses Bildirimleri</div>
+                                    <div class="option-description">Yeni bildirimleriniz için ses çal</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="notification-option">
+                                    <div class="option-title">Masa üstü Bildirimleri</div>
+                                    <div class="option-description">Uygulama arka plandayken bildirim alın</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="notification-option">
+                                    <div class="option-title">E-posta Bildirimleri</div>
+                                    <div class="option-description">Önemli bildirimler için e-posta alın</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-option-group">
+                                <h3>Rahatsız Etmeyin Modu</h3>
+                                <div class="notification-option">
+                                    <div class="option-title">Rahatsız Etme Modu</div>
+                                    <div class="option-description">Belirtilen saatler arasında tüm bildirimleri sessize al</div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="dnd-toggle">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="dnd-times">
+                                    <div class="time-input">
+                                        <label>Başlangıç</label>
+                                        <input type="time" id="dnd-start-time" value="22:00" disabled>
+                                    </div>
+                                    <div class="time-input">
+                                        <label>Bitiş</label>
+                                        <input type="time" id="dnd-end-time" value="08:00" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-form-actions">
+                                <button class="cancel-button">İptal</button>
+                                <button class="save-button">Değişiklikleri Kaydet</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'Ses & Video':
+                    panelContent = `
+                        <div class="settings-section-header">
+                            <h2>Ses & Video</h2>
+                            <p>Ses ve video görüşmelerini özelleştirin</p>
+                        </div>
+                        <div class="audio-video-settings-content">
+                            <div class="device-settings">
+                                <h3>Cihaz Seçimi</h3>
+                                
+                                <div class="device-selector">
+                                    <label>Ses Çıkış Cihazı</label>
+                                    <select>
+                                        <option selected>Varsayılan - Hoparlör (Realtek HD Audio)</option>
+                                        <option>Kulaklık (Realtek HD Audio)</option>
+                                        <option>Bluetooth Kulaklık</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="device-selector">
+                                    <label>Mikrofon</label>
+                                    <select>
+                                        <option selected>Varsayılan - Mikrofon (Realtek HD Audio)</option>
+                                        <option>Harici Mikrofon (USB)</option>
+                                        <option>Bluetooth Mikrofon</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="device-selector">
+                                    <label>Kamera</label>
+                                    <select>
+                                        <option selected>Varsayılan - Dahili Kamera</option>
+                                        <option>USB Webcam</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="volume-settings">
+                                <h3>Ses Ayarları</h3>
+                                
+                                <div class="volume-slider">
+                                    <i class="fas fa-volume-up"></i>
+                                    <input type="range" id="output-volume" min="0" max="100" value="80">
+                                    <span class="volume-value">80%</span>
+                                </div>
+                                
+                                <div class="volume-slider">
+                                    <i class="fas fa-microphone-alt"></i>
+                                    <input type="range" id="input-volume" min="0" max="100" value="70">
+                                    <span class="volume-value">70%</span>
+                                </div>
+                                
+                                <div class="mic-test">
+                                    <button class="test-mic-btn">Mikrofonu Test Et</button>
+                                    <div class="mic-meter">
+                                        <div class="meter-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="video-settings">
+                                <h3>Kamera Ayarları</h3>
+                                
+                                <div class="video-preview">
+                                    <div class="video-placeholder">
+                                        <i class="fas fa-video-slash"></i>
+                                        <span>Kamera kapalı</span>
+                                    </div>
+                                    <div class="video-controls">
+                                        <button class="enable-video"><i class="fas fa-video"></i><span>Kamerayı Etkinleştir</span></button>
+                                        <button class="test-video" disabled><i class="fas fa-check-circle"></i><span>Test Et</span></button>
+                                    </div>
+                                </div>
+                                
+                                <div class="advanced-video-settings">
+                                    <h4>Gelişmiş Ayarlar</h4>
+                                    
+                                    <div class="advanced-option">
+                                        <div class="option-title">Oto Parlaklık</div>
+                                        <div class="option-description">Kamera parlaklığını otomatik ayarla</div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="advanced-option">
+                                        <div class="option-title">Düşük Işık Modu</div>
+                                        <div class="option-description">Düşük ışık koşullarında görüntüyü iyileştir</div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="advanced-option">
+                                        <div class="option-title">Arka Plan Bulanıklaştırma</div>
+                                        <div class="option-description">Video görüşmelerinde arka planı bulanıklaştır</div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-form-actions">
+                                <button class="cancel-button">İptal</button>
+                                <button class="save-button">Değişiklikleri Kaydet</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                default:
+                    // Varsayılan "Geliştirme aşamasında" içeriği
+                    panelContent = `
+                        <div class="settings-section-header">
+                            <h2>${categoryText}</h2>
+                            <p>Bu bölüm geliştirilme aşamasındadır</p>
+                        </div>
+                        <div class="settings-content-placeholder">
+                            <i class="fas fa-tools"></i>
+                            <h3>Yapım Aşamasında</h3>
+                            <p>Bu bölüm şu anda geliştiriliyor ve yakında kullanıma sunulacak.</p>
+                        </div>
+                    `;
+            }
+
+            // Yeni panel oluştur
+            const newPanel = document.createElement('div');
+            newPanel.id = panelId;
+            newPanel.className = 'settings-section hidden';
+            newPanel.innerHTML = panelContent;
+
+            // Paneli sayfaya ekle
+            settingsContent.appendChild(newPanel);
+            console.log('Yeni panel eklendi:', panelId);
+        });
+    }
+
+    // Eksik olabilecek CSS stillerini dinamik olarak ekleyen fonksiyon
+    function addSettingStyles() {
+        // Stil zaten eklenmişse tekrar ekleme
+        if (document.getElementById('setting-transition-styles')) return;
+
+        const styleElement = document.createElement('style');
+        styleElement.id = 'setting-transition-styles';
+        styleElement.textContent = `
+            .settings-section {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+            .settings-section.hidden {
+                display: none;
+                opacity: 0;
+            }
+            .settings-section.changing {
+                opacity: 0;
+            }
+            .settings-section.changing-in {
+                animation: fadeIn 0.3s ease forwards;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(styleElement);
+        console.log('Dinamik CSS stilleri eklendi');
+    }
+
+    // Sayfa yüklendiğinde ayarları başlat
+    initializeSettingsPage();
+
     settingsCategories.forEach(category => {
-        category.addEventListener('click', function () {
+        category.addEventListener('click', function (e) {
+            console.log('Kategori tıklandı:', category.querySelector('span').textContent);
+            console.log('Data-target değeri:', category.getAttribute('data-target'));
+
             // Çıkış Yap kategorisini özel olarak işle
             if (category.querySelector('span').textContent === 'Çıkış Yap') {
                 showNotification('Çıkış yapılıyor...', 'info');
@@ -392,101 +830,178 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Aktif kategoriyi güncelle
-            document.querySelector('.settings-category.active').classList.remove('active');
+            const previousActiveCategory = document.querySelector('.settings-category.active');
+            if (previousActiveCategory) {
+                previousActiveCategory.classList.remove('active');
+                console.log('Önceki aktif kategori:', previousActiveCategory.querySelector('span').textContent);
+            }
+
             category.classList.add('active');
+            console.log('Yeni aktif kategori:', category.querySelector('span').textContent);
 
             // Aktif bölümü belirle
-            let activeSection = null;
-            settingsSections.forEach(section => {
-                if (!section.classList.contains('hidden')) {
-                    activeSection = section;
-                }
-            });
+            const activeSection = [...settingsSections].find(section => !section.classList.contains('hidden'));
+            console.log('Şu anki aktif bölüm:', activeSection ? activeSection.id : 'Yok');
 
             // Tüm bölümleri gizlemeden önce çıkış animasyonu uygula
             if (activeSection) {
                 activeSection.classList.add('changing');
-                setTimeout(() => {
-                    // Tüm bölümleri gizle
-                    settingsSections.forEach(section => {
-                        section.classList.add('hidden');
-                        section.classList.remove('changing');
-                    });
+                console.log('Çıkış animasyonu uygulanıyor:', activeSection.id);
+            }
 
-                    // Data-target özelliğine göre ilgili bölümü göster
-                    const targetSection = category.getAttribute('data-target');
-                    if (targetSection) {
-                        const sectionElement = document.getElementById(targetSection);
-                        if (sectionElement) {
-                            sectionElement.classList.remove('hidden');
-                            sectionElement.classList.add('changing-in');
-                            setTimeout(() => {
-                                sectionElement.classList.remove('changing-in');
-                            }, 300);
-                            return;
+            // Data-target özelliğini al
+            const targetId = category.getAttribute('data-target');
+            console.log('Hedef bölüm ID:', targetId);
+
+            // Tüm bölümleri kontrol et
+            console.log('Mevcut tüm bölümler:');
+            settingsSections.forEach(section => {
+                console.log(`- ${section.id} (${section.classList.contains('hidden') ? 'gizli' : 'görünür'})`);
+            });
+
+            setTimeout(() => {
+                // Tüm bölümleri gizle
+                settingsSections.forEach(section => {
+                    section.classList.add('hidden');
+                    section.classList.remove('changing');
+                });
+                console.log('Tüm bölümler gizlendi');
+
+                // ID'ye göre doğrudan bölümü bul
+                let targetSection = document.getElementById(targetId);
+                console.log('Doğrudan ID araması sonucu:', targetSection ? targetSection.id : 'Bulunamadı');
+
+                // ID bulunamazsa, kategori adına göre bölüm eşleştirme yap
+                if (!targetSection) {
+                    const categoryText = category.querySelector('span').textContent.trim();
+                    console.log('ID bulunamadı, kategori adını kullanıyorum:', categoryText);
+
+                    // HTML ID'lerini kategori adlarına doğrudan eşleştirelim
+                    const categoryToId = {
+                        'Hesabım': 'account-settings',
+                        'Görünüm': 'appearance-settings',
+                        'Bildirimler': 'notification-settings',
+                        'Gizlilik & Güvenlik': 'privacy-settings',
+                        'Güvenlik': 'security-settings',
+                        'Ses & Video': 'audio-video-settings',
+                        'Klavye Kısayolları': 'keyboard-shortcuts-settings',
+                        'Dil & Bölge': 'language-region-settings',
+                        'Cihazlar': 'devices-settings',
+                        'Geliştirici': 'developer-settings'
+                    };
+
+                    // Eşleştirilmiş ID'yi al
+                    const mappedId = categoryToId[categoryText];
+                    console.log('Eşleştirme sonucu ID:', mappedId);
+
+                    if (mappedId) {
+                        targetSection = document.getElementById(mappedId);
+                        console.log('Eşleştirilmiş ID araması sonucu:', targetSection ? targetSection.id : 'Bulunamadı');
+                    }
+
+                    // Eşleştirme başarısızsa, switch-case'e geri dönelim
+                    if (!targetSection) {
+                        console.log('Eşleştirme başarısız, switch-case deneniyor');
+
+                        switch (categoryText) {
+                            case 'Hesabım':
+                                targetSection = document.getElementById('account-settings');
+                                break;
+                            case 'Görünüm':
+                                targetSection = document.getElementById('appearance-settings');
+                                break;
+                            case 'Bildirimler':
+                                targetSection = document.getElementById('notification-settings');
+                                break;
+                            case 'Gizlilik & Güvenlik':
+                                targetSection = document.getElementById('privacy-settings');
+                                break;
+                            case 'Güvenlik':
+                                targetSection = document.getElementById('security-settings');
+                                break;
+                            case 'Ses & Video':
+                                targetSection = document.getElementById('audio-video-settings');
+                                break;
+                            case 'Klavye Kısayolları':
+                                targetSection = document.getElementById('keyboard-shortcuts-settings');
+                                break;
+                            case 'Dil & Bölge':
+                                targetSection = document.getElementById('language-region-settings');
+                                break;
+                            case 'Cihazlar':
+                                targetSection = document.getElementById('devices-settings');
+                                break;
+                            case 'Geliştirici':
+                                targetSection = document.getElementById('developer-settings');
+                                break;
+                            default:
+                                // Varsayılan olarak hesap ayarlarını göster
+                                targetSection = document.getElementById('account-settings');
                         }
                     }
+                }
 
-                    // Kategori adına göre bölüm eşleştirme (data-target olmayan durumlar için)
-                    const categoryText = category.querySelector('span').textContent;
-                    let targetSectionElement;
-
-                    switch (categoryText) {
-                        case 'Hesabım':
-                            targetSectionElement = document.getElementById('account-settings');
-                            break;
-                        case 'Görünüm':
-                            targetSectionElement = document.getElementById('appearance-settings');
-                            break;
-                        case 'Dil & Bölge':
-                            targetSectionElement = document.getElementById('language-region-settings');
-                            break;
-                        default:
-                            // Henüz oluşturulmamış bölümler için 
-                            showNotification(`${categoryText} ayarları yakında eklenecek`, 'warning');
-                            targetSectionElement = document.getElementById('account-settings');
-                    }
-
-                    if (targetSectionElement) {
-                        targetSectionElement.classList.remove('hidden');
-                        targetSectionElement.classList.add('changing-in');
-                        setTimeout(() => {
-                            targetSectionElement.classList.remove('changing-in');
-                        }, 300);
-                    }
-                }, 200);
-            } else {
-                // Eğer hiçbir aktif bölüm yoksa, direkt yeni bölümü göster
-                // Data-target özelliğine göre ilgili bölümü göster
-                const targetSection = category.getAttribute('data-target');
+                // Hedef bölüm varsa göster
                 if (targetSection) {
-                    const sectionElement = document.getElementById(targetSection);
-                    if (sectionElement) {
-                        sectionElement.classList.remove('hidden');
-                        return;
-                    }
-                }
+                    console.log('Bölüm bulundu, gösteriliyor:', targetSection.id);
+                    targetSection.classList.remove('hidden');
+                    targetSection.classList.add('changing-in');
 
-                // Kategori adına göre bölüm eşleştirme (data-target olmayan durumlar için)
-                const categoryText = category.querySelector('span').textContent;
-                switch (categoryText) {
-                    case 'Hesabım':
-                        document.getElementById('account-settings').classList.remove('hidden');
-                        break;
-                    case 'Görünüm':
-                        document.getElementById('appearance-settings').classList.remove('hidden');
-                        break;
-                    case 'Dil & Bölge':
-                        document.getElementById('language-region-settings').classList.remove('hidden');
-                        break;
-                    default:
-                        // Henüz oluşturulmamış bölümler için 
-                        showNotification(`${categoryText} ayarları yakında eklenecek`, 'warning');
-                        document.getElementById('account-settings').classList.remove('hidden');
+                    setTimeout(() => {
+                        targetSection.classList.remove('changing-in');
+                        console.log('Giriş animasyonu tamamlandı');
+                    }, 300);
+                } else {
+                    console.warn(`${targetId || category.querySelector('span').textContent} için bölüm bulunamadı`);
+                    showNotification('Bu bölüm henüz mevcut değil', 'warning');
+
+                    // Eksik bölüm oluştur
+                    createMissingSection(targetId, category.querySelector('span').textContent);
                 }
-            }
+            }, 300);
         });
     });
+
+    // Eksik bölüm oluşturan fonksiyon
+    function createMissingSection(id, title) {
+        console.log('Eksik bölüm oluşturuluyor:', id);
+
+        // ID belirtilmemişse kategori adından oluştur
+        if (!id) {
+            id = title.toLowerCase().replace(/\s+/g, '-').replace(/[&]/g, '-and-') + '-settings';
+            console.log('Oluşturulan ID:', id);
+        }
+
+        // Mevcut bölüm zaten varsa tekrar oluşturma
+        if (document.getElementById(id)) {
+            console.log('Bu ID ile zaten bir bölüm var, gösteriliyor:', id);
+            document.getElementById(id).classList.remove('hidden');
+            return;
+        }
+
+        // Yeni bölüm oluştur
+        const newSection = document.createElement('div');
+        newSection.id = id;
+        newSection.className = 'settings-section';
+        newSection.innerHTML = `
+            <div class="settings-section-header">
+                <h2>${title}</h2>
+                <p>Bu bölüm geliştirilme aşamasındadır</p>
+            </div>
+            <div class="settings-content-placeholder">
+                <i class="fas fa-tools"></i>
+                <h3>Yapım Aşamasında</h3>
+                <p>Bu bölüm şu anda geliştiriliyor ve yakında kullanıma sunulacak.</p>
+            </div>
+        `;
+
+        // Yeni bölümü ekle
+        document.querySelector('.settings-content').appendChild(newSection);
+        console.log('Yeni bölüm oluşturuldu ve eklendi:', id);
+
+        // Bölümü göster
+        newSection.classList.remove('hidden');
+    }
 
     // Form alanlarına animasyon ekle
     const formElements = document.querySelectorAll('.settings-form-group input, .settings-form-group textarea, .settings-form-group select');
@@ -516,7 +1031,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const themeCards = document.querySelectorAll('.theme-card');
     themeCards.forEach(card => {
         card.addEventListener('click', function () {
-            document.querySelector('.theme-card.active').classList.remove('active');
+            const active = document.querySelector('.theme-card.active');
+            if (active) active.classList.remove('active');
             card.classList.add('active');
 
             const themeName = card.querySelector('.theme-name').textContent;
@@ -1216,5 +1732,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showNotification('Tüm diğer oturumlar başarıyla kapatıldı.', 'success');
             });
         }
+    }
+
+    // Bu fonksiyonlar çağrıldığında hata olmaması için boş tanımlamalar ekle
+    function initializeSettingsCategories() {
+        console.log('initializeSettingsCategories çağrıldı');
+    }
+    function initializeThemeCards() {
+        console.log('initializeThemeCards çağrıldı');
+    }
+    function initializeColorItems() {
+        console.log('initializeColorItems çağrıldı');
+    }
+    function initializeSaveButton() {
+        console.log('initializeSaveButton çağrıldı');
+    }
+    function initializeCancelButton() {
+        console.log('initializeCancelButton çağrıldı');
+    }
+    function initializeDangerButton() {
+        console.log('initializeDangerButton çağrıldı');
+    }
+    function initializeFontSizeSlider() {
+        console.log('initializeFontSizeSlider çağrıldı');
+    }
+    function initializeSearchInput() {
+        console.log('initializeSearchInput çağrıldı');
+    }
+    function initializeAnimationSettings() {
+        console.log('initializeAnimationSettings çağrıldı');
+    }
+    function initializeFontSelector() {
+        console.log('initializeFontSelector çağrıldı');
+    }
+    function initializePasswordSettings() {
+        console.log('initializePasswordSettings çağrıldı');
+    }
+    function initializeKeyboardShortcuts() {
+        console.log('initializeKeyboardShortcuts çağrıldı');
+    }
+    function initializeLanguageSettings() {
+        console.log('initializeLanguageSettings çağrıldı');
     }
 }); 

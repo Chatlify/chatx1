@@ -3973,6 +3973,219 @@
     color: var(--primary-color);
 }
 
+/* GIF Picker Modal Stilleri */
+.gif-modal-overlay {
+    background-color: rgba(0, 0, 0, 0.65);
+    /* Daha koyu overlay */
+    z-index: 10005;
+    /* Diğer modalların üzerinde, emoji picker'dan da yüksek */
+}
+
+.gif-picker-container {
+    width: 520px;
+    /* Genişlik */
+    max-width: 90vw;
+    height: 75vh;
+    /* Yükseklik */
+    max-height: 650px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--dm-bg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gif-picker-container .modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.gif-picker-container .modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.gif-picker-container .modal-content {
+    padding: 15px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.gif-search-container {
+    display: flex;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
+.gif-search-input {
+    flex-grow: 1;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color var(--animation-speed) ease, background-color var(--animation-speed) ease;
+}
+
+.gif-search-input:focus {
+    border-color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.gif-search-btn {
+    padding: 0 15px;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--animation-speed) ease;
+}
+
+.gif-search-btn:hover {
+    background-color: var(--primary-light);
+}
+
+.gif-categories {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+    /* Yatay scroll eklendi */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) rgba(0, 0, 0, 0.1);
+}
+
+.gif-categories::-webkit-scrollbar {
+    height: 4px;
+}
+
+.gif-categories::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 2px;
+}
+
+.gif-categories::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+.gif-category-btn {
+    padding: 7px 14px;
+    border: 1px solid transparent;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    border-radius: 15px;
+    /* Daha yuvarlak butonlar */
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    /* Kategori isimleri tek satırda kalsın */
+    transition: background-color var(--animation-speed) ease, color var(--animation-speed) ease, border-color var(--animation-speed) ease;
+}
+
+.gif-category-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-color);
+}
+
+.gif-category-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-light);
+    font-weight: 600;
+}
+
+.gif-results-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin: 0 -5px;
+    padding: 5px 5px 0;
+    /* Üstte biraz boşluk */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) rgba(0, 0, 0, 0.1);
+}
+
+.gif-results-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gif-results-container::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 3px;
+}
+
+.gif-results-container::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+.loading-placeholder,
+.error-placeholder,
+.empty-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 20px;
+}
+
+.loading-placeholder i,
+.error-placeholder i,
+.empty-placeholder i {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+    opacity: 0.7;
+}
+
+.gif-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    /* GIF'ler biraz daha büyük */
+    gap: 8px;
+    padding-bottom: 15px;
+}
+
+.gif-item {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: var(--border-radius-sm);
+    aspect-ratio: 1 / 1;
+    background-color: rgba(255, 255, 255, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid transparent;
+    /* Hover için border hazırlığı */
+}
+
+.gif-item:hover {
+    transform: scale(1.03);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.35);
+    border-color: rgba(var(--primary-color-rgb), 0.5);
+}
+
+.gif-item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 /* Bildirim Sistemi */
 .notification-container {
     position: fixed;
