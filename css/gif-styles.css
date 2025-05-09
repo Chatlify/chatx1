@@ -1,234 +1,194 @@
-/* GIF Mesajları için Özel Stiller */
-
-/* GIF Seçici Stilleri */
+/* GIF Panel Genel Stilleri */
 .gif-picker-container {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    bottom: 70px;
+    /* Mesaj giriş alanının biraz üstünde */
+    right: 20px;
+    /* Sağ kenara yakın */
+    width: 350px;
+    /* Daha kompakt bir genişlik */
+    height: 450px;
+    /* Yükseklik ayarı */
+    background-color: var(--main-bg-darker, #2f3136);
+    /* Koyu tema arkaplan */
+    border-radius: var(--border-radius-lg, 8px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    /* Daha belirgin gölge */
+    z-index: 10010;
+    /* Diğer elementlerin üzerinde */
     display: none;
-    /* Will be set to 'flex' by JS */
-    align-items: center;
-    /* Flexbox vertical centering */
-    justify-content: center;
-    /* Flexbox horizontal centering */
-    z-index: 10000;
+    /* Başlangıçta gizli */
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--divider-color-light, #3a3d42);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateY(20px) scale(0.95);
+    transition: opacity 0.25s ease-out, transform 0.25s ease-out;
 }
 
 .gif-picker-container.show {
-    opacity: 1;
-}
-
-.gif-picker-modal {
-    /* position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); Removed for Flexbox centering */
-    width: 90%;
-    max-width: 520px;
-    /* Increased max-width */
-    height: auto;
-    max-height: 85vh;
-    /* Increased max-height */
-    background-color: var(--dm-bg);
-    border-radius: var(--border-radius-lg);
-    /* Slightly larger radius */
-    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.35);
-    /* Enhanced shadow */
-    border: 1px solid var(--divider-color-light);
-    /* Added subtle border */
-    overflow: hidden;
     display: flex;
-    flex-direction: column;
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
+/* GIF Panel Başlığı */
 .gif-picker-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    /* Increased padding */
-    border-bottom: 1px solid var(--divider-color);
+    padding: 12px 15px;
+    background-color: var(--main-bg-light, #36393f);
+    /* Başlık için biraz daha açık arkaplan */
+    border-bottom: 1px solid var(--divider-color, #202225);
 }
 
-/* New style for the GIF picker title */
 .gif-picker-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-color);
-    margin-right: auto;
-    /* Pushes search and close button to the right */
-}
-
-.gif-search-container {
-    display: flex;
-    flex: 1;
-    /* margin-right: 10px; Removed, title will push it */
-}
-
-.gif-search-input {
-    flex-grow: 1;
-    padding: 12px 18px;
-    /* Increased padding */
-    border: 1px solid var(--divider-color);
-    background-color: var(--input-bg);
-    /* Use a specific input background */
-    color: var(--text-color);
-    border-radius: var(--border-radius-md);
-    outline: none;
-    transition: border-color var(--animation-speed) ease, box-shadow var(--animation-speed) ease;
-    font-size: 14px;
-}
-
-.gif-search-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color-translucent);
-}
-
-.gif-search-button {
-    padding: 0 18px;
-    /* Increased padding */
-    border: none;
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color var(--animation-speed) ease;
-    margin-left: 10px;
-    /* Increased margin */
     font-size: 16px;
-    /* Added font size for icon */
-}
-
-.gif-search-button:hover {
-    background-color: var(--primary-light);
+    font-weight: 600;
+    color: var(--text-color, #ffffff);
 }
 
 .gif-close-button {
     background: transparent;
-    /* Explicitly transparent */
     border: none;
-    color: var(--text-secondary);
-    font-size: 20px;
-    /* Increased size */
+    color: var(--text-secondary, #b9bbbe);
+    font-size: 18px;
     cursor: pointer;
-    padding: 8px;
-    /* Increased padding for easier click */
-    margin-left: 12px;
-    /* Increased margin */
+    padding: 5px;
     border-radius: 50%;
-    transition: color var(--animation-speed) ease, background-color var(--animation-speed) ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .gif-close-button:hover {
-    color: var(--text-color);
-    background-color: var(--hover-bg);
-    /* Subtle background on hover */
+    color: var(--text-color, #ffffff);
+    background-color: var(--hover-bg, #3a3d42);
 }
 
+/* Arama Çubuğu */
+.gif-search-container {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--divider-color, #202225);
+    display: flex;
+    /* İkonu input ile aynı hizada tutmak için */
+    align-items: center;
+    background-color: var(--main-bg-light, #36393f);
+}
+
+.gif-search-input {
+    flex-grow: 1;
+    padding: 10px 15px 10px 35px;
+    /* Sol padding ikona yer açmak için */
+    border: 1px solid var(--input-border, #202225);
+    background-color: var(--input-bg, #202225);
+    color: var(--text-color, #dcddde);
+    border-radius: var(--border-radius-md, 5px);
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gif-search-input:focus {
+    border-color: var(--primary-color, #7289da);
+    box-shadow: 0 0 0 1px var(--primary-color-translucent, rgba(114, 137, 218, 0.3));
+}
+
+.gif-search-container .fa-search {
+    position: absolute;
+    left: 28px;
+    /* Arama inputunun soluna göre ayarla */
+    color: var(--text-muted, #72767d);
+    font-size: 14px;
+}
+
+
+/* Kategoriler */
 .gif-categories {
     display: flex;
     overflow-x: auto;
-    padding: 12px 20px;
-    /* Increased padding */
-    border-bottom: 1px solid var(--divider-color);
-    background-color: var(--main-bg-darker);
-    /* Slightly different background for categories section */
+    padding: 8px 15px;
+    background-color: var(--main-bg-light, #36393f);
+    border-bottom: 1px solid var(--divider-color, #202225);
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb, #202225) var(--main-bg-light, #36393f);
 }
 
-/* Hide scrollbar for categories but keep scrollability */
 .gif-categories::-webkit-scrollbar {
-    display: none;
+    height: 6px;
 }
 
-.gif-categories {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+.gif-categories::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb, #202225);
+    border-radius: 3px;
 }
-
 
 .gif-category {
     flex-shrink: 0;
-    background-color: var(--button-secondary-bg);
-    /* Use a button background */
-    border: 1px solid var(--button-secondary-border);
-    color: var(--text-secondary);
-    padding: 8px 16px;
-    /* Adjusted padding */
-    margin-right: 10px;
-    /* Increased margin */
-    border-radius: var(--border-radius-lg);
-    /* Larger radius */
+    background-color: var(--button-secondary-bg, #4f545c);
+    color: var(--text-color, #dcddde);
+    padding: 6px 12px;
+    margin-right: 8px;
+    border-radius: var(--border-radius-md, 5px);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    /* Added font weight */
-    transition: all 0.2s ease;
+    border: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .gif-category:hover {
-    background-color: var(--button-secondary-hover-bg);
-    border-color: var(--button-secondary-hover-border);
-    color: var(--text-color);
+    background-color: var(--button-secondary-hover-bg, #5c616a);
 }
 
 .gif-category.active {
-    background-color: var(--primary-color);
+    background-color: var(--primary-color, #7289da);
     color: white;
-    border-color: var(--primary-color);
 }
 
+/* GIF Sonuç Alanı */
 .gif-results {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
-    /* Increased padding */
+    padding: 15px;
     position: relative;
-    min-height: 300px;
-    /* Kept min-height */
-    max-height: calc(85vh - 150px);
-    /* Adjusted max-height based on other elements */
-    background-color: var(--main-bg);
-    /* Ensure results area has a background */
+    background-color: var(--main-bg, #33363c);
+    /* Sonuçlar için ana arkaplan */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb, #202225) var(--main-bg, #33363c);
+}
+
+.gif-results::-webkit-scrollbar {
+    width: 8px;
+}
+
+.gif-results::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb, #202225);
+    border-radius: 4px;
 }
 
 .gif-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    /* Slightly larger items */
-    gap: 12px;
-    /* Increased gap */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    /* Daha küçük GIF önizlemeleri */
+    gap: 8px;
 }
 
 .gif-item {
     position: relative;
     cursor: pointer;
-    border-radius: var(--border-radius-md);
-    /* Consistent radius */
+    border-radius: var(--border-radius-sm, 4px);
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background-color: var(--surface-color);
-    /* Use a surface color */
+    background-color: var(--surface-color, #292b2f);
+    /* GIF arkaplanı */
     aspect-ratio: 1 / 1;
-    /* Maintained for now, can be revisited */
-    border: 1px solid transparent;
-    /* For hover effect */
+    /* Kare oranını koru */
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .gif-item:hover {
-    transform: scale(1.08);
-    /* Slightly more pronounced hover */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
-    /* Enhanced shadow */
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 10;
-    /* Ensure it's above others */
-    border-color: var(--primary-color-translucent);
 }
 
 .gif-item img {
@@ -236,46 +196,64 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    border-radius: var(--border-radius-sm, 4px);
 }
 
-.gif-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(26, 32, 54, 0.8);
-    z-index: 2;
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    border-top-color: var(--primary-color);
-    animation: spin 1s linear infinite;
-}
-
+/* Yükleniyor ve Hata Durumları */
+.gif-loading,
 .gif-error,
 .no-results {
-    color: var(--text-secondary);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-secondary, #b9bbbe);
     text-align: center;
     padding: 20px;
     font-size: 14px;
+    width: 100%;
 }
 
-/* GIF Mesaj Stilleri */
+.gif-loading {
+    display: flex;
+    /* Spinner'ı ortalamak için */
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* Spinner ve metin için */
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--primary-color-translucent, rgba(114, 137, 218, 0.2));
+    border-radius: 50%;
+    border-top-color: var(--primary-color, #7289da);
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 10px;
+    /* Metinle arasında boşluk */
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.gif-error p,
+.no-results p {
+    margin: 0;
+}
+
+/* Mesaj İçindeki GIF Stilleri (Mevcut kalsın, gerekirse ayarlanabilir) */
 .message-content.gif-message {
     padding: 0;
     background-color: transparent;
-    max-width: 320px;
+    max-width: 300px;
+    /* Biraz daha küçük */
     overflow: hidden;
-    border-radius: var(--border-radius-md);
-    margin-top: 5px;
+    border-radius: var(--border-radius-md, 5px);
+    margin-top: 4px;
     position: relative;
 }
 
@@ -283,26 +261,8 @@
     display: block;
     max-width: 100%;
     height: auto;
-    border-radius: var(--border-radius-md);
+    border-radius: var(--border-radius-md, 5px);
     cursor: pointer;
-}
-
-/* Yedek çözüm için stil */
-.message-status {
-    display: block;
-    font-size: 11px;
-    color: var(--text-muted);
-    padding: 4px 8px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-    text-align: center;
-}
-
-/* Yerel olarak gösterilen mesajlar */
-.message-group.local-message {
-    opacity: 0.9;
-}
-
-.message-group.local-message .message-content {
-    border: 1px dashed var(--text-muted);
+    border: 1px solid var(--divider-color-light, #3a3d42);
+    /* Hafif bir çerçeve */
 }

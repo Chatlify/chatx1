@@ -1644,15 +1644,19 @@ function displayMessage(message, authorName = null, authorAvatar = null, source 
     }
 
     // Kimin mesajı olduğunu ve gösterilecek bilgileri belirle
-    const isOwnMessage = senderId === currentUserId;
+    const isOwnMessage = senderId === currentUserId || source === 'local-sent'; // 'local-sent' kaynağını da kontrol et
     const displayName = isOwnMessage ? 'Sen' : (authorName || 'Kullanıcı');
     let displayAvatar = defaultAvatar;
 
     if (isOwnMessage) {
+        // Kendi mesajımızsa, alt paneldeki avatarı kullan
         const userAvatarElement = document.querySelector('.dm-footer .dm-user-avatar img');
-        if (userAvatarElement) displayAvatar = userAvatarElement.src;
+        if (userAvatarElement && userAvatarElement.src) {
+            displayAvatar = userAvatarElement.src;
+        }
     } else {
-        displayAvatar = authorAvatar || document.querySelector('.chat-avatar img')?.src || defaultAvatar;
+        // Başkasının mesajıysa, sağlanan avatarı veya sohbet başlığındaki avatarı kullan
+        displayAvatar = authorAvatar || document.querySelector('.chat-header .chat-avatar img')?.src || defaultAvatar;
     }
 
     // Mesaj öğesini oluştur
@@ -1722,78 +1726,84 @@ function setupMessageSending(chatTextarea) {
     newTextarea.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            sendMessage(newTextarea);
+            await sendTextMessageFromTextarea(newTextarea);
         }
     });
 
     // Gönder butonu için event listener
-    const sendButton = document.querySelector('.chat-textbox .send-message-btn');
+    const sendButton = document.querySelector('.chat-submit .chat-send-btn'); // Selector güncellendi
     if (sendButton) {
         const newSendButton = sendButton.cloneNode(true);
         if (sendButton.parentNode) {
             sendButton.parentNode.replaceChild(newSendButton, sendButton);
         }
 
-        newSendButton.addEventListener('click', () => {
-            sendMessage(newTextarea);
+        newSendButton.addEventListener('click', async () => {
+            await sendTextMessageFromTextarea(newTextarea);
         });
     }
 
-    // Mesaj gönderme yardımcı fonksiyonu
-    async function sendMessage(textarea) {
+    // Metin mesajını textarea'dan gönderme yardımcı fonksiyonu
+    async function sendTextMessageFromTextarea(textarea) {
         const messageText = textarea.value.trim();
-        if (!messageText || !currentConversationId) {
-            console.warn('Mesaj göndermek için içerik ve geçerli conversationId gerekli.');
-            return;
+        if (messageText) {
+            await sendMessage(messageText, 'text');
+            textarea.value = ''; // Textarea'yı temizle
+            textarea.style.height = 'auto'; // Yüksekliği sıfırla (eğer otomatik yükseklik ayarı varsa)
+        }
+    }
+}
+
+// Genel mesaj gönderme fonksiyonu (metin veya yapılandırılmış içerik için)
+async function sendMessage(content, contentType = 'text') {
+    if (!content || !currentConversationId) {
+        console.warn('Mesaj göndermek için içerik ve geçerli conversationId gerekli.');
+        return;
+    }
+
+    let messageContentString;
+    if (contentType === 'gif') {
+        // content: { type: 'gif', url: '...', title: '...' }
+        messageContentString = JSON.stringify(content);
+    } else {
+        messageContentString = content; // Düz metin
+    }
+
+    console.log(`Mesaj gönderiliyor (${contentType}): ${messageContentString} (ConversationID: ${currentConversationId}, SenderID: ${currentUserId})`);
+
+    try {
+        const messageData = {
+            content: messageContentString,
+            senderId: currentUserId,
+            conversationId: currentConversationId,
+        };
+
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([messageData])
+            .select(); // .select() ekledik ki dönen veriyi alabilelim
+
+        if (error) {
+            console.error('Mesaj eklenirken Supabase hatası:', error);
+            if (error.code === '23514') {
+                alert('Mesaj gönderilemedi. (Kural İhlali: ' + error.message + ')');
+            } else {
+                alert('Mesaj gönderilemedi. Lütfen tekrar deneyiniz.');
+            }
+            throw error;
         }
 
-        console.log(`Mesaj gönderiliyor: ${messageText} (ConversationID: ${currentConversationId}, SenderID: ${currentUserId})`);
-
-        try {
-            // Insert edilecek veriye conversationId'yi ekle
-            const messageData = {
-                content: messageText,
-                senderId: currentUserId,
-                conversationId: currentConversationId, // CHECK kuralı için eklendi
-                // receiverId'yi ayrıca göndermeye gerek yok, conversationId yeterli olabilir.
-                // Eğer tablo yapınızda receiverId zorunluysa, onu da ekleyebilirsiniz:
-                // receiverId: currentConversationId // Bu isimlendirme kafa karıştırıcı, 
-                // currentConversationId aslında diğer kullanıcının ID'si
-                // DM sisteminde conversationId'nin neyi temsil ettiğini netleştirmek iyi olur.
-            };
-
-            console.log('Eklenecek mesaj verisi:', messageData);
-
-            const { data, error } = await supabase
-                .from('messages')
-                .insert([messageData])
-                .select();
-
-            if (error) {
-                console.error('Mesaj eklenirken Supabase hatası:', error);
-                // Hata detayını kullanıcıya göstermeyi düşünebilirsiniz
-                if (error.code === '23514') { // Check constraint hatası
-                    alert('Mesaj gönderilemedi. (Kural İhlali: ' + error.message + ')');
-                } else {
-                    alert('Mesaj gönderilemedi. Lütfen tekrar deneyiniz.');
-                }
-                throw error; // Hatayı tekrar fırlatarak işlemi durdur
-            }
-
-            // Mesaj alanını temizle
-            textarea.value = '';
-
-            // Başarılı mesaj gönderildiyse ve veri döndüyse ekranda göster
-            if (data && data.length > 0) {
-                console.log('Mesaj başarıyla gönderildi:', data[0]);
-                displayMessage(data[0]); // displayGifMessage yerine displayMessage çağır
-            }
-
-        } catch (error) {
-            // Zaten yukarıda loglandı ve kullanıcıya alert gösterildi.
-            // Burada ek bir işlem yapmaya gerek yok.
-            // console.error('Mesaj gönderilirken genel hata:', error);
+        if (data && data.length > 0) {
+            console.log('Mesaj başarıyla gönderildi:', data[0]);
+            // Kendi gönderdiğimiz mesajı hemen göstermek için displayMessage'ı çağırıyoruz.
+            // 'Sen' ve 'local-sent' ile kendi avatarımızın doğru yüklenmesini sağlıyoruz.
+            const userAvatarElement = document.querySelector('.dm-footer .dm-user-avatar img');
+            const ownAvatar = userAvatarElement ? userAvatarElement.src : defaultAvatar;
+            displayMessage(data[0], 'Sen', ownAvatar, 'local-sent');
         }
+    } catch (error) {
+        console.error('Mesaj gönderilirken genel hata:', error);
+        // Hata zaten kullanıcıya gösterildi.
     }
 }
 
@@ -2642,20 +2652,29 @@ function setupGifPicker(gifButton, textarea) {
     }
 
     // GIF seçimi
-    function selectGif(gif) {
-        // Sohbet alanına GIF'i ekle
+    async function selectGif(gif) { // Fonksiyonu async yap
         const gifUrl = gif.media_formats.gif.url;
-        const gifMessage = `[GIF: ${gif.title || 'Chatlify GIF'}](${gifUrl})`;
+        const gifTitle = gif.content_description || gif.id; // Başlık yoksa ID kullan
 
-        // Mevcut metni koru ve GIF referansını ekle
-        const currentText = textarea.value;
-        textarea.value = currentText ? `${currentText} ${gifMessage}` : gifMessage;
+        // GIF mesajını JSON formatında hazırla
+        const gifData = {
+            type: 'gif',
+            url: gifUrl,
+            title: gifTitle
+        };
+
+        // sendMessage fonksiyonunu kullanarak GIF'i gönder
+        await sendMessage(gifData, 'gif');
 
         // Modalı kapat
         hideGifModal();
 
-        // Textarea'ya odaklanma
-        textarea.focus();
+        // Textarea'ya odaklanmaya gerek yok, mesaj gönderildi.
+        // Textarea'yı temizleyebiliriz (isteğe bağlı)
+        if (textarea) {
+            textarea.value = '';
+            textarea.style.height = 'auto';
+        }
     }
 
     // Yükleme durumunu göster
