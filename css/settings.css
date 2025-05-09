@@ -50,6 +50,13 @@
     --background: var(--main-bg);
     --bg-dark: var(--dm-bg);
     --bg-light: var(--server-bg);
+    --primary-color-translucent: rgba(var(--primary-color-rgb), 0.15);
+    /* Yeni değişken */
+    --background-modifier-hover-light: rgba(255, 255, 255, 0.1);
+    /* Yeni değişken */
+    --background-modifier-active-light: rgba(255, 255, 255, 0.15);
+    /* Yeni değişken */
+
 
     /* Animasyon süreleri */
     --anim-duration-fast: 0.25s;
@@ -163,35 +170,48 @@
 }
 
 .settings-search {
-    padding: 12px 16px;
+    padding: 15px;
+    /* Padding güncellendi */
     position: relative;
-    margin: 12px;
+    margin: 10px 15px;
+    /* Margin güncellendi */
 }
 
 .settings-search input {
     width: 100%;
-    height: 36px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: none;
+    height: 40px;
+    /* Yükseklik artırıldı */
+    background-color: var(--input-bg, rgba(255, 255, 255, 0.05));
+    /* Değişken kullanımı */
+    border: 1px solid transparent;
+    /* Odaklanma için border eklendi */
     border-radius: var(--input-border-radius);
-    padding: 0 36px 0 12px;
+    padding: 0 15px 0 40px;
+    /* Sol padding ikona yer açmak için artırıldı */
     font-size: 14px;
     color: var(--text-color);
     transition: all 0.2s ease;
 }
 
 .settings-search input:focus {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--background-modifier-hover-light);
+    /* Değişken kullanımı */
     outline: none;
+    border-color: var(--primary-color);
+    /* Odaklanınca border */
 }
 
 .settings-search i {
     position: absolute;
-    right: 28px;
+    left: 30px;
+    /* İkon sola alındı ve padding ile uyumlu hale getirildi */
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 15px;
+    /* İkon boyutu biraz artırıldı */
+    pointer-events: none;
+    /* İkonun tıklanmasını engelle */
 }
 
 .settings-categories {
@@ -285,11 +305,13 @@
 }
 
 .settings-category:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--background-modifier-hover-light);
+    /* Değişken kullanımı */
 }
 
 .settings-category.active {
-    background-color: rgba(95, 117, 252, 0.15);
+    background-color: var(--primary-color-translucent);
+    /* Değişken kullanımı */
     color: var(--primary-color);
 }
 
@@ -602,9 +624,11 @@
 .input-with-icon textarea {
     flex: 1;
     background: none;
+    /* Arkaplan şeffaf olmalı */
     border: none;
     color: var(--text-color);
-    padding: 12px 12px 12px 40px;
+    padding: 12px 14px 12px 10px;
+    /* İkon için sol padding azaltıldı, genel padding ayarlandı */
     font-size: 14px;
     width: 100%;
     outline: none;
@@ -612,9 +636,16 @@
 
 .input-with-icon i {
     position: absolute;
-    left: 15px;
+    /* İkonu input içinde konumlandırmak için */
+    left: 14px;
+    /* İkonun soldan boşluğu */
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--text-muted);
-    font-size: 16px;
+    font-size: 15px;
+    /* İkon boyutu */
+    pointer-events: none;
+    /* İkonun tıklanmasını engelle */
 }
 
 /* Toggle Switch */
