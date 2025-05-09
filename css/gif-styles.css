@@ -1,18 +1,17 @@
 /* GIF Panel Genel Stilleri */
 .gif-picker-container {
     position: fixed;
-    bottom: 70px;
-    /* Mesaj giriş alanının biraz üstünde */
-    right: 20px;
-    /* Sağ kenara yakın */
-    width: 350px;
-    /* Daha kompakt bir genişlik */
-    height: 450px;
-    /* Yükseklik ayarı */
+    top: 50%;
+    left: 50%;
+    width: 480px;
+    /* Genişlik artırıldı */
+    height: 550px;
+    /* Yükseklik artırıldı */
     background-color: var(--main-bg-darker, #2f3136);
     /* Koyu tema arkaplan */
     border-radius: var(--border-radius-lg, 8px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+    /* Gölge biraz daha belirgin */
     /* Daha belirgin gölge */
     z-index: 10010;
     /* Diğer elementlerin üzerinde */
@@ -22,14 +21,16 @@
     overflow: hidden;
     border: 1px solid var(--divider-color-light, #3a3d42);
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translate(-50%, -50%) scale(0.95);
+    /* Ortalamak için transform eklendi */
     transition: opacity 0.25s ease-out, transform 0.25s ease-out;
 }
 
 .gif-picker-container.show {
     display: flex;
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate(-50%, -50%) scale(1);
+    /* Ortalamak için transform eklendi */
 }
 
 /* GIF Panel Başlığı */
@@ -95,7 +96,8 @@
 
 .gif-search-container .fa-search {
     position: absolute;
-    left: 28px;
+    left: 30px;
+    /* Input padding'ine göre ayarlandı (15px padding + 15px ikon alanı) */
     /* Arama inputunun soluna göre ayarla */
     color: var(--text-muted, #72767d);
     font-size: 14px;
