@@ -35,6 +35,22 @@ const outgoingCallPanel = document.querySelector('.call-panel.outgoing-call');
 const incomingCallPanel = document.querySelector('.call-panel.incoming-call');
 const activeCallPanel = document.querySelector('.call-panel.active-call');
 
+// Ring sound variables
+let callRingSound = null;
+const RING_SOUND_PATH = 'sounds/callsound.mp3'; // User will create this file in sounds/
+
+// DOM Elements
+const outgoingCallUsername = outgoingCallPanel.querySelector('.call-username');
+const outgoingCallAvatar = outgoingCallPanel.querySelector('.call-avatar');
+const incomingCallUsername = incomingCallPanel.querySelector('.call-username');
+const incomingCallAvatar = incomingCallPanel.querySelector('.call-avatar');
+const incomingCallDeclineButton = document.getElementById('incoming-call-decline');
+const activeCallHangupButton = document.getElementById('active-call-hangup');
+const muteButton = document.getElementById('mute-call-btn');
+const callTimerDisplay = document.getElementById('call-timer');
+const localAudioVisualizer = document.getElementById('localAudioVisualizer');
+const remoteAudioVisualizer = document.getElementById('remoteAudioVisualizer');
+
 // Sesli arama sistemini başlatma
 export function initVoiceCallSystem() {
     console.log('📞 Sesli arama sistemi başlatılıyor...');
@@ -566,52 +582,28 @@ function toggleMute() {
 
 // Giden arama UI'ını göster
 function showOutgoingCallUI(username, avatar) {
-    console.log('📞 Giden arama paneli gösteriliyor...');
-
-    // Avatar ve kullanıcı adını ayarla
-    const callAvatar = outgoingCallPanel.querySelector('.call-avatar');
-    const callUsername = outgoingCallPanel.querySelector('.call-username');
-
-    if (callAvatar) callAvatar.src = avatar || 'images/DefaultAvatar.png';
-    if (callUsername) callUsername.textContent = `${username} aranıyor...`;
-
-    // Paneli göster
-    callPanelOverlay.style.display = 'flex';
+    console.log("Showing outgoing call UI for:", username);
+    outgoingCallUsername.textContent = username;
+    outgoingCallAvatar.src = avatar || 'assets/default-avatar.png';
+    callPanelOverlay.classList.add('active');
     outgoingCallPanel.style.display = 'flex';
     incomingCallPanel.style.display = 'none';
     activeCallPanel.style.display = 'none';
-
-    // Animasyon için gecikme
-    setTimeout(() => {
-        callPanelOverlay.classList.add('active');
-    }, 10);
+    currentCallType = 'outgoing';
+    playRingingSound();
 }
 
 // Gelen arama UI'ını göster
 function showIncomingCallUI(username, avatar) {
-    console.log('📞 Gelen arama paneli gösteriliyor...');
-
-    // Avatar ve kullanıcı adını ayarla
-    const callAvatar = incomingCallPanel.querySelector('.call-avatar');
-    const callUsername = incomingCallPanel.querySelector('.call-username');
-
-    if (callAvatar) callAvatar.src = avatar || 'images/DefaultAvatar.png';
-    if (callUsername) callUsername.textContent = `${username} arıyor...`;
-
-    // Bildirim sesi çal
-    ringtoneAudio.play().catch(e => console.warn('Ses çalınamadı:', e));
-    incomingCallPanel.dataset.ringtone = 'playing';
-
-    // Paneli göster
-    callPanelOverlay.style.display = 'flex';
-    incomingCallPanel.style.display = 'flex';
+    console.log("Showing incoming call UI from:", username);
+    incomingCallUsername.textContent = username;
+    incomingCallAvatar.src = avatar || 'assets/default-avatar.png';
+    callPanelOverlay.classList.add('active');
     outgoingCallPanel.style.display = 'none';
+    incomingCallPanel.style.display = 'flex';
     activeCallPanel.style.display = 'none';
-
-    // Animasyon için gecikme
-    setTimeout(() => {
-        callPanelOverlay.classList.add('active');
-    }, 10);
+    currentCallType = 'incoming';
+    playRingingSound();
 }
 
 // Aktif arama UI'ını göster
@@ -700,6 +692,7 @@ function hideAllCallPanels() {
     localAnalyserNode = null;
     remoteAnalyserNode = null;
     // AudioContext'i kapatma, diğer aramalar için kullanılabilir
+    stopRingingSound();
 }
 
 // Arama durumunu sıfırla
@@ -797,6 +790,33 @@ function drawVisualization(canvas, analyserNode, type) {
         }
     }
     draw();
+}
+
+// Ring sound functions
+function initRingSound() {
+    if (!callRingSound) {
+        try {
+            callRingSound = new Audio(RING_SOUND_PATH);
+            callRingSound.loop = true;
+        } catch (e) {
+            console.error("Failed to initialize ring sound:", e);
+            callRingSound = null; // Ensure it's null if initialization fails
+        }
+    }
+}
+
+function playRingingSound() {
+    initRingSound();
+    if (callRingSound && callRingSound.paused) {
+        callRingSound.play().catch(e => console.error("Error playing ringing sound:", e));
+    }
+}
+
+function stopRingingSound() {
+    if (callRingSound && !callRingSound.paused) {
+        callRingSound.pause();
+        callRingSound.currentTime = 0;
+    }
 }
 
 // Zil sesi için audio elementi
