@@ -18,7 +18,7 @@ let ringtoneAudio = null; // Zil sesi için ses nesnesi
 // Görselleştirici için global değişkenler
 let audioContext = null;
 let analyser = null;
-let visualizerFrameId = null;
+let visualizerAnimationId = null;
 let dataArray = null;
 
 // ICE sunucu yapılandırması - STUN sunucuları
@@ -100,7 +100,7 @@ function addVoiceCallStyles() {
             justify-content: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             transform: scale(0.9);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.2s ease; /* box-shadow geçişi eklendi */
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -118,7 +118,7 @@ function addVoiceCallStyles() {
             border: 3px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 16px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out; /* Görselleştirici için geçiş */
+            transition: box-shadow 0.1s ease-out, border-color 0.1s ease-out; /* Görselleştirici için geçişler */
         }
         
         .call-username {
@@ -211,6 +211,14 @@ function addVoiceCallStyles() {
         .incoming-call .call-avatar, .outgoing-call .call-avatar {
             animation: calling 1.5s infinite;
         }
+
+        /* Avatar görselleştirici için ek stil */
+        .call-avatar.speaking {
+            /* Konuşurken avatar çerçevesinin nasıl görüneceği burada belirlenecek, JS ile dinamik olarak */
+            /* Örn: box-shadow: 0 0 20px 5px #4CAF50; */
+            /* Örn: border-color: #4CAF50; */
+        }
+
     `;
 
     // Stil zaten varsa kaldır
@@ -597,99 +605,21 @@ function createPeerConnection() {
     // Uzak akış alındığında
     peerConnection.ontrack = (event) => {
         console.log('📞 Uzak ses akışı alındı:', event.streams[0]);
+
+        // Uzak sesi oynatmak için audio elementi oluştur
         const remoteAudio = document.createElement('audio');
         remoteAudio.id = 'remoteAudio';
         remoteAudio.autoplay = true;
         remoteAudio.srcObject = event.streams[0];
         document.body.appendChild(remoteAudio);
 
-        // Görselleştiriciyi başlat
+        // Ses görselleştiricisini başlat
         if (event.streams && event.streams[0]) {
-            setupVisualizer(event.streams[0]);
+            startVisualizer(event.streams[0]);
         }
     };
 
     return peerConnection;
-}
-
-// Görselleştiriciyi ayarlayan fonksiyon
-function setupVisualizer(stream) {
-    if (audioContext) { // Zaten varsa önce temizle
-        if (audioContext.state !== 'closed') {
-            audioContext.close().catch(e => console.warn('Eski AudioContext kapatılırken hata:', e));
-        }
-        audioContext = null;
-        analyser = null;
-        if (visualizerFrameId) {
-            cancelAnimationFrame(visualizerFrameId);
-            visualizerFrameId = null;
-        }
-    }
-
-    try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaStreamSource(stream);
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256; // Daha hızlı tepki için daha küçük FFT boyutu
-        const bufferLength = analyser.frequencyBinCount;
-        dataArray = new Uint8Array(bufferLength);
-        source.connect(analyser);
-
-        console.log('📞 Ses görselleştirici ayarlandı.');
-        drawVisualizerLoop(); // Görselleştirici döngüsünü başlat
-    } catch (e) {
-        console.error('📞 Ses görselleştirici ayarlanamadı:', e);
-    }
-}
-
-// Görselleştiriciyi çizen döngü
-function drawVisualizerLoop() {
-    if (!analyser || !isCallActive || !activeCallPanel || activeCallPanel.style.display === 'none') {
-        if (visualizerFrameId) {
-            cancelAnimationFrame(visualizerFrameId);
-            visualizerFrameId = null;
-        }
-        // Çağrı aktif değilse veya panel görünür değilse avatar stilini sıfırla
-        const avatar = activeCallPanel ? activeCallPanel.querySelector('.call-avatar') : null;
-        if (avatar) {
-            avatar.style.transform = 'scale(1)';
-            avatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)'; // Orijinal gölge
-        }
-        return;
-    }
-
-    visualizerFrameId = requestAnimationFrame(drawVisualizerLoop);
-    analyser.getByteFrequencyData(dataArray);
-
-    let sum = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-    }
-    const avg = dataArray.length > 0 ? sum / dataArray.length : 0;
-
-    const activeCallAvatar = activeCallPanel.querySelector('.call-avatar');
-    if (activeCallAvatar) {
-        const normalizedAvg = avg / 255; // 0-1 aralığına normalize et
-
-        // Ölçek efekti (hafif)
-        const scaleFactor = 1 + normalizedAvg * 0.05; // Maksimum %5 büyüme
-        activeCallAvatar.style.transform = `scale(${scaleFactor})`;
-
-        // "Çerçeve" için parlama efekti
-        const baseGlowIntensity = 0.05; // Ses algılandığında minimum parlama
-        const dynamicGlowIntensity = normalizedAvg * 0.65; // Sese göre ek parlama (maksimum 0.65)
-        const glowOpacity = Math.min(baseGlowIntensity + dynamicGlowIntensity, 0.7); // 0.7 ile sınırla
-
-        const glowSize = 5 + normalizedAvg * 20; // Parlama yayılımı 5px ile 25px arası
-
-        // Sadece ses yeterince güçlüyse aktif parlamayı uygula
-        if (avg > 10) { // Parlamayı aktifleştime eşiği (0-255 arası bir değer)
-            activeCallAvatar.style.boxShadow = `0 0 ${glowSize}px ${glowSize / 2}px rgba(76, 175, 80, ${glowOpacity})`;
-        } else {
-            // Dinlenme durumu gölgesi (orijinal)
-            activeCallAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-        }
-    }
 }
 
 // Gelen aramayı kabul et
@@ -758,23 +688,6 @@ function declineIncomingCall() {
         ringtoneAudio.currentTime = 0;
     }
 
-    // Görselleştiriciyi durdur ve sıfırla (eğer bir şekilde çalışıyorsa)
-    if (visualizerFrameId) {
-        cancelAnimationFrame(visualizerFrameId);
-        visualizerFrameId = null;
-    }
-    if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close().catch(e => console.warn('AudioContext kapatılırken hata (decline):', e));
-    }
-    audioContext = null;
-    analyser = null;
-    dataArray = null;
-    const avatar = activeCallPanel ? activeCallPanel.querySelector('.call-avatar') : null;
-    if (avatar) {
-        avatar.style.transform = 'scale(1)';
-        avatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-    }
-
     // Arayan tarafa reddetme sinyali gönder
     sendCallSignal({
         type: 'hangup',
@@ -784,37 +697,14 @@ function declineIncomingCall() {
     // UI'ı temizle
     hideAllCallPanels();
     resetCallState();
-
-    // Timer'ı durdur
-    if (callTimer) {
-        clearInterval(callTimer);
-        callTimer = null;
-    }
-
-    // Görselleştiriciyi durdur ve kaynakları serbest bırak
-    if (visualizerFrameId) {
-        cancelAnimationFrame(visualizerFrameId);
-        visualizerFrameId = null;
-    }
-    if (audioContext) {
-        if (audioContext.state !== 'closed') {
-            audioContext.close().catch(e => console.error("AudioContext kapatılırken hata (endCall):", e));
-        }
-        audioContext = null;
-        analyser = null;
-        dataArray = null;
-    }
-    // Avatar stilini son bir kez sıfırla
-    const activeCallAvatar = activeCallPanel.querySelector('.call-avatar');
-    if (activeCallAvatar) {
-        activeCallAvatar.style.transform = 'scale(1)';
-        activeCallAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-    }
 }
 
 // Aramayı sonlandır
 function endCall() {
     console.log('📞 Arama sonlandırılıyor...');
+
+    // Ses görselleştiricisini durdur
+    stopVisualizer();
 
     // Zil sesini durdur (giden veya gelen arama zil sesleri çalıyorsa)
     if (ringtoneAudio) {
@@ -857,26 +747,6 @@ function endCall() {
     if (callTimer) {
         clearInterval(callTimer);
         callTimer = null;
-    }
-
-    // Görselleştiriciyi durdur ve kaynakları serbest bırak
-    if (visualizerFrameId) {
-        cancelAnimationFrame(visualizerFrameId);
-        visualizerFrameId = null;
-    }
-    if (audioContext) {
-        if (audioContext.state !== 'closed') {
-            audioContext.close().catch(e => console.error("AudioContext kapatılırken hata (endCall):", e));
-        }
-        audioContext = null;
-        analyser = null;
-        dataArray = null;
-    }
-    // Avatar stilini son bir kez sıfırla
-    const activeCallAvatar = activeCallPanel.querySelector('.call-avatar');
-    if (activeCallAvatar) {
-        activeCallAvatar.style.transform = 'scale(1)';
-        activeCallAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
     }
 }
 
@@ -1022,6 +892,18 @@ function resetCallState() {
     isMuted = false;
     isInitiator = false;
     callDuration = 0;
+
+    // Görselleştirici ile ilgili değişkenleri de sıfırla
+    if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(e => console.warn('AudioContext kapatılırken hata:', e));
+    }
+    audioContext = null;
+    analyser = null;
+    if (visualizerAnimationId) {
+        cancelAnimationFrame(visualizerAnimationId);
+        visualizerAnimationId = null;
+    }
+    dataArray = null;
 }
 
 // Sesli arama için hata kontrolü
@@ -1032,4 +914,85 @@ export function checkVoiceCallSupport() {
     }
 
     return true;
+}
+
+// Ses görselleştiricisini başlat
+function startVisualizer(stream) {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+
+    analyser.fftSize = 256; // Daha az veri, daha iyi performans olabilir
+    const bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+
+    const visualizerAvatar = activeCallPanel.querySelector('.call-avatar');
+
+    function drawVisualizer() {
+        if (!isCallActive || !analyser) { // Sadece arama aktifken ve analizör varsa çalıştır
+            if (visualizerAvatar) {
+                visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)'; // Varsayılan gölge
+                visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)'; // Varsayılan çerçeve rengi
+            }
+            cancelAnimationFrame(visualizerAnimationId);
+            return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i];
+        }
+        let average = sum / bufferLength;
+
+        // Ortalama ses seviyesine göre çerçeve efektini ayarla
+        // Bu değerleri ve efektleri isteğinize göre ayarlayabilirsiniz
+        const intensity = Math.min(1, average / 100); // Yoğunluğu 0 ile 1 arasında sınırla
+
+        if (visualizerAvatar) {
+            if (average > 20) { // Belli bir eşiğin üzerindeyse efekt uygula
+                const glowSize = Math.min(20, 5 + intensity * 25); // Gölge boyutunu ayarla
+                const borderColorOpacity = 0.2 + intensity * 0.8; // Çerçeve opaklığını ayarla
+                visualizerAvatar.style.boxShadow = `0 0 ${glowSize}px ${glowSize / 3}px rgba(76, 175, 80, ${0.5 + intensity * 0.5})`; // Yeşilimsi bir parlama
+                visualizerAvatar.style.borderColor = `rgba(76, 175, 80, ${borderColorOpacity})`;
+            } else {
+                visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)'; // Varsayılan gölge
+                visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)'; // Varsayılan çerçeve rengi
+            }
+        }
+
+        visualizerAnimationId = requestAnimationFrame(drawVisualizer);
+    }
+
+    drawVisualizer();
+}
+
+// Ses görselleştiricisini durdur
+function stopVisualizer() {
+    if (visualizerAnimationId) {
+        cancelAnimationFrame(visualizerAnimationId);
+        visualizerAnimationId = null;
+    }
+    if (analyser) {
+        analyser.disconnect();
+        analyser = null;
+    }
+    if (audioContext && audioContext.state !== 'closed') {
+        // Kaynak düğümlerini ayır
+        // audioContext.close() hemen kapatır, bu da bazen hatalara yol açabilir.
+        // Burada kaynakların bağlantısını kesmek yeterli olabilir.
+    }
+    // dataArray'i sıfırla
+    dataArray = null;
+
+    const visualizerAvatar = activeCallPanel.querySelector('.call-avatar');
+    if (visualizerAvatar) {
+        visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+        visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+    }
+    console.log('📞 Ses görselleştiricisi durduruldu.');
 } 
