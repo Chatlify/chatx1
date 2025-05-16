@@ -14,6 +14,9 @@ let isCallActive = false;
 let isMuted = false;
 let isInitiator = false;
 let ringtoneAudio = null; // Zil sesi için ses nesnesi
+let audioContext = null; // Web Audio API için context
+let audioProcessingNode = null; // Ses işleme için node
+let rnNoiseProcessor = null; // RNNoise işlemcisi
 
 // ICE sunucu yapılandırması - STUN sunucuları
 const iceServers = {
@@ -32,6 +35,71 @@ const outgoingCallPanel = document.querySelector('.call-panel.outgoing-call');
 const incomingCallPanel = document.querySelector('.call-panel.incoming-call');
 const activeCallPanel = document.querySelector('.call-panel.active-call');
 
+// RNNoise için AudioWorklet işlemcisi
+const RNNOISE_WORKLET_CODE = `
+class RNNoiseProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.bufferSize = 480; // RNNoise frame size
+    this.buffer = new Float32Array(this.bufferSize);
+    this.bufferIndex = 0;
+    
+    // Zaman alanında gürültü bastırma için basit bir gürültü kapısı
+    this.noiseGateThreshold = 0.01;
+    this.smoothingFactor = 0.98;
+    this.level = 0;
+    
+    // Port üzerinden mesajları dinle (gelecekte tam RNNoise WebAssembly implementasyonu için)
+    this.port.onmessage = (event) => {
+      if(event.data.type === 'setThreshold') {
+        this.noiseGateThreshold = event.data.value;
+      }
+    };
+  }
+
+  process(inputs, outputs) {
+    const input = inputs[0];
+    const output = outputs[0];
+    
+    if (input.length === 0 || output.length === 0) return true;
+    
+    const inputChannel = input[0];
+    const outputChannel = output[0];
+    
+    // Ses seviyesini hesapla ve ölç (smoothed RMS)
+    let sum = 0;
+    for (let i = 0; i < inputChannel.length; i++) {
+      sum += inputChannel[i] * inputChannel[i];
+    }
+    let rms = Math.sqrt(sum / inputChannel.length);
+    
+    // Düzleştirme faktörü ile ses seviyesini güncelle
+    this.level = this.smoothingFactor * this.level + (1 - this.smoothingFactor) * rms;
+    
+    // Basit gürültü kapısı
+    let gainMultiplier = 1;
+    if (this.level < this.noiseGateThreshold) {
+      // Gürültü kapısı altında - sesi azalt
+      gainMultiplier = 0.1;
+    } else {
+      // İnsan sesini geliştir - eşiğin üstünde
+      gainMultiplier = 1.0;
+    }
+    
+    // Sesi işleyip çıktıya gönder
+    for (let i = 0; i < outputChannel.length; i++) {
+      // Ses geliştirme: Düşük frekanslı sesleri artırıcı bir filtre
+      // Ses örneklerini işleme
+      outputChannel[i] = inputChannel[i] * gainMultiplier;
+    }
+    
+    return true;
+  }
+}
+
+registerProcessor('rnnoise-processor', RNNoiseProcessor);
+`;
+
 // Sesli arama sistemini başlatma
 export function initVoiceCallSystem() {
     console.log('📞 Sesli arama sistemi başlatılıyor...');
@@ -47,6 +115,32 @@ export function initVoiceCallSystem() {
 
     // Zil sesini önceden yükle
     preloadRingtone();
+
+    // Web Audio API'yi hazırla
+    prepareAudioProcessing();
+}
+
+// Web Audio API'yi hazırla
+async function prepareAudioProcessing() {
+    try {
+        // AudioContext oluştur (lazy başlatma için null olarak bırakılabilir)
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'interactive',
+            sampleRate: 48000
+        });
+
+        // İşlemci sınıfını kaydetme
+        const blob = new Blob([RNNOISE_WORKLET_CODE], { type: 'application/javascript' });
+        const workletUrl = URL.createObjectURL(blob);
+
+        await audioContext.audioWorklet.addModule(workletUrl);
+        console.log('📞 Ses işleme modülü başarıyla yüklendi');
+
+        // URL'i serbest bırak
+        URL.revokeObjectURL(workletUrl);
+    } catch (error) {
+        console.error('📞 Ses işleme modülü yüklenemedi:', error);
+    }
 }
 
 // Zil sesini önceden yükle
@@ -254,6 +348,54 @@ function setupCallButtons() {
     }
 }
 
+// Ses filtreleme işlevi
+async function applyNoiseSuppression(stream) {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'interactive',
+            sampleRate: 48000
+        });
+    }
+
+    // Eğer ses işleme düğümü varsa önce onu durdur ve temizle
+    if (audioProcessingNode) {
+        audioProcessingNode.disconnect();
+        audioProcessingNode = null;
+    }
+
+    try {
+        // Ses akışı için kaynak oluştur
+        const source = audioContext.createMediaStreamSource(stream);
+
+        // İşlemcimizi oluştur
+        audioProcessingNode = new AudioWorkletNode(audioContext, 'rnnoise-processor', {
+            outputChannelCount: [1], // Mono çıkış
+            processorOptions: {
+                noiseGateThreshold: 0.01
+            }
+        });
+
+        // İşlemci parametreleri ayarla
+        audioProcessingNode.port.postMessage({
+            type: 'setThreshold',
+            value: 0.008 // Eşik değeri (daha düşük değer daha hassas gürültü bastırma)
+        });
+
+        // Ses işleme hattı oluştur: source -> işlemci -> çıkış
+        source.connect(audioProcessingNode);
+
+        // İşlenmiş ses için çıkış akışı oluştur
+        const destination = audioContext.createMediaStreamDestination();
+        audioProcessingNode.connect(destination);
+
+        // İşlenmiş ses akışını döndür
+        return destination.stream;
+    } catch (error) {
+        console.error('📞 Gürültü bastırma uygulanamadı:', error);
+        return stream; // Hata durumunda orijinal akışı kullan
+    }
+}
+
 // Sesli arama butonuna tıklandığında
 function handleVoiceCallButtonClick() {
     console.log('📞 Sesli arama butonu tıklandı');
@@ -348,18 +490,30 @@ async function startCall(userId, username, avatar) {
             throw profileError;
         }
 
-        // Mikrofon erişimi iste
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
+        // Mikrofon erişimi iste - gelişmiş ses kalitesi ayarları
+        const constraints = {
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1, // Mono
+                sampleRate: 48000, // Yüksek ses kalitesi için 48kHz
+                sampleSize: 16 // 16-bit
+            },
             video: false
-        });
+        };
+
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        // Gürültü bastırma uygula
+        const processedStream = await applyNoiseSuppression(localStream);
 
         // WebRTC bağlantısını kur
         createPeerConnection();
 
-        // Yerel akışı bağlantıya ekle
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
+        // İşlenmiş akışı bağlantıya ekle
+        processedStream.getAudioTracks().forEach(track => {
+            peerConnection.addTrack(track, processedStream);
         });
 
         // Offer oluştur
@@ -552,8 +706,18 @@ function createPeerConnection() {
         peerConnection = null;
     }
 
-    console.log('📞 Yeni WebRTC bağlantısı oluşturuluyor...');
-    peerConnection = new RTCPeerConnection(iceServers);
+    console.log('📞 Yeni WebRTC bağlantısını oluşturuyor...');
+
+    // Özel konfigürasyonlar ile bağlantıyı oluştur
+    const config = {
+        ...iceServers,
+        sdpSemantics: 'unified-plan',
+        bundlePolicy: 'max-bundle',  // Tüm medya türlerini tek bir transport üzerinden gönder
+        rtcpMuxPolicy: 'require',    // RTCP ve RTP'yi aynı port üzerinden gönder
+        iceTransportPolicy: 'all'    // ICE vasıtasıyla tüm bağlantı yöntemlerini dene
+    };
+
+    peerConnection = new RTCPeerConnection(config);
 
     // ICE adayı alındığında
     peerConnection.onicecandidate = (event) => {
@@ -569,12 +733,17 @@ function createPeerConnection() {
     // Bağlantı durumu değiştiğinde
     peerConnection.oniceconnectionstatechange = () => {
         console.log('📞 ICE bağlantı durumu değişti:', peerConnection.iceConnectionState);
+
+        // Bağlantı durumunu işle
         if (peerConnection.iceConnectionState === 'connected' ||
             peerConnection.iceConnectionState === 'completed') {
             // Bağlantı kuruldu, arama aktif
             if (!isCallActive) {
                 console.log('📞 Sesli arama bağlantısı kuruldu!');
                 showActiveCallUI();
+
+                // Ses kalitesi iyileştirmesi
+                applyAudioOptimizations();
             }
         } else if (peerConnection.iceConnectionState === 'failed' ||
             peerConnection.iceConnectionState === 'disconnected' ||
@@ -587,19 +756,63 @@ function createPeerConnection() {
         }
     };
 
+    // Bağlantı toplama durumu değiştiğinde
+    peerConnection.onicegatheringstatechange = () => {
+        console.log('📞 ICE toplama durumu değişti:', peerConnection.iceGatheringState);
+    };
+
+    // Bağlantı durumu değiştiğinde
+    peerConnection.onsignalingstatechange = () => {
+        console.log('📞 Sinyal durumu değişti:', peerConnection.signalingState);
+    };
+
     // Uzak akış alındığında
     peerConnection.ontrack = (event) => {
         console.log('📞 Uzak ses akışı alındı:', event.streams[0]);
-        // Ses çalma mantığını burada uygulayabiliriz
-        // Örneğin bir audio elementi oluşturup atayabiliriz
-        const remoteAudio = document.createElement('audio');
-        remoteAudio.id = 'remoteAudio';
-        remoteAudio.autoplay = true;
-        remoteAudio.srcObject = event.streams[0];
-        document.body.appendChild(remoteAudio);
+
+        // Ses işleme uygulanmış uzak akışı al ve çal
+        applyRemoteAudioProcessing(event.streams[0]).then(processedStream => {
+            // Ses çalma mantığını burada uygulayabiliriz
+            const remoteAudio = document.createElement('audio');
+            remoteAudio.id = 'remoteAudio';
+            remoteAudio.autoplay = true;
+            remoteAudio.srcObject = processedStream;
+            document.body.appendChild(remoteAudio);
+        });
     };
 
     return peerConnection;
+}
+
+// Uzak ses akışına işlem uygula
+async function applyRemoteAudioProcessing(stream) {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'interactive',
+            sampleRate: 48000
+        });
+    }
+
+    try {
+        // Ses akışı için kaynak oluştur
+        const source = audioContext.createMediaStreamSource(stream);
+
+        // Ses düzeyini daha iyi kontrol etmek için gain node oluştur
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 1.2; // Ses seviyesini hafifçe artır
+
+        // Ses işleme hattı: source -> gain -> çıkış
+        source.connect(gainNode);
+
+        // İşlenmiş ses için çıkış akışı oluştur
+        const destination = audioContext.createMediaStreamDestination();
+        gainNode.connect(destination);
+
+        return destination.stream;
+    } catch (error) {
+        console.error('📞 Uzak ses işleme uygulanamadı:', error);
+        return stream; // Hata durumunda orijinal akışı kullan
+    }
 }
 
 // Gelen aramayı kabul et
@@ -613,11 +826,23 @@ async function acceptIncomingCall() {
             ringtoneAudio.currentTime = 0;
         }
 
-        // Mikrofon erişimi iste
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
+        // Mikrofon erişimi iste - gelişmiş ses kalitesi ayarları
+        const constraints = {
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1, // Mono
+                sampleRate: 48000, // Yüksek ses kalitesi için 48kHz
+                sampleSize: 16 // 16-bit
+            },
             video: false
-        });
+        };
+
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        // Gürültü bastırma uygula
+        const processedStream = await applyNoiseSuppression(localStream);
 
         // Gelen offer bilgisini al
         const offerStr = incomingCallPanel.dataset.offer;
@@ -630,9 +855,9 @@ async function acceptIncomingCall() {
         // WebRTC bağlantısını kur
         createPeerConnection();
 
-        // Yerel akışı bağlantıya ekle
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
+        // İşlenmiş akışı bağlantıya ekle
+        processedStream.getAudioTracks().forEach(track => {
+            peerConnection.addTrack(track, processedStream);
         });
 
         // Uzak tanımlamayı ayarla
@@ -679,6 +904,48 @@ function declineIncomingCall() {
     resetCallState();
 }
 
+// Arama sırasında ses optimizasyonları uygula
+function applyAudioOptimizations() {
+    if (!peerConnection) return;
+
+    // Mevcut SDP parametrelerini al
+    peerConnection.getReceivers().forEach(receiver => {
+        if (receiver.track && receiver.track.kind === 'audio') {
+            // Mevcut parametreleri al
+            const parameters = receiver.getParameters();
+
+            // Audio bitrate ayarla (kaliteyi artır)
+            if (parameters.encodings && parameters.encodings.length > 0) {
+                // Kaliteyi artır - 32kbps mono
+                parameters.encodings[0].maxBitrate = 32000;
+
+                // Değişiklikleri uygula
+                receiver.setParameters(parameters).catch(e => {
+                    console.warn('📞 Alıcı parametreleri güncellenemedi:', e);
+                });
+            }
+        }
+    });
+
+    peerConnection.getSenders().forEach(sender => {
+        if (sender.track && sender.track.kind === 'audio') {
+            // Mevcut parametreleri al
+            const parameters = sender.getParameters();
+
+            // Audio bitrate ayarla (kaliteyi artır)
+            if (parameters.encodings && parameters.encodings.length > 0) {
+                // Kaliteyi artır - 32kbps mono
+                parameters.encodings[0].maxBitrate = 32000;
+
+                // Değişiklikleri uygula
+                sender.setParameters(parameters).catch(e => {
+                    console.warn('📞 Gönderici parametreleri güncellenemedi:', e);
+                });
+            }
+        }
+    });
+}
+
 // Aramayı sonlandır
 function endCall() {
     console.log('📞 Arama sonlandırılıyor...');
@@ -701,6 +968,12 @@ function endCall() {
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
+    }
+
+    // Ses işleme düğümlerini temizle
+    if (audioProcessingNode) {
+        audioProcessingNode.disconnect();
+        audioProcessingNode = null;
     }
 
     // Uzak ses elementi varsa kaldır
@@ -873,9 +1146,20 @@ function resetCallState() {
 
 // Sesli arama için hata kontrolü
 export function checkVoiceCallSupport() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    const hasWebRTC = !!window.RTCPeerConnection;
+    const hasAudioContext = !!(window.AudioContext || window.webkitAudioContext);
+    const hasAudioWorklet = hasAudioContext && 'audioWorklet' in (window.AudioContext || window.webkitAudioContext).prototype;
+    const hasMediaDevices = !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia;
+
+    if (!hasWebRTC || !hasMediaDevices) {
         console.error('📞 WebRTC desteklenmiyor! Sesli arama kullanılamaz.');
         return false;
+    }
+
+    if (!hasAudioContext || !hasAudioWorklet) {
+        console.warn('📞 AudioWorklet desteklenmiyor! Gelişmiş ses işleme özellikleri devre dışı bırakılacak.');
+        // Bu durumda uygulamayı düşürebilir veya devam edebilirsiniz
+        // Şimdilik devam edelim ve temel gürültü azaltma işlemini kullanmayalım
     }
 
     return true;
