@@ -496,34 +496,74 @@ async function startCall(userId, username, avatar) {
         // Mikrofon erişimi iste - gelişmiş ses kalitesi ayarları
         const constraints = {
             audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-                channelCount: 1, // Mono
-                sampleRate: 48000, // Yüksek ses kalitesi için 48kHz
-                sampleSize: 16 // 16-bit
+                echoCancellation: { ideal: true },
+                noiseSuppression: { ideal: true },
+                autoGainControl: { ideal: true },
+                channelCount: { ideal: 1 }, // Mono
+                sampleRate: { ideal: 48000 }, // Yüksek ses kalitesi
+                sampleSize: { ideal: 16 }  // 16-bit
             },
             video: false
         };
 
+        console.log('📞 Mikrofon erişimi isteniyor...');
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log('📞 Mikrofon erişimi sağlandı:', localStream.getAudioTracks());
 
-        // Gürültü bastırma uygula
+        // Mikrofon işleme için Web Audio API'yi kullan
         const processedStream = await applyNoiseSuppression(localStream);
+        console.log('📞 Ses işleme tamamlandı:', processedStream.getAudioTracks());
 
         // WebRTC bağlantısını kur
         createPeerConnection();
+        console.log('📞 WebRTC bağlantısı kuruldu');
 
-        // İşlenmiş akışı bağlantıya ekle
+        // SDP teklif oluşturma öncesi her iki ortam da eklensin
+        // Önce orijinal yerel akışı ekle (güvenilirlik için)
+        localStream.getAudioTracks().forEach(track => {
+            console.log('📞 Orijinal ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
+            peerConnection.addTrack(track, localStream);
+        });
+
+        // Sonra işlenmiş akışı ekle (kalite için)
         processedStream.getAudioTracks().forEach(track => {
+            console.log('📞 İşlenmiş ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
             peerConnection.addTrack(track, processedStream);
         });
 
-        // Offer oluştur
-        const offer = await peerConnection.createOffer();
+        // Ses gönderim kalitesini en baştan ayarla
+        peerConnection.getSenders().forEach(sender => {
+            if (sender.track && sender.track.kind === 'audio') {
+                // Parametreleri al
+                const params = sender.getParameters();
+                // Yeni değerler ayarla (en iyi ses kalitesi için)
+                if (params.encodings && params.encodings.length > 0) {
+                    params.encodings[0].maxBitrate = 48000; // 48 kbps
+                    params.encodings[0].priority = 'high';
+
+                    try {
+                        sender.setParameters(params);
+                    } catch (err) {
+                        console.warn('📞 Gönderici parametreleri ayarlanamadı:', err);
+                    }
+                }
+            }
+        });
+
+        // SDP teklifini oluştur
+        console.log('📞 Teklif oluşturuluyor...');
+        const offerOptions = {
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: false,
+            voiceActivityDetection: true
+        };
+
+        const offer = await peerConnection.createOffer(offerOptions);
+        console.log('📞 Yerel tanım ayarlanıyor:', offer);
         await peerConnection.setLocalDescription(offer);
 
         // Supabase üzerinden teklifi ilet
+        console.log('📞 Teklif karşı tarafa gönderiliyor...');
         await sendCallSignal({
             type: 'offer',
             offer: peerConnection.localDescription,
@@ -912,20 +952,23 @@ async function acceptIncomingCall() {
         // Mikrofon erişimi iste - gelişmiş ses kalitesi ayarları
         const constraints = {
             audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-                channelCount: 1, // Mono
-                sampleRate: 48000, // Yüksek ses kalitesi için 48kHz
-                sampleSize: 16 // 16-bit
+                echoCancellation: { ideal: true },
+                noiseSuppression: { ideal: true },
+                autoGainControl: { ideal: true },
+                channelCount: { ideal: 1 }, // Mono
+                sampleRate: { ideal: 48000 }, // Yüksek ses kalitesi
+                sampleSize: { ideal: 16 }  // 16-bit
             },
             video: false
         };
 
+        console.log('📞 Mikrofon erişimi isteniyor...');
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log('📞 Mikrofon erişimi sağlandı:', localStream.getAudioTracks());
 
-        // Gürültü bastırma uygula
+        // Mikrofon işleme için Web Audio API'yi kullan
         const processedStream = await applyNoiseSuppression(localStream);
+        console.log('📞 Ses işleme tamamlandı:', processedStream.getAudioTracks());
 
         // Gelen offer bilgisini al
         const offerStr = incomingCallPanel.dataset.offer;
@@ -937,20 +980,56 @@ async function acceptIncomingCall() {
 
         // WebRTC bağlantısını kur
         createPeerConnection();
+        console.log('📞 WebRTC bağlantısı kuruldu');
 
-        // İşlenmiş akışı bağlantıya ekle
+        // SDP teklif kabulü öncesi her iki ortam da eklensin
+        // Önce orijinal yerel akışı ekle (güvenilirlik için)
+        localStream.getAudioTracks().forEach(track => {
+            console.log('📞 Orijinal ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
+            peerConnection.addTrack(track, localStream);
+        });
+
+        // Sonra işlenmiş akışı ekle (kalite için)
         processedStream.getAudioTracks().forEach(track => {
+            console.log('📞 İşlenmiş ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
             peerConnection.addTrack(track, processedStream);
         });
 
+        // Ses gönderim kalitesini en baştan ayarla
+        peerConnection.getSenders().forEach(sender => {
+            if (sender.track && sender.track.kind === 'audio') {
+                // Parametreleri al
+                const params = sender.getParameters();
+                // Yeni değerler ayarla (en iyi ses kalitesi için)
+                if (params.encodings && params.encodings.length > 0) {
+                    params.encodings[0].maxBitrate = 48000; // 48 kbps
+                    params.encodings[0].priority = 'high';
+
+                    try {
+                        sender.setParameters(params);
+                    } catch (err) {
+                        console.warn('📞 Gönderici parametreleri ayarlanamadı:', err);
+                    }
+                }
+            }
+        });
+
         // Uzak tanımlamayı ayarla
+        console.log('📞 Gelen teklif ayarlanıyor:', offer);
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
         // Cevap oluştur
-        const answer = await peerConnection.createAnswer();
+        console.log('📞 Cevap oluşturuluyor...');
+        const answerOptions = {
+            voiceActivityDetection: true
+        };
+
+        const answer = await peerConnection.createAnswer(answerOptions);
+        console.log('📞 Yerel tanım ayarlanıyor:', answer);
         await peerConnection.setLocalDescription(answer);
 
         // Cevabı gönder
+        console.log('📞 Cevap karşı tarafa gönderiliyor...');
         await sendCallSignal({
             type: 'answer',
             answer: peerConnection.localDescription
@@ -991,42 +1070,57 @@ function declineIncomingCall() {
 function applyAudioOptimizations() {
     if (!peerConnection) return;
 
-    // Mevcut SDP parametrelerini al
-    peerConnection.getReceivers().forEach(receiver => {
-        if (receiver.track && receiver.track.kind === 'audio') {
-            // Mevcut parametreleri al
-            const parameters = receiver.getParameters();
-
-            // Audio bitrate ayarla (kaliteyi artır)
-            if (parameters.encodings && parameters.encodings.length > 0) {
-                // Kaliteyi artır - 32kbps mono
-                parameters.encodings[0].maxBitrate = 32000;
-
-                // Değişiklikleri uygula
-                receiver.setParameters(parameters).catch(e => {
-                    console.warn('📞 Alıcı parametreleri güncellenemedi:', e);
-                });
-            }
-        }
-    });
-
+    // Sadece göndericiler üzerinde parametreleri ayarla
     peerConnection.getSenders().forEach(sender => {
         if (sender.track && sender.track.kind === 'audio') {
-            // Mevcut parametreleri al
-            const parameters = sender.getParameters();
+            try {
+                // Mevcut parametreleri al
+                const parameters = sender.getParameters();
 
-            // Audio bitrate ayarla (kaliteyi artır)
-            if (parameters.encodings && parameters.encodings.length > 0) {
-                // Kaliteyi artır - 32kbps mono
-                parameters.encodings[0].maxBitrate = 32000;
+                // Audio bitrate ayarla (kaliteyi artır)
+                if (parameters.encodings && parameters.encodings.length > 0) {
+                    // Kaliteyi artır - 48kbps mono (daha yüksek kalite)
+                    parameters.encodings[0].maxBitrate = 48000;
+                    parameters.encodings[0].priority = 'high';
 
-                // Değişiklikleri uygula
-                sender.setParameters(parameters).catch(e => {
-                    console.warn('📞 Gönderici parametreleri güncellenemedi:', e);
-                });
+                    console.log('📞 Ses göndericisi parametreleri ayarlanıyor:', parameters);
+
+                    // Değişiklikleri uygula
+                    sender.setParameters(parameters).catch(e => {
+                        console.warn('📞 Gönderici parametreleri güncellenemedi:', e);
+                    });
+                }
+            } catch (error) {
+                console.warn('📞 Ses parametreleri ayarlanamadı:', error);
             }
         }
     });
+
+    // Ses kalitesini optimize etmek için yaptığımız diğer ayarlamalar
+    try {
+        // Stereo ve Echo Cancellation gibi ek özellikler
+        if (localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                const constraints = {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    channelCount: 1, // Mono ses
+                    sampleRate: 48000 // Yüksek kalite
+                };
+
+                // Ses özelliklerini ayarla (eğer tarayıcı destekliyorsa)
+                if (audioTrack.applyConstraints) {
+                    audioTrack.applyConstraints(constraints).catch(e => {
+                        console.warn('📞 Ses kısıtlamaları uygulanamadı:', e);
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        console.warn('📞 Ses kalitesi optimizasyonu yapılamadı:', error);
+    }
 }
 
 // Aramayı sonlandır
