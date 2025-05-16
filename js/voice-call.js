@@ -5,13 +5,6 @@ import { supabase } from './auth_config.js';
 // Global değişkenler
 let localStream = null;
 let peerConnection = null;
-let remoteStream = null;
-let callOfferSignal = null;
-let callInProgress = false;
-let currentCallTargetUserId = null;
-let currentCallTargetUsername = null;
-let currentCallTargetAvatar = null;
-let currentCallType = null;
 let callTimer = null;
 let callDuration = 0;
 let currentCallUserId = null;
@@ -20,10 +13,7 @@ let currentCallUserAvatar = null;
 let isCallActive = false;
 let isMuted = false;
 let isInitiator = false;
-let audioContext = null; // AudioContext'i global yap
-let localAnalyserNode = null;
-let remoteAnalyserNode = null;
-let visualizerAnimationId = null;
+let ringSound = null; // Arama sesi için değişken
 
 // ICE sunucu yapılandırması - STUN sunucuları
 const iceServers = {
@@ -42,25 +32,13 @@ const outgoingCallPanel = document.querySelector('.call-panel.outgoing-call');
 const incomingCallPanel = document.querySelector('.call-panel.incoming-call');
 const activeCallPanel = document.querySelector('.call-panel.active-call');
 
-// Ring sound variables
-let callRingSound = null;
-const RING_SOUND_PATH = 'sounds/callsound.mp3'; // User will create this file in sounds/
-
-// DOM Elements
-const outgoingCallUsername = outgoingCallPanel.querySelector('.call-username');
-const outgoingCallAvatar = outgoingCallPanel.querySelector('.call-avatar');
-const incomingCallUsername = incomingCallPanel.querySelector('.call-username');
-const incomingCallAvatar = incomingCallPanel.querySelector('.call-avatar');
-const incomingCallDeclineButton = document.getElementById('incoming-call-decline');
-const activeCallHangupButton = document.getElementById('active-call-hangup');
-const muteButton = document.getElementById('mute-call-btn');
-const callTimerDisplay = document.getElementById('call-timer');
-const localAudioVisualizer = document.getElementById('localAudioVisualizer');
-const remoteAudioVisualizer = document.getElementById('remoteAudioVisualizer');
-
 // Sesli arama sistemini başlatma
 export function initVoiceCallSystem() {
     console.log('📞 Sesli arama sistemi başlatılıyor...');
+    // Arama sesini yükle
+    ringSound = new Audio('sounds/callsound.mp3');
+    ringSound.loop = true; // Ses döngüye alınsın
+
     // Sesli arama butonlarını dinlemeye başla
     setupCallButtons();
     // Gelen aramaları dinlemeye başla
@@ -228,11 +206,15 @@ async function startCall(userId, username, avatar) {
             callType: 'voice'
         }, userId);
 
+        // Arama sesini çal
+        ringSound.play().catch(err => console.error('Arama sesi çalınamadı:', err));
+
         // Giden arama panelini göster
         showOutgoingCallUI(username, avatar);
 
     } catch (error) {
         console.error('📞 Arama başlatılırken hata oluştu:', error);
+        stopRingSound();
         endCall();
         alert('Arama başlatılamadı. Mikrofonunuza erişim izni olduğundan emin olun.');
     }
@@ -330,26 +312,31 @@ function handleCallSignal(payload) {
 
 // Gelen arama teklifi
 async function handleCallOffer(signal) {
-    // Zaten görüşme varsa reddedelim
-    if (isCallActive) {
-        sendCallSignal({
-            type: 'hangup',
-            reason: 'busy'
-        }, signal.from.userId);
-        return;
+    try {
+        console.log('📞 Gelen arama teklifi alındı:', signal);
+        const { from } = signal;
+
+        if (!from || !from.userId || !from.username) {
+            throw new Error('Geçersiz arama bilgileri');
+        }
+
+        // Arayan kullanıcı bilgilerini kaydet
+        currentCallUserId = from.userId;
+        currentCallUsername = from.username;
+        currentCallUserAvatar = from.avatar || 'images/DefaultAvatar.png';
+        isInitiator = false;
+
+        // Arama sesini çal
+        ringSound.play().catch(err => console.error('Arama sesi çalınamadı:', err));
+
+        // Gelen arama UI'ını göster
+        showIncomingCallUI(from.username, from.avatar);
+
+    } catch (error) {
+        console.error('📞 Arama teklifi işlenirken hata oluştu:', error);
+        stopRingSound();
+        endCall();
     }
-
-    currentCallUserId = signal.from.userId;
-    currentCallUsername = signal.from.username;
-    currentCallUserAvatar = signal.from.avatar;
-    isInitiator = false;
-
-    // Gelen arama panelini göster
-    showIncomingCallUI(signal.from.username, signal.from.avatar);
-
-    // Offer ve from bilgilerini geçici olarak saklayalım
-    incomingCallPanel.dataset.offer = JSON.stringify(signal.offer);
-    incomingCallPanel.dataset.fromUserId = signal.from.userId;
 }
 
 // Arama cevabı alındığında
@@ -392,9 +379,6 @@ function createPeerConnection() {
 
     console.log('📞 Yeni WebRTC bağlantısı oluşturuluyor...');
     peerConnection = new RTCPeerConnection(iceServers);
-    if (!audioContext) { // Sadece bir kere oluştur
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
 
     // ICE adayı alındığında
     peerConnection.onicecandidate = (event) => {
@@ -431,20 +415,13 @@ function createPeerConnection() {
     // Uzak akış alındığında
     peerConnection.ontrack = (event) => {
         console.log('📞 Uzak ses akışı alındı:', event.streams[0]);
+        // Ses çalma mantığını burada uygulayabiliriz
+        // Örneğin bir audio elementi oluşturup atayabiliriz
         const remoteAudio = document.createElement('audio');
         remoteAudio.id = 'remoteAudio';
         remoteAudio.autoplay = true;
         remoteAudio.srcObject = event.streams[0];
         document.body.appendChild(remoteAudio);
-
-        // Uzak akış için görselleştiriciyi ayarla (aktif arama panelindeki)
-        if (activeCallPanel && activeCallPanel.style.display === 'flex') {
-            const remoteVisualizerCanvas = activeCallPanel.querySelector('.voice-visualizer');
-            if (remoteVisualizerCanvas) {
-                remoteAnalyserNode = setupVisualizer(event.streams[0], remoteVisualizerCanvas, audioContext, 'remote');
-                drawVisualization(remoteVisualizerCanvas, remoteAnalyserNode, 'remote');
-            }
-        }
     };
 
     return peerConnection;
@@ -453,21 +430,16 @@ function createPeerConnection() {
 // Gelen aramayı kabul et
 async function acceptIncomingCall() {
     try {
-        console.log('📞 Gelen arama kabul ediliyor...');
+        console.log('📞 Arama kabul ediliyor...');
+
+        // Arama sesini durdur
+        stopRingSound();
 
         // Mikrofon erişimi iste
         localStream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: false
         });
-
-        // Gelen offer bilgisini al
-        const offerStr = incomingCallPanel.dataset.offer;
-        if (!offerStr) {
-            throw new Error('Offer bilgisi bulunamadı');
-        }
-
-        const offer = JSON.parse(offerStr);
 
         // WebRTC bağlantısını kur
         createPeerConnection();
@@ -477,24 +449,45 @@ async function acceptIncomingCall() {
             peerConnection.addTrack(track, localStream);
         });
 
-        // Uzak tanımlamayı ayarla
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        // Gelen teklifi ayarla
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.offer));
 
         // Cevap oluştur
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
-        // Cevabı gönder
+        // Supabase üzerinden cevabı ilet
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            throw new Error('Kullanıcı bilgileri alınamadı: ' + (userError?.message || 'Oturum bulunamadı'));
+        }
+
+        // Profil bilgilerini al
+        const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('username, avatar')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        // Cevap sinyalini gönder
         await sendCallSignal({
             type: 'answer',
-            answer: peerConnection.localDescription
+            answer: peerConnection.localDescription,
+            from: {
+                userId: user.id,
+                username: profile?.username || 'Anonim Kullanıcı',
+                avatar: profile?.avatar || 'images/DefaultAvatar.png'
+            }
         }, currentCallUserId);
 
-        // Arama UI'ını aktif hale getir
+        // Aktif arama panelini göster
+        isCallActive = true;
         showActiveCallUI();
 
     } catch (error) {
         console.error('📞 Arama kabul edilirken hata oluştu:', error);
+        stopRingSound();
         endCall();
         alert('Arama kabul edilemedi. Mikrofonunuza erişim izni olduğundan emin olun.');
     }
@@ -502,15 +495,20 @@ async function acceptIncomingCall() {
 
 // Gelen aramayı reddet
 function declineIncomingCall() {
-    console.log('📞 Gelen arama reddedildi.');
+    console.log('📞 Arama reddediliyor...');
 
-    // Arayan tarafa reddetme sinyali gönder
-    sendCallSignal({
-        type: 'hangup',
-        reason: 'rejected'
-    }, currentCallUserId);
+    // Arama sesini durdur
+    stopRingSound();
 
-    // UI'ı temizle
+    // Aramayı reddet sinyali gönder
+    if (currentCallUserId) {
+        sendCallSignal({
+            type: 'hangup',
+            reason: 'rejected'
+        }, currentCallUserId).catch(console.error);
+    }
+
+    // Arama panelini kapat
     hideAllCallPanels();
     resetCallState();
 }
@@ -519,42 +517,42 @@ function declineIncomingCall() {
 function endCall() {
     console.log('📞 Arama sonlandırılıyor...');
 
-    // Eğer aktif bir arama varsa, karşı tarafa bilgi ver
-    if (isCallActive && currentCallUserId) {
+    // Arama sesini durdur
+    stopRingSound();
+
+    // Karşı tarafa hangup sinyali gönder
+    if (currentCallUserId) {
         sendCallSignal({
             type: 'hangup',
             reason: 'ended'
-        }, currentCallUserId);
+        }, currentCallUserId).catch(console.error);
     }
 
-    // Ses akışını durdur
+    // Süreölçeri durdur
+    if (callTimer) {
+        clearInterval(callTimer);
+        callTimer = null;
+    }
+
+    // Arama bilgilerini sıfırla
+    hideAllCallPanels();
+
+    // Yerel medya akışını kapat
     if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
+        localStream.getTracks().forEach(track => {
+            track.stop();
+        });
         localStream = null;
     }
 
-    // Uzak ses elementi varsa kaldır
-    const remoteAudio = document.getElementById('remoteAudio');
-    if (remoteAudio) {
-        remoteAudio.srcObject = null;
-        remoteAudio.remove();
-    }
-
-    // WebRTC bağlantısını kapat
+    // Peer bağlantıyı kapat
     if (peerConnection) {
         peerConnection.close();
         peerConnection = null;
     }
 
-    // UI'ı temizle
-    hideAllCallPanels();
+    // Diğer durum bilgilerini sıfırla
     resetCallState();
-
-    // Timer'ı durdur
-    if (callTimer) {
-        clearInterval(callTimer);
-        callTimer = null;
-    }
 }
 
 // Mikrofonun sesini aç/kapat
@@ -589,28 +587,54 @@ function toggleMute() {
 
 // Giden arama UI'ını göster
 function showOutgoingCallUI(username, avatar) {
-    console.log("Showing outgoing call UI for:", username);
-    outgoingCallUsername.textContent = username;
-    outgoingCallAvatar.src = avatar || 'assets/default-avatar.png';
-    callPanelOverlay.classList.add('active');
+    console.log('📞 Giden arama paneli gösteriliyor...');
+
+    // Avatar ve kullanıcı adını ayarla
+    const callAvatar = outgoingCallPanel.querySelector('.call-avatar');
+    const callUsername = outgoingCallPanel.querySelector('.call-username');
+
+    if (callAvatar) callAvatar.src = avatar || 'images/DefaultAvatar.png';
+    if (callUsername) callUsername.textContent = `${username} aranıyor...`;
+
+    // Paneli göster
+    callPanelOverlay.style.display = 'flex';
     outgoingCallPanel.style.display = 'flex';
     incomingCallPanel.style.display = 'none';
     activeCallPanel.style.display = 'none';
-    currentCallType = 'outgoing';
-    playRingingSound();
+
+    // Animasyon için gecikme
+    setTimeout(() => {
+        callPanelOverlay.classList.add('active');
+    }, 10);
 }
 
 // Gelen arama UI'ını göster
 function showIncomingCallUI(username, avatar) {
-    console.log("Showing incoming call UI from:", username);
-    incomingCallUsername.textContent = username;
-    incomingCallAvatar.src = avatar || 'assets/default-avatar.png';
-    callPanelOverlay.classList.add('active');
-    outgoingCallPanel.style.display = 'none';
+    console.log('📞 Gelen arama paneli gösteriliyor...');
+
+    // Avatar ve kullanıcı adını ayarla
+    const callAvatar = incomingCallPanel.querySelector('.call-avatar');
+    const callUsername = incomingCallPanel.querySelector('.call-username');
+
+    if (callAvatar) callAvatar.src = avatar || 'images/DefaultAvatar.png';
+    if (callUsername) callUsername.textContent = `${username} arıyor...`;
+
+    // Bildirim sesi çalabiliriz
+    const ringtone = new Audio('sounds/ringtone.mp3');
+    ringtone.loop = true;
+    ringtone.play().catch(e => console.warn('Ses çalınamadı:', e));
+    incomingCallPanel.dataset.ringtone = 'playing';
+
+    // Paneli göster
+    callPanelOverlay.style.display = 'flex';
     incomingCallPanel.style.display = 'flex';
+    outgoingCallPanel.style.display = 'none';
     activeCallPanel.style.display = 'none';
-    currentCallType = 'incoming';
-    playRingingSound();
+
+    // Animasyon için gecikme
+    setTimeout(() => {
+        callPanelOverlay.classList.add('active');
+    }, 10);
 }
 
 // Aktif arama UI'ını göster
@@ -619,21 +643,17 @@ function showActiveCallUI() {
 
     // Eğer çalan bir zil sesi varsa durdur
     if (incomingCallPanel.dataset.ringtone === 'playing') {
-        const ringtoneAudio = document.querySelector('#ringtoneAudio');
-        if (ringtoneAudio) {
-            ringtoneAudio.pause();
-            ringtoneAudio.currentTime = 0;
-        }
+        const ringtone = new Audio();
+        ringtone.pause();
         incomingCallPanel.dataset.ringtone = '';
     }
 
     // Avatar ve kullanıcı adını ayarla
-    const callAvatarElement = activeCallPanel.querySelector('.call-avatar');
-    const callUsernameElement = activeCallPanel.querySelector('.call-username');
-    const visualizerCanvas = activeCallPanel.querySelector('.voice-visualizer'); // Canvas'ı seç
+    const callAvatar = activeCallPanel.querySelector('.call-avatar');
+    const callUsername = activeCallPanel.querySelector('.call-username');
 
-    if (callAvatarElement) callAvatarElement.src = currentCallUserAvatar || 'images/DefaultAvatar.png';
-    if (callUsernameElement) callUsernameElement.textContent = `${currentCallUsername} ile görüşülüyor`;
+    if (callAvatar) callAvatar.src = currentCallUserAvatar || 'images/DefaultAvatar.png';
+    if (callUsername) callUsername.textContent = `${currentCallUsername} ile görüşülüyor`;
 
     // Arama süresini başlat
     callDuration = 0;
@@ -657,20 +677,6 @@ function showActiveCallUI() {
 
     // Arama aktif olarak işaretle
     isCallActive = true;
-
-    // Görselleştiriciyi başlat
-    if (visualizerCanvas && localStream) {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        // Yerel akış için görselleştirici (her zaman aktif paneldeki canvas'ı kullanırız)
-        localAnalyserNode = setupVisualizer(localStream, visualizerCanvas, audioContext, 'local');
-
-        // Uzak akış zaten varsa, onu da aynı canvas'a bağlayabiliriz veya ayrı bir canvas.
-        // Şimdilik, remote ontrack'te ayarlanacak.
-        // Çizimi başlat
-        drawVisualization(visualizerCanvas, localAnalyserNode, 'local'); // Başlangıçta sadece yerel için
-    }
 }
 
 // Tüm arama panellerini gizle
@@ -687,19 +693,6 @@ function hideAllCallPanels() {
         incomingCallPanel.style.display = 'none';
         activeCallPanel.style.display = 'none';
     }, 300);
-
-    // Görselleştirici animasyonunu durdur
-    if (visualizerAnimationId) {
-        cancelAnimationFrame(visualizerAnimationId);
-        visualizerAnimationId = null;
-    }
-    // Analyser node'ları temizle
-    if (localAnalyserNode) localAnalyserNode.disconnect();
-    if (remoteAnalyserNode) remoteAnalyserNode.disconnect();
-    localAnalyserNode = null;
-    remoteAnalyserNode = null;
-    // AudioContext'i kapatma, diğer aramalar için kullanılabilir
-    stopRingingSound();
 }
 
 // Arama durumunu sıfırla
@@ -713,6 +706,14 @@ function resetCallState() {
     callDuration = 0;
 }
 
+// Arama sesini durdurma yardımcı fonksiyonu
+function stopRingSound() {
+    if (ringSound) {
+        ringSound.pause();
+        ringSound.currentTime = 0;
+    }
+}
+
 // Sesli arama için hata kontrolü
 export function checkVoiceCallSupport() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -721,113 +722,4 @@ export function checkVoiceCallSupport() {
     }
 
     return true;
-}
-
-// Ses Görselleştirici Fonksiyonları
-function setupVisualizer(stream, canvasElement, audioCtx, type) {
-    if (!stream || !canvasElement || !audioCtx) {
-        console.warn(`Görselleştirici için eksik parametreler (${type}):`, { stream, canvasElement, audioCtx });
-        return null;
-    }
-    console.log(`🎙️ ${type} akışı için görselleştirici ayarlanıyor.`);
-
-    const analyser = audioCtx.createAnalyser();
-    const source = audioCtx.createMediaStreamSource(stream);
-    source.connect(analyser);
-    // analyser.connect(audioCtx.destination); // Sesi tekrar çalmamak için bunu bağlamıyoruz, sadece analiz için.
-
-    analyser.fftSize = 256; // Daha az detay, daha büyük çubuklar/dalga
-    // analyser.smoothingTimeConstant = 0.85; // Daha yumuşak geçişler
-    return analyser;
-}
-
-function drawVisualization(canvas, analyserNode, type) {
-    if (!canvas || !analyserNode) {
-        // console.warn(`Çizim için eksik parametreler (${type}):`, { canvas, analyserNode });
-        if (visualizerAnimationId) cancelAnimationFrame(visualizerAnimationId); // Eğer bir önceki animasyon varsa durdur
-        return;
-    }
-
-    const canvasCtx = canvas.getContext('2d');
-    const bufferLength = analyserNode.frequencyBinCount; // fftSize / 2
-    const dataArray = new Uint8Array(bufferLength);
-
-    // Canvas boyutlarını stil ile eşleştir (önemli!)
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 10; // Kenarlardan 10px boşluk bırak
-
-    function draw() {
-        visualizerAnimationId = requestAnimationFrame(draw);
-
-        analyserNode.getByteFrequencyData(dataArray); // Frekans verilerini al
-
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const barWidth = (2 * Math.PI * radius) / bufferLength * 0.8; // Barlar arası boşluk için 0.8 ile çarp
-        let angle = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-            const barHeight = dataArray[i] * 0.5; // Yüksekliği biraz azaltalım
-
-            const x = centerX + radius * Math.cos(angle);
-            const y = centerY + radius * Math.sin(angle);
-            const xEnd = centerX + (radius + barHeight) * Math.cos(angle);
-            const yEnd = centerY + (radius + barHeight) * Math.sin(angle);
-
-            canvasCtx.beginPath();
-            canvasCtx.moveTo(x, y);
-            canvasCtx.lineTo(xEnd, yEnd);
-
-            // Renkleri ses şiddetine göre ayarla (örnek)
-            const hue = i / bufferLength * 360; // Renk tekerleğinde dön
-            // const saturation = '100%';
-            // const lightness = Math.max(20, Math.min(80, barHeight * 0.8)) + '%'; // Parlaklığı ayarla
-            // canvasCtx.strokeStyle = `hsl(${hue}, ${saturation}, ${lightness})`;
-
-            // Veya sabit bir renk
-            canvasCtx.strokeStyle = 'rgba(var(--primary-color-rgb), ' + Math.min(1, dataArray[i] / 255 + 0.2) + ')'; // Ana renk, opaklık sesle değişsin
-            canvasCtx.lineWidth = barWidth;
-            canvasCtx.stroke();
-
-            angle += (2 * Math.PI) / bufferLength;
-        }
-    }
-    draw();
-}
-
-// Ring sound functions
-function initRingSound() {
-    if (!callRingSound) {
-        try {
-            callRingSound = new Audio(RING_SOUND_PATH);
-            callRingSound.loop = true;
-        } catch (e) {
-            console.error("Failed to initialize ring sound:", e);
-            callRingSound = null; // Ensure it's null if initialization fails
-        }
-    }
-}
-
-function playRingingSound() {
-    initRingSound();
-    if (callRingSound && callRingSound.paused) {
-        callRingSound.play().catch(e => console.error("Error playing ringing sound:", e));
-    }
-}
-
-function stopRingingSound() {
-    if (callRingSound && !callRingSound.paused) {
-        callRingSound.pause();
-        callRingSound.currentTime = 0;
-    }
-}
-
-// Zil sesi için audio elementi
-const ringtoneAudio = new Audio('sounds/ringtone.mp3');
-ringtoneAudio.id = 'ringtoneAudio'; // ID ekleyelim
-ringtoneAudio.loop = true;
-document.body.appendChild(ringtoneAudio); // Sayfaya ekleyelim 
+} 
