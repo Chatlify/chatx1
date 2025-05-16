@@ -5,6 +5,13 @@ import { supabase } from './auth_config.js';
 // Global değişkenler
 let localStream = null;
 let peerConnection = null;
+let remoteStream = null;
+let callOfferSignal = null;
+let callInProgress = false;
+let currentCallTargetUserId = null;
+let currentCallTargetUsername = null;
+let currentCallTargetAvatar = null;
+let currentCallType = null;
 let callTimer = null;
 let callDuration = 0;
 let currentCallUserId = null;
