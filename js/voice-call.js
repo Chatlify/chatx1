@@ -100,7 +100,7 @@ function addVoiceCallStyles() {
             justify-content: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             transform: scale(0.9);
-            transition: transform 0.3s ease, box-shadow 0.2s ease; /* box-shadow geçişi eklendi */
+            transition: transform 0.3s ease; /* Sadece transform için geçiş */
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -118,7 +118,7 @@ function addVoiceCallStyles() {
             border: 3px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 16px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: box-shadow 0.1s ease-out, border-color 0.1s ease-out; /* Görselleştirici için geçişler */
+            transition: box-shadow 0.05s ease-out, border-color 0.05s ease-out; /* Daha hızlı geçiş */
         }
         
         .call-username {
@@ -211,14 +211,6 @@ function addVoiceCallStyles() {
         .incoming-call .call-avatar, .outgoing-call .call-avatar {
             animation: calling 1.5s infinite;
         }
-
-        /* Avatar görselleştirici için ek stil */
-        .call-avatar.speaking {
-            /* Konuşurken avatar çerçevesinin nasıl görüneceği burada belirlenecek, JS ile dinamik olarak */
-            /* Örn: box-shadow: 0 0 20px 5px #4CAF50; */
-            /* Örn: border-color: #4CAF50; */
-        }
-
     `;
 
     // Stil zaten varsa kaldır
@@ -607,11 +599,13 @@ function createPeerConnection() {
         console.log('📞 Uzak ses akışı alındı:', event.streams[0]);
 
         // Uzak sesi oynatmak için audio elementi oluştur
-        const remoteAudio = document.createElement('audio');
-        remoteAudio.id = 'remoteAudio';
-        remoteAudio.autoplay = true;
-        remoteAudio.srcObject = event.streams[0];
-        document.body.appendChild(remoteAudio);
+        const remoteAudioElement = document.getElementById('remoteAudio') || document.createElement('audio');
+        remoteAudioElement.id = 'remoteAudio';
+        remoteAudioElement.autoplay = true;
+        remoteAudioElement.srcObject = event.streams[0];
+        if (!remoteAudioElement.parentNode) {
+            document.body.appendChild(remoteAudioElement);
+        }
 
         // Ses görselleştiricisini başlat
         if (event.streams && event.streams[0]) {
@@ -921,23 +915,29 @@ function startVisualizer(stream) {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
+    // AudioContext'in durumunu kontrol et, askıya alınmışsa devam ettir
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
     analyser = audioContext.createAnalyser();
     const source = audioContext.createMediaStreamSource(stream);
     source.connect(analyser);
 
-    analyser.fftSize = 256; // Daha az veri, daha iyi performans olabilir
+    analyser.fftSize = 256;
     const bufferLength = analyser.frequencyBinCount;
     dataArray = new Uint8Array(bufferLength);
 
     const visualizerAvatar = activeCallPanel.querySelector('.call-avatar');
 
     function drawVisualizer() {
-        if (!isCallActive || !analyser) { // Sadece arama aktifken ve analizör varsa çalıştır
+        if (!isCallActive || !analyser) {
             if (visualizerAvatar) {
-                visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)'; // Varsayılan gölge
-                visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)'; // Varsayılan çerçeve rengi
+                visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)';
             }
-            cancelAnimationFrame(visualizerAnimationId);
+            if (visualizerAnimationId) cancelAnimationFrame(visualizerAnimationId);
+            visualizerAnimationId = null;
             return;
         }
 
@@ -949,25 +949,38 @@ function startVisualizer(stream) {
         }
         let average = sum / bufferLength;
 
-        // Ortalama ses seviyesine göre çerçeve efektini ayarla
-        // Bu değerleri ve efektleri isteğinize göre ayarlayabilirsiniz
-        const intensity = Math.min(1, average / 100); // Yoğunluğu 0 ile 1 arasında sınırla
+        const visualizerThreshold = 15; // Ses algılama eşiği (0-255 arası)
+        const maxGlowSize = 25;        // Maksimum parlama boyutu (px)
+        const minGlowSize = 5;         // Minimum parlama boyutu (px)
+        const baseBorderOpacity = 0.2; // Temel çerçeve opaklığı
+        const maxBorderOpacityBoost = 0.8; // Maksimum çerçeve opaklık artışı
+        const baseShadowOpacity = 0.5; // Temel gölge opaklığı
+        const maxShadowOpacityBoost = 0.5; // Maksimum gölge opaklık artışı
 
         if (visualizerAvatar) {
-            if (average > 20) { // Belli bir eşiğin üzerindeyse efekt uygula
-                const glowSize = Math.min(20, 5 + intensity * 25); // Gölge boyutunu ayarla
-                const borderColorOpacity = 0.2 + intensity * 0.8; // Çerçeve opaklığını ayarla
-                visualizerAvatar.style.boxShadow = `0 0 ${glowSize}px ${glowSize / 3}px rgba(76, 175, 80, ${0.5 + intensity * 0.5})`; // Yeşilimsi bir parlama
-                visualizerAvatar.style.borderColor = `rgba(76, 175, 80, ${borderColorOpacity})`;
+            if (average > visualizerThreshold) {
+                const intensity = Math.min(1, (average - visualizerThreshold) / (128 - visualizerThreshold)); // Eşiği hesaba katarak yoğunluk (128 keyfi bir üst sınır)
+                const glowSize = minGlowSize + intensity * (maxGlowSize - minGlowSize);
+                const borderColorOpacity = baseBorderOpacity + intensity * maxBorderOpacityBoost;
+                const shadowOpacity = baseShadowOpacity + intensity * maxShadowOpacityBoost;
+
+                visualizerAvatar.style.boxShadow = `0 0 ${glowSize}px ${glowSize / 2.5}px rgba(76, 200, 80, ${shadowOpacity})`; // Daha canlı yeşil ve ayarlanmış yayılma
+                visualizerAvatar.style.borderColor = `rgba(76, 200, 80, ${borderColorOpacity})`;
+                visualizerAvatar.classList.add('speaking');
             } else {
-                visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)'; // Varsayılan gölge
-                visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)'; // Varsayılan çerçeve rengi
+                visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                visualizerAvatar.classList.remove('speaking');
             }
         }
 
         visualizerAnimationId = requestAnimationFrame(drawVisualizer);
     }
 
+    // Zaten bir animasyon çalışıyorsa iptal et
+    if (visualizerAnimationId) {
+        cancelAnimationFrame(visualizerAnimationId);
+    }
     drawVisualizer();
 }
 
@@ -977,14 +990,11 @@ function stopVisualizer() {
         cancelAnimationFrame(visualizerAnimationId);
         visualizerAnimationId = null;
     }
+    // Analyser ve source bağlantısını kes
     if (analyser) {
         analyser.disconnect();
+        // source.disconnect() -> source zaten analyser'a bağlı, analyser'ı kesmek yeterli
         analyser = null;
-    }
-    if (audioContext && audioContext.state !== 'closed') {
-        // Kaynak düğümlerini ayır
-        // audioContext.close() hemen kapatır, bu da bazen hatalara yol açabilir.
-        // Burada kaynakların bağlantısını kesmek yeterli olabilir.
     }
     // dataArray'i sıfırla
     dataArray = null;
@@ -993,6 +1003,7 @@ function stopVisualizer() {
     if (visualizerAvatar) {
         visualizerAvatar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
         visualizerAvatar.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        visualizerAvatar.classList.remove('speaking');
     }
     console.log('📞 Ses görselleştiricisi durduruldu.');
 } 
