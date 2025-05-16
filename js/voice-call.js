@@ -100,6 +100,9 @@ class RNNoiseProcessor extends AudioWorkletProcessor {
 registerProcessor('rnnoise-processor', RNNoiseProcessor);
 `;
 
+// ICE adaylarını geçici olarak saklayacak bir dizi oluştur
+let pendingIceCandidates = [];
+
 // Sesli arama sistemini başlatma
 export function initVoiceCallSystem() {
     console.log('📞 Sesli arama sistemi başlatılıyor...');
@@ -674,6 +677,9 @@ async function handleCallAnswer(signal) {
         try {
             console.log('📞 Arama cevabı alındı, uzak açıklama ayarlanıyor...');
             await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+
+            // Remote description ayarlandıktan sonra bekleyen ICE adaylarını ekle
+            addPendingIceCandidates();
         } catch (error) {
             console.error('📞 Uzak açıklama ayarlanırken hata oluştu:', error);
         }
@@ -685,11 +691,37 @@ async function handleIceCandidate(signal) {
     if (peerConnection && peerConnection.signalingState !== 'closed' && signal.candidate) {
         try {
             console.log('📞 ICE adayı alındı:', signal.candidate);
-            await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+
+            // Remote description ayarlanmışsa adayı ekle, aksi takdirde kuyruğa al
+            if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                console.log('📞 ICE adayı başarıyla eklendi');
+            } else {
+                console.log('📞 Remote description henüz ayarlanmadı, ICE adayı kuyruğa alınıyor');
+                pendingIceCandidates.push(signal.candidate);
+            }
         } catch (error) {
             console.error('📞 ICE adayı eklenirken hata oluştu:', error);
         }
     }
+}
+
+// Bekleyen ICE adaylarını ekle
+async function addPendingIceCandidates() {
+    if (pendingIceCandidates.length === 0) return;
+
+    console.log(`📞 ${pendingIceCandidates.length} bekleyen ICE adayı ekleniyor...`);
+
+    for (const candidate of pendingIceCandidates) {
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (error) {
+            console.error('📞 Bekleyen ICE adayı eklenirken hata oluştu:', error);
+        }
+    }
+
+    // Kuyruk temizlenir
+    pendingIceCandidates = [];
 }
 
 // Uzak taraf aramayı sonlandırdığında
@@ -700,10 +732,9 @@ function handleRemoteHangup() {
 
 // WebRTC bağlantısını oluştur
 function createPeerConnection() {
+    // Varolan bağlantıyı temizle
     if (peerConnection) {
-        console.warn('📞 Zaten bir bağlantı mevcut, önce temizleniyor...');
-        peerConnection.close();
-        peerConnection = null;
+        cleanupPeerConnection();
     }
 
     console.log('📞 Yeni WebRTC bağlantısını oluşturuyor...');
@@ -714,10 +745,15 @@ function createPeerConnection() {
         sdpSemantics: 'unified-plan',
         bundlePolicy: 'max-bundle',  // Tüm medya türlerini tek bir transport üzerinden gönder
         rtcpMuxPolicy: 'require',    // RTCP ve RTP'yi aynı port üzerinden gönder
-        iceTransportPolicy: 'all'    // ICE vasıtasıyla tüm bağlantı yöntemlerini dene
+        iceTransportPolicy: 'all',   // ICE vasıtasıyla tüm bağlantı yöntemlerini dene
+        iceCandidatePoolSize: 2      // ICE aday havuzu boyutu (bağlantı kurulumunu hızlandırır)
     };
 
+    // Yeni bağlantı oluştur
     peerConnection = new RTCPeerConnection(config);
+
+    // Bekleyen ICE adayları dizisini temizle
+    pendingIceCandidates = [];
 
     // ICE adayı alındığında
     peerConnection.onicecandidate = (event) => {
@@ -727,32 +763,55 @@ function createPeerConnection() {
                 type: 'candidate',
                 candidate: event.candidate
             }, currentCallUserId);
+        } else {
+            console.log('📞 ICE aday toplama işlemi tamamlandı.');
         }
     };
 
     // Bağlantı durumu değiştiğinde
     peerConnection.oniceconnectionstatechange = () => {
-        console.log('📞 ICE bağlantı durumu değişti:', peerConnection.iceConnectionState);
+        const state = peerConnection.iceConnectionState;
+        console.log('📞 ICE bağlantı durumu değişti:', state);
 
         // Bağlantı durumunu işle
-        if (peerConnection.iceConnectionState === 'connected' ||
-            peerConnection.iceConnectionState === 'completed') {
-            // Bağlantı kuruldu, arama aktif
-            if (!isCallActive) {
-                console.log('📞 Sesli arama bağlantısı kuruldu!');
-                showActiveCallUI();
+        switch (state) {
+            case 'connected':
+            case 'completed':
+                // Bağlantı kuruldu, arama aktif
+                if (!isCallActive) {
+                    console.log('📞 Sesli arama bağlantısı kuruldu!');
+                    showActiveCallUI();
 
-                // Ses kalitesi iyileştirmesi
-                applyAudioOptimizations();
-            }
-        } else if (peerConnection.iceConnectionState === 'failed' ||
-            peerConnection.iceConnectionState === 'disconnected' ||
-            peerConnection.iceConnectionState === 'closed') {
-            // Bağlantı kesildi veya başarısız oldu
-            console.log('📞 Bağlantı kesildi veya başarısız oldu:', peerConnection.iceConnectionState);
-            if (isCallActive) {
-                endCall();
-            }
+                    // Ses kalitesi iyileştirmesi
+                    applyAudioOptimizations();
+                }
+                break;
+
+            case 'failed':
+                // Bağlantı kurulamadı, yeniden deneme
+                console.log('📞 ICE bağlantısı başarısız oldu, yeniden deneniyor...');
+                restartIce();
+                break;
+
+            case 'disconnected':
+                // Geçici bağlantı kesintisi, bir süre bekle
+                console.warn('📞 ICE bağlantısı kesintiye uğradı, yeniden bağlanmayı deniyor...');
+                // 5 saniye içinde bağlantı düzelmezse aramayı sonlandır
+                setTimeout(() => {
+                    if (peerConnection && peerConnection.iceConnectionState === 'disconnected') {
+                        console.error('📞 Bağlantı 5 saniye içinde düzelmedi, arama sonlandırılıyor.');
+                        endCall();
+                    }
+                }, 5000);
+                break;
+
+            case 'closed':
+                // Bağlantı kapatıldı
+                if (isCallActive) {
+                    console.log('📞 Bağlantı kapatıldı.');
+                    endCall();
+                }
+                break;
         }
     };
 
@@ -764,6 +823,11 @@ function createPeerConnection() {
     // Bağlantı durumu değiştiğinde
     peerConnection.onsignalingstatechange = () => {
         console.log('📞 Sinyal durumu değişti:', peerConnection.signalingState);
+
+        // Bağlantı kapandıysa temizle
+        if (peerConnection.signalingState === 'closed') {
+            cleanupPeerConnection();
+        }
     };
 
     // Uzak akış alındığında
@@ -772,12 +836,31 @@ function createPeerConnection() {
 
         // Ses işleme uygulanmış uzak akışı al ve çal
         applyRemoteAudioProcessing(event.streams[0]).then(processedStream => {
-            // Ses çalma mantığını burada uygulayabiliriz
+            // Mevcut ses elementini temizle
+            const existingAudio = document.getElementById('remoteAudio');
+            if (existingAudio) {
+                existingAudio.srcObject = null;
+                existingAudio.remove();
+            }
+
+            // Yeni ses elementi oluştur
             const remoteAudio = document.createElement('audio');
             remoteAudio.id = 'remoteAudio';
             remoteAudio.autoplay = true;
+            remoteAudio.volume = 1.0; // Ses seviyesini maksimuma ayarla
+
+            // Safari uyumluluğu için ek ayarlar
+            remoteAudio.muted = false;
+            remoteAudio.playsInline = true;
+
+            // Ses elementine akışı bağla
             remoteAudio.srcObject = processedStream;
             document.body.appendChild(remoteAudio);
+
+            // Oynatmayı zorla (Safari için)
+            remoteAudio.play().catch(e =>
+                console.warn('📞 Otomatik oynatma başlatılamadı:', e)
+            );
         });
     };
 
@@ -983,11 +1066,8 @@ function endCall() {
         remoteAudio.remove();
     }
 
-    // WebRTC bağlantısını kapat
-    if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-    }
+    // WebRTC bağlantısını temizle
+    cleanupPeerConnection();
 
     // UI'ı temizle
     hideAllCallPanels();
@@ -1163,4 +1243,61 @@ export function checkVoiceCallSupport() {
     }
 
     return true;
+}
+
+// ICE yeniden başlatma
+async function restartIce() {
+    if (!peerConnection || !isCallActive) return;
+
+    try {
+        console.log('📞 ICE yeniden başlatılıyor...');
+
+        // ICE yeniden başlatma bayrağını ayarla
+        const offerOptions = {
+            iceRestart: true,
+            voiceActivityDetection: true
+        };
+
+        // Yeni bir teklif oluştur
+        if (isInitiator) {
+            const offer = await peerConnection.createOffer(offerOptions);
+            await peerConnection.setLocalDescription(offer);
+
+            // Karşı tarafa yeni teklifi gönder
+            sendCallSignal({
+                type: 'offer',
+                offer: peerConnection.localDescription
+            }, currentCallUserId);
+        }
+    } catch (error) {
+        console.error('📞 ICE yeniden başlatma hatası:', error);
+    }
+}
+
+// Peer bağlantısı temizleme
+function cleanupPeerConnection() {
+    console.log('📞 WebRTC bağlantısı temizleniyor...');
+
+    if (peerConnection) {
+        // Tüm dinleyicileri kaldır
+        peerConnection.onicecandidate = null;
+        peerConnection.oniceconnectionstatechange = null;
+        peerConnection.onicegatheringstatechange = null;
+        peerConnection.onsignalingstatechange = null;
+        peerConnection.ontrack = null;
+
+        // Tüm gönderici ve alıcıları temizle
+        peerConnection.getSenders().forEach(sender => {
+            if (sender.track) {
+                sender.track.stop();
+            }
+        });
+
+        // Bağlantıyı kapat
+        peerConnection.close();
+        peerConnection = null;
+    }
+
+    // Bekleyen ICE adaylarını temizle
+    pendingIceCandidates = [];
 } 
