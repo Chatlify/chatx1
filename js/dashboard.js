@@ -1391,6 +1391,14 @@ async function openChatPanel(userId, username, avatar) {
 
     // Realtime aboneliği GERÇEK sohbet ID'si ile başlat
     subscribeToMessages(currentConversationId);
+
+    // Kullanıcının çevrimiçi durumunu belirle
+    const userIsOnline = onlineFriends.has(userId);
+    chatPanel.dataset.userIsOnline = userIsOnline ? 'true' : 'false';
+
+    const chatHeader = chatPanel.querySelector('.chat-header');
+    const chatUsername = chatPanel.querySelector('.chat-username');
+    const chatAvatar = chatPanel.querySelector('.chat-avatar img');
 }
 
 // Sohbet panelini kapatma
