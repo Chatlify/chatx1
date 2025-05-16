@@ -13,7 +13,7 @@ let currentCallUserAvatar = null;
 let isCallActive = false;
 let isMuted = false;
 let isInitiator = false;
-let ringSound = null; // Arama sesi için değişken
+let ringtoneAudio = null; // Zil sesi için ses nesnesi
 
 // ICE sunucu yapılandırması - STUN sunucuları
 const iceServers = {
@@ -35,14 +35,186 @@ const activeCallPanel = document.querySelector('.call-panel.active-call');
 // Sesli arama sistemini başlatma
 export function initVoiceCallSystem() {
     console.log('📞 Sesli arama sistemi başlatılıyor...');
-    // Arama sesini yükle
-    ringSound = new Audio('sounds/callsound.mp3');
-    ringSound.loop = true; // Ses döngüye alınsın
+
+    // CSS stillerini ekle
+    addVoiceCallStyles();
 
     // Sesli arama butonlarını dinlemeye başla
     setupCallButtons();
+
     // Gelen aramaları dinlemeye başla
     setupIncomingCallListener();
+
+    // Zil sesini önceden yükle
+    preloadRingtone();
+}
+
+// Zil sesini önceden yükle
+function preloadRingtone() {
+    ringtoneAudio = new Audio('sounds/callsound.mp3');
+    ringtoneAudio.loop = true;
+    ringtoneAudio.load(); // Önceden yükle
+    console.log('📞 Zil sesi yüklendi');
+}
+
+// CSS stillerini ekleyen fonksiyon
+function addVoiceCallStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.id = 'voice-call-styles';
+    styleElement.textContent = `
+        /* Sesli arama paneli temel stilleri */
+        .call-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .call-panel-overlay.active {
+            opacity: 1;
+        }
+        
+        .call-panel {
+            background: linear-gradient(145deg, #3b4da7, #2c3875);
+            border-radius: 16px;
+            padding: 24px;
+            min-width: 300px;
+            max-width: 400px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .call-panel-overlay.active .call-panel {
+            transform: scale(1);
+        }
+        
+        /* Avatar ve kullanıcı bilgileri */
+        .call-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .call-username {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .call-status {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        /* Butonlar */
+        .call-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        
+        .call-action-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .accept-btn {
+            background-color: #4CAF50;
+        }
+        
+        .accept-btn:hover {
+            background-color: #43A047;
+            transform: translateY(-2px);
+        }
+        
+        .decline-btn, .hangup-btn {
+            background-color: #F44336;
+        }
+        
+        .decline-btn:hover, .hangup-btn:hover {
+            background-color: #E53935;
+            transform: translateY(-2px);
+        }
+        
+        .mute-btn {
+            background-color: #2196F3;
+        }
+        
+        .mute-btn:hover {
+            background-color: #1E88E5;
+            transform: translateY(-2px);
+        }
+        
+        .mute-btn.muted {
+            background-color: #607D8B;
+        }
+        
+        /* Arama süresi animasyonu */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .active-call .call-status {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Gelen/Giden arama animasyonu */
+        @keyframes calling {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .incoming-call .call-avatar, .outgoing-call .call-avatar {
+            animation: calling 1.5s infinite;
+        }
+    `;
+
+    // Stil zaten varsa kaldır
+    const existingStyle = document.getElementById('voice-call-styles');
+    if (existingStyle) {
+        existingStyle.remove();
+    }
+
+    // Yeni stili ekle
+    document.head.appendChild(styleElement);
+    console.log('📞 Sesli arama stilleri eklendi');
 }
 
 // Chat panel içindeki arama butonlarını dinleme
@@ -206,15 +378,17 @@ async function startCall(userId, username, avatar) {
             callType: 'voice'
         }, userId);
 
-        // Arama sesini çal
-        ringSound.play().catch(err => console.error('Arama sesi çalınamadı:', err));
+        // Giden arama zil sesini çal
+        if (ringtoneAudio) {
+            ringtoneAudio.currentTime = 0;
+            ringtoneAudio.play().catch(e => console.warn('Zil sesi çalınamadı:', e));
+        }
 
         // Giden arama panelini göster
         showOutgoingCallUI(username, avatar);
 
     } catch (error) {
         console.error('📞 Arama başlatılırken hata oluştu:', error);
-        stopRingSound();
         endCall();
         alert('Arama başlatılamadı. Mikrofonunuza erişim izni olduğundan emin olun.');
     }
@@ -312,31 +486,32 @@ function handleCallSignal(payload) {
 
 // Gelen arama teklifi
 async function handleCallOffer(signal) {
-    try {
-        console.log('📞 Gelen arama teklifi alındı:', signal);
-        const { from } = signal;
-
-        if (!from || !from.userId || !from.username) {
-            throw new Error('Geçersiz arama bilgileri');
-        }
-
-        // Arayan kullanıcı bilgilerini kaydet
-        currentCallUserId = from.userId;
-        currentCallUsername = from.username;
-        currentCallUserAvatar = from.avatar || 'images/DefaultAvatar.png';
-        isInitiator = false;
-
-        // Arama sesini çal
-        ringSound.play().catch(err => console.error('Arama sesi çalınamadı:', err));
-
-        // Gelen arama UI'ını göster
-        showIncomingCallUI(from.username, from.avatar);
-
-    } catch (error) {
-        console.error('📞 Arama teklifi işlenirken hata oluştu:', error);
-        stopRingSound();
-        endCall();
+    // Zaten görüşme varsa reddedelim
+    if (isCallActive) {
+        sendCallSignal({
+            type: 'hangup',
+            reason: 'busy'
+        }, signal.from.userId);
+        return;
     }
+
+    currentCallUserId = signal.from.userId;
+    currentCallUsername = signal.from.username;
+    currentCallUserAvatar = signal.from.avatar;
+    isInitiator = false;
+
+    // Gelen arama zil sesini çal
+    if (ringtoneAudio) {
+        ringtoneAudio.currentTime = 0;
+        ringtoneAudio.play().catch(e => console.warn('Zil sesi çalınamadı:', e));
+    }
+
+    // Gelen arama panelini göster
+    showIncomingCallUI(signal.from.username, signal.from.avatar);
+
+    // Offer ve from bilgilerini geçici olarak saklayalım
+    incomingCallPanel.dataset.offer = JSON.stringify(signal.offer);
+    incomingCallPanel.dataset.fromUserId = signal.from.userId;
 }
 
 // Arama cevabı alındığında
@@ -430,16 +605,27 @@ function createPeerConnection() {
 // Gelen aramayı kabul et
 async function acceptIncomingCall() {
     try {
-        console.log('📞 Arama kabul ediliyor...');
+        console.log('📞 Gelen arama kabul ediliyor...');
 
-        // Arama sesini durdur
-        stopRingSound();
+        // Zil sesini durdur
+        if (ringtoneAudio) {
+            ringtoneAudio.pause();
+            ringtoneAudio.currentTime = 0;
+        }
 
         // Mikrofon erişimi iste
         localStream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: false
         });
+
+        // Gelen offer bilgisini al
+        const offerStr = incomingCallPanel.dataset.offer;
+        if (!offerStr) {
+            throw new Error('Offer bilgisi bulunamadı');
+        }
+
+        const offer = JSON.parse(offerStr);
 
         // WebRTC bağlantısını kur
         createPeerConnection();
@@ -449,45 +635,24 @@ async function acceptIncomingCall() {
             peerConnection.addTrack(track, localStream);
         });
 
-        // Gelen teklifi ayarla
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.offer));
+        // Uzak tanımlamayı ayarla
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
         // Cevap oluştur
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
-        // Supabase üzerinden cevabı ilet
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-            throw new Error('Kullanıcı bilgileri alınamadı: ' + (userError?.message || 'Oturum bulunamadı'));
-        }
-
-        // Profil bilgilerini al
-        const { data: profile, error: profileError } = await supabase
-            .from('users')
-            .select('username, avatar')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        // Cevap sinyalini gönder
+        // Cevabı gönder
         await sendCallSignal({
             type: 'answer',
-            answer: peerConnection.localDescription,
-            from: {
-                userId: user.id,
-                username: profile?.username || 'Anonim Kullanıcı',
-                avatar: profile?.avatar || 'images/DefaultAvatar.png'
-            }
+            answer: peerConnection.localDescription
         }, currentCallUserId);
 
-        // Aktif arama panelini göster
-        isCallActive = true;
+        // Arama UI'ını aktif hale getir
         showActiveCallUI();
 
     } catch (error) {
         console.error('📞 Arama kabul edilirken hata oluştu:', error);
-        stopRingSound();
         endCall();
         alert('Arama kabul edilemedi. Mikrofonunuza erişim izni olduğundan emin olun.');
     }
@@ -495,20 +660,21 @@ async function acceptIncomingCall() {
 
 // Gelen aramayı reddet
 function declineIncomingCall() {
-    console.log('📞 Arama reddediliyor...');
+    console.log('📞 Gelen arama reddedildi.');
 
-    // Arama sesini durdur
-    stopRingSound();
-
-    // Aramayı reddet sinyali gönder
-    if (currentCallUserId) {
-        sendCallSignal({
-            type: 'hangup',
-            reason: 'rejected'
-        }, currentCallUserId).catch(console.error);
+    // Zil sesini durdur
+    if (ringtoneAudio) {
+        ringtoneAudio.pause();
+        ringtoneAudio.currentTime = 0;
     }
 
-    // Arama panelini kapat
+    // Arayan tarafa reddetme sinyali gönder
+    sendCallSignal({
+        type: 'hangup',
+        reason: 'rejected'
+    }, currentCallUserId);
+
+    // UI'ı temizle
     hideAllCallPanels();
     resetCallState();
 }
@@ -517,42 +683,48 @@ function declineIncomingCall() {
 function endCall() {
     console.log('📞 Arama sonlandırılıyor...');
 
-    // Arama sesini durdur
-    stopRingSound();
+    // Zil sesini durdur (giden veya gelen arama zil sesleri çalıyorsa)
+    if (ringtoneAudio) {
+        ringtoneAudio.pause();
+        ringtoneAudio.currentTime = 0;
+    }
 
-    // Karşı tarafa hangup sinyali gönder
-    if (currentCallUserId) {
+    // Eğer aktif bir arama varsa, karşı tarafa bilgi ver
+    if (isCallActive && currentCallUserId) {
         sendCallSignal({
             type: 'hangup',
             reason: 'ended'
-        }, currentCallUserId).catch(console.error);
+        }, currentCallUserId);
     }
 
-    // Süreölçeri durdur
-    if (callTimer) {
-        clearInterval(callTimer);
-        callTimer = null;
-    }
-
-    // Arama bilgilerini sıfırla
-    hideAllCallPanels();
-
-    // Yerel medya akışını kapat
+    // Ses akışını durdur
     if (localStream) {
-        localStream.getTracks().forEach(track => {
-            track.stop();
-        });
+        localStream.getTracks().forEach(track => track.stop());
         localStream = null;
     }
 
-    // Peer bağlantıyı kapat
+    // Uzak ses elementi varsa kaldır
+    const remoteAudio = document.getElementById('remoteAudio');
+    if (remoteAudio) {
+        remoteAudio.srcObject = null;
+        remoteAudio.remove();
+    }
+
+    // WebRTC bağlantısını kapat
     if (peerConnection) {
         peerConnection.close();
         peerConnection = null;
     }
 
-    // Diğer durum bilgilerini sıfırla
+    // UI'ı temizle
+    hideAllCallPanels();
     resetCallState();
+
+    // Timer'ı durdur
+    if (callTimer) {
+        clearInterval(callTimer);
+        callTimer = null;
+    }
 }
 
 // Mikrofonun sesini aç/kapat
@@ -619,12 +791,6 @@ function showIncomingCallUI(username, avatar) {
     if (callAvatar) callAvatar.src = avatar || 'images/DefaultAvatar.png';
     if (callUsername) callUsername.textContent = `${username} arıyor...`;
 
-    // Bildirim sesi çalabiliriz
-    const ringtone = new Audio('sounds/ringtone.mp3');
-    ringtone.loop = true;
-    ringtone.play().catch(e => console.warn('Ses çalınamadı:', e));
-    incomingCallPanel.dataset.ringtone = 'playing';
-
     // Paneli göster
     callPanelOverlay.style.display = 'flex';
     incomingCallPanel.style.display = 'flex';
@@ -641,11 +807,10 @@ function showIncomingCallUI(username, avatar) {
 function showActiveCallUI() {
     console.log('📞 Aktif arama paneli gösteriliyor...');
 
-    // Eğer çalan bir zil sesi varsa durdur
-    if (incomingCallPanel.dataset.ringtone === 'playing') {
-        const ringtone = new Audio();
-        ringtone.pause();
-        incomingCallPanel.dataset.ringtone = '';
+    // Zil sesini durdur
+    if (ringtoneAudio) {
+        ringtoneAudio.pause();
+        ringtoneAudio.currentTime = 0;
     }
 
     // Avatar ve kullanıcı adını ayarla
@@ -704,14 +869,6 @@ function resetCallState() {
     isMuted = false;
     isInitiator = false;
     callDuration = 0;
-}
-
-// Arama sesini durdurma yardımcı fonksiyonu
-function stopRingSound() {
-    if (ringSound) {
-        ringSound.pause();
-        ringSound.currentTime = 0;
-    }
 }
 
 // Sesli arama için hata kontrolü
