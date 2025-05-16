@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="darkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16151f" />
+      <stop offset="100%" stop-color="#1a1a2e" />
+    </linearGradient>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6a11cb" />
+      <stop offset="100%" stop-color="#8357eb" />
+    </linearGradient>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2575fc" />
+      <stop offset="100%" stop-color="#45a5ff" />
+    </linearGradient>
+    <filter id="glow" height="130%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="glow" />
+      <feComposite in="SourceGraphic" in2="glow" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Ana arka plan -->
+  <rect width="800" height="600" fill="url(#darkGradient)" rx="12" ry="12" />
+  
+  <!-- Sunucu kenar çubuğu -->
+  <rect x="10" y="10" width="70" height="580" fill="#121219" rx="8" ry="8" />
+  
+  <!-- Sunucu ikonları -->
+  <circle cx="45" cy="45" r="25" fill="#7289da" filter="url(#glow)" />
+  <text x="45" y="50" font-family="Arial" font-size="18" fill="white" text-anchor="middle">C</text>
+  
+  <circle cx="45" cy="110" r="25" fill="#333" />
+  <text x="45" y="115" font-family="Arial" font-size="18" fill="white" text-anchor="middle">G</text>
+  
+  <circle cx="45" cy="175" r="25" fill="#333" />
+  <text x="45" y="180" font-family="Arial" font-size="18" fill="white" text-anchor="middle">M</text>
+  
+  <circle cx="45" cy="240" r="25" fill="#333" />
+  <text x="45" y="245" font-family="Arial" font-size="18" fill="white" text-anchor="middle">K</text>
+  
+  <circle cx="45" cy="510" r="25" fill="#333" />
+  <text x="45" y="515" font-family="Arial" font-size="18" fill="#999" text-anchor="middle">+</text>
+  
+  <!-- DM kenar çubuğu -->
+  <rect x="90" y="10" width="200" height="580" fill="#1a1a28" rx="8" ry="8" />
+  <rect x="100" y="20" width="180" height="40" fill="#1f1f30" rx="6" ry="6" />
+  <text x="120" y="45" font-family="Arial" font-size="16" fill="white">Özel Mesajlar</text>
+  
+  <!-- Arama kutusu -->
+  <rect x="100" y="70" width="180" height="35" fill="#12121c" rx="6" ry="6" />
+  <text x="130" y="93" font-family="Arial" font-size="12" fill="#999">Sohbetlerde Ara</text>
+  
+  <!-- Chat türü seçicisi -->
+  <rect x="100" y="115" width="180" height="40" fill="#1f1f30" rx="6" ry="6" />
+  <rect x="105" y="120" width="85" height="30" fill="url(#purpleGradient)" rx="4" ry="4" />
+  <text x="120" y="140" font-family="Arial" font-size="12" fill="white">Normal Sohbet</text>
+  <text x="200" y="140" font-family="Arial" font-size="12" fill="#999">Grup Sohbeti</text>
+  
+  <!-- Arkadaşlar bölümü -->
+  <rect x="100" y="165" width="180" height="30" fill="#1f1f30" rx="4" ry="4" />
+  <text x="120" y="185" font-family="Arial" font-size="14" fill="white">Arkadaşlar</text>
+  
+  <!-- DM öğeleri -->
+  <rect x="100" y="205" width="180" height="60" fill="#12121c" rx="6" ry="6" />
+  <circle cx="120" cy="235" r="15" fill="url(#purpleGradient)" />
+  <text x="155" y="230" font-family="Arial" font-size="14" fill="white">Ahmet Yılmaz</text>
+  <text x="155" y="248" font-family="Arial" font-size="12" fill="#999">Çevrimiçi</text>
+  <circle cx="120" cy="235" r="20" fill="none" stroke="#1f1f30" stroke-width="2" />
+  <circle cx="135" cy="245" r="5" fill="#3ecf8e" stroke="#1a1a28" stroke-width="2" />
+  
+  <rect x="100" y="275" width="180" height="60" fill="#12121c" rx="6" ry="6" />
+  <circle cx="120" cy="305" r="15" fill="url(#blueGradient)" />
+  <text x="155" y="300" font-family="Arial" font-size="14" fill="white">Mehmet Demir</text>
+  <text x="155" y="318" font-family="Arial" font-size="12" fill="#999">Minecraft oynuyor</text>
+  <circle cx="120" cy="305" r="20" fill="none" stroke="#1f1f30" stroke-width="2" />
+  <circle cx="135" cy="315" r="5" fill="#3ecf8e" stroke="#1a1a28" stroke-width="2" />
+  
+  <rect x="100" y="345" width="180" height="60" fill="#12121c" rx="6" ry="6" />
+  <circle cx="120" cy="375" r="15" fill="#444" />
+  <text x="155" y="370" font-family="Arial" font-size="14" fill="white">Zeynep Kaya</text>
+  <text x="155" y="388" font-family="Arial" font-size="12" fill="#999">Çevrimdışı</text>
+  <circle cx="120" cy="375" r="20" fill="none" stroke="#1f1f30" stroke-width="2" />
+  <circle cx="135" cy="385" r="5" fill="#999" stroke="#1a1a28" stroke-width="2" />
+  
+  <!-- Kullanıcı bölümü -->
+  <rect x="100" y="530" width="180" height="50" fill="#1a1a28" rx="6" ry="6" />
+  <circle cx="120" cy="555" r="15" fill="url(#purpleGradient)" />
+  <text x="155" y="560" font-family="Arial" font-size="14" fill="white">KullanıcıAdı</text>
+  <circle cx="135" cy="565" r="5" fill="#3ecf8e" stroke="#1a1a28" stroke-width="2" />
+  
+  <!-- Ana içerik alanı -->
+  <rect x="300" y="10" width="490" height="580" fill="#121219" rx="8" ry="8" />
+  
+  <!-- Üst başlık -->
+  <rect x="310" y="20" width="470" height="60" fill="#1a1a28" rx="6" ry="6" />
+  <text x="340" y="55" font-family="Arial" font-size="18" fill="white">Arkadaşlar</text>
+  
+  <!-- Sekmeler -->
+  <rect x="310" y="90" width="470" height="40" fill="#1f1f30" rx="6" ry="6" />
+  <rect x="320" y="95" width="120" height="30" fill="url(#purpleGradient)" rx="4" ry="4" filter="url(#glow)" />
+  <text x="345" y="115" font-family="Arial" font-size="14" fill="white">Tüm Arkadaşlar</text>
+  <text x="465" y="115" font-family="Arial" font-size="14" fill="#999">Çevrimiçi</text>
+  <text x="565" y="115" font-family="Arial" font-size="14" fill="#999">Bekleyen</text>
+  
+  <!-- Arkadaş arama -->
+  <rect x="620" y="95" width="150" height="30" fill="#12121c" rx="15" ry="15" />
+  <text x="650" y="115" font-family="Arial" font-size="12" fill="#999">Arkadaş ara...</text>
+  
+  <!-- Çevrimiçi başlık -->
+  <rect x="310" y="140" width="470" height="30" fill="#1a1a28" rx="4" ry="4" />
+  <circle cx="330" cy="155" r="5" fill="#3ecf8e" />
+  <text x="345" y="160" font-family="Arial" font-size="16" fill="white">Çevrimiçi</text>
+  <rect x="420" y="145" width="30" height="20" fill="#12121c" rx="10" ry="10" />
+  <text x="435" y="160" font-family="Arial" font-size="14" fill="white">4</text>
+  
+  <!-- Arkadaş satırları -->
+  <rect x="310" y="180" width="470" height="70" fill="#1f1f30" rx="8" ry="8" />
+  <circle cx="345" cy="215" r="20" fill="url(#purpleGradient)" />
+  <text x="385" y="210" font-family="Arial" font-size="16" fill="white">Ahmet Yılmaz</text>
+  <text x="385" y="230" font-family="Arial" font-size="14" fill="#999">Çevrimiçi</text>
+  <circle cx="660" cy="215" r="15" fill="#1a1a28" />
+  <text x="660" y="220" font-family="Arial" font-size="16" fill="white" text-anchor="middle">💬</text>
+  <circle cx="700" cy="215" r="15" fill="#1a1a28" />
+  <text x="700" y="220" font-family="Arial" font-size="16" fill="white" text-anchor="middle">👤</text>
+  <circle cx="740" cy="215" r="15" fill="#1a1a28" />
+  <text x="740" y="220" font-family="Arial" font-size="16" fill="white" text-anchor="middle">⋯</text>
+  
+  <rect x="310" y="260" width="470" height="70" fill="#1f1f30" rx="8" ry="8" />
+  <circle cx="345" cy="295" r="20" fill="url(#blueGradient)" />
+  <text x="385" y="290" font-family="Arial" font-size="16" fill="white">Mehmet Demir</text>
+  <text x="385" y="310" font-family="Arial" font-size="14" fill="#999">Minecraft oynuyor</text>
+  <circle cx="660" cy="295" r="15" fill="#1a1a28" />
+  <text x="660" y="300" font-family="Arial" font-size="16" fill="white" text-anchor="middle">💬</text>
+  <circle cx="700" cy="295" r="15" fill="#1a1a28" />
+  <text x="700" y="300" font-family="Arial" font-size="16" fill="white" text-anchor="middle">👤</text>
+  <circle cx="740" cy="295" r="15" fill="#1a1a28" />
+  <text x="740" y="300" font-family="Arial" font-size="16" fill="white" text-anchor="middle">⋯</text>
+  
+  <rect x="310" y="340" width="470" height="70" fill="#1f1f30" rx="8" ry="8" />
+  <circle cx="345" cy="375" r="20" fill="#7367f0" />
+  <text x="385" y="370" font-family="Arial" font-size="16" fill="white">Ayşe Öztürk</text>
+  <text x="385" y="390" font-family="Arial" font-size="14" fill="#999">League of Legends oynuyor</text>
+  <circle cx="660" cy="375" r="15" fill="#1a1a28" />
+  <text x="660" y="380" font-family="Arial" font-size="16" fill="white" text-anchor="middle">💬</text>
+  <circle cx="700" cy="375" r="15" fill="#1a1a28" />
+  <text x="700" y="380" font-family="Arial" font-size="16" fill="white" text-anchor="middle">👤</text>
+  <circle cx="740" cy="375" r="15" fill="#1a1a28" />
+  <text x="740" y="380" font-family="Arial" font-size="16" fill="white" text-anchor="middle">⋯</text>
+  
+  <rect x="310" y="420" width="470" height="70" fill="#1f1f30" rx="8" ry="8" />
+  <circle cx="345" cy="455" r="20" fill="#e74c3c" />
+  <text x="385" y="450" font-family="Arial" font-size="16" fill="white">Kemal Aydın</text>
+  <text x="385" y="470" font-family="Arial" font-size="14" fill="#999">Çevrimiçi · 2 saat</text>
+  <circle cx="660" cy="455" r="15" fill="#1a1a28" />
+  <text x="660" y="460" font-family="Arial" font-size="16" fill="white" text-anchor="middle">💬</text>
+  <circle cx="700" cy="455" r="15" fill="#1a1a28" />
+  <text x="700" y="460" font-family="Arial" font-size="16" fill="white" text-anchor="middle">👤</text>
+  <circle cx="740" cy="455" r="15" fill="#1a1a28" />
+  <text x="740" y="460" font-family="Arial" font-size="16" fill="white" text-anchor="middle">⋯</text>
+  
+  <!-- Arkadaş Ekle -->
+  <circle cx="740" cy="540" r="30" fill="url(#purpleGradient)" filter="url(#glow)" />
+  <text x="740" y="547" font-family="Arial" font-size="24" fill="white" text-anchor="middle">+</text>
+</svg> 

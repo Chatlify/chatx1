@@ -1,0 +1,19 @@
+[build]
+  publish = "/"
+  command = "echo 'Static site, no build needed'"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  command = "npm run dev"
+  port = 8888
+  publish = "/"
+
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core" 

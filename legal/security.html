@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatlify - Security</title>
+    <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/legal.css">
+    <script src="../js/main.js" defer></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <svg class="logo-svg" width="40" height="40" viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6a11cb" />
+                            <stop offset="100%" stop-color="#2575fc" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                        <clipPath id="circle-clip">
+                            <circle cx="100" cy="100" r="85" />
+                        </clipPath>
+                    </defs>
+                    <!-- Main Logo Circle -->
+                    <circle cx="100" cy="100" r="85" fill="#16213e" stroke="url(#gradient)" stroke-width="5"
+                        opacity="0.7" />
+                    <!-- Logo Path -->
+                    <path class="logo-path"
+                        d="M100,30 C60,30 30,60 30,100 C30,140 60,170 100,170 C140,170 170,140 170,100" fill="none"
+                        stroke="url(#gradient)" stroke-width="10" stroke-linecap="round" filter="url(#glow)" />
+                    <!-- C Letter -->
+                    <text x="75" y="125" class="logo-text" fill="white" font-size="80" font-family="Poppins, sans-serif"
+                        font-weight="bold" filter="url(#glow)">C</text>
+                </svg>
+                <span>CHATLIFY</span>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../community.html">Community</a>
+                <a href="../support.html">Support</a>
+                <a href="../download.html">Download</a>
+            </div>
+            <div class="nav-buttons">
+                <a href="#" class="login-btn">Sign In</a>
+                <a href="../download.html" class="download-btn">Download Now</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="legal-hero">
+            <div class="legal-hero-content">
+                <h1><span class="highlight">SECURITY</span></h1>
+                <p>Last Updated: March 29, 2025</p>
+            </div>
+        </section>
+
+        <section class="legal-container">
+            <div class="legal-sidebar">
+                <div class="sidebar-content">
+                    <h3>Contents</h3>
+                    <ul>
+                        <li><a href="#overview">1. Security Overview</a></li>
+                        <li><a href="#data-encryption">2. Data Encryption</a></li>
+                        <li><a href="#infrastructure">3. Infrastructure Security</a></li>
+                        <li><a href="#access-controls">4. Access Controls</a></li>
+                        <li><a href="#security-practices">5. Security Practices</a></li>
+                        <li><a href="#vulnerability">6. Vulnerability Management</a></li>
+                        <li><a href="#incident-response">7. Incident Response</a></li>
+                        <li><a href="#compliance">8. Compliance & Certifications</a></li>
+                        <li><a href="#security-tips">9. Security Tips for Users</a></li>
+                        <li><a href="#reporting">10. Reporting Security Issues</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="legal-content">
+                <div class="legal-intro">
+                    <p>At Chatlify, security is a top priority. We're committed to implementing and maintaining the
+                        highest standards of security to protect your data, privacy, and communications. This document
+                        outlines our approach to security, the measures we have in place, and recommendations for users
+                        to enhance their own security while using our services.</p>
+                    <p>Our security program is built on industry best practices and continuously evolves to address new
+                        threats and challenges in the digital landscape.</p>
+                </div>
+
+                <div class="legal-section" id="overview">
+                    <h2>1. Security Overview</h2>
+                    <p>Chatlify's security framework is designed with a defense-in-depth approach, implementing multiple
+                        layers of security controls to protect your information at every level:</p>
+                    <ul>
+                        <li>End-to-end encryption for messaging and calls</li>
+                        <li>Secure infrastructure hosted in SOC 2 compliant data centers</li>
+                        <li>Regular security assessments and penetration testing</li>
+                        <li>Robust access control and authentication systems</li>
+                        <li>Comprehensive incident response procedures</li>
+                        <li>Ongoing security monitoring and threat detection</li>
+                    </ul>
+                    <p>Our security team works diligently to maintain and enhance these protections, staying current
+                        with emerging threats and evolving our defenses accordingly.</p>
+                </div>
+
+                <div class="legal-section" id="data-encryption">
+                    <h2>2. Data Encryption</h2>
+                    <p>Encryption is a cornerstone of our security strategy. We implement multiple layers of encryption
+                        to protect your data:</p>
+
+                    <h3>2.1 End-to-End Encryption</h3>
+                    <p>All private messages and calls on Chatlify are secured with end-to-end encryption, meaning only
+                        you and the people you're communicating with can read or hear the content. Not even Chatlify can
+                        access the content of your encrypted communications.</p>
+                    <p>Our end-to-end encryption implementation uses industry-standard protocols based on the Signal
+                        Protocol, with 256-bit AES encryption, Diffie-Hellman key exchange, and RSA encryption for key
+                        verification.</p>
+
+                    <h3>2.2 Transport Encryption</h3>
+                    <p>All data transmitted between your devices and Chatlify servers is protected using Transport Layer
+                        Security (TLS 1.3), ensuring that your communications cannot be intercepted during transmission.
+                    </p>
+
+                    <h3>2.3 At-Rest Encryption</h3>
+                    <p>Data stored on our servers is encrypted using AES-256 encryption. This includes account
+                        information, settings, and encrypted message backups (if enabled by the user).</p>
+
+                    <h3>2.4 Key Management</h3>
+                    <p>We implement strict key management procedures, including secure key generation, storage, and
+                        rotation practices. Encryption keys are never stored in plaintext and are protected with
+                        additional layers of security.</p>
+                </div>
+
+                <div class="legal-section" id="infrastructure">
+                    <h2>3. Infrastructure Security</h2>
+                    <p>Chatlify's infrastructure is designed with security as a fundamental principle:</p>
+
+                    <h3>3.1 Secure Data Centers</h3>
+                    <p>Our services are hosted in Tier IV data centers that maintain strict physical security controls,
+                        including:</p>
+                    <ul>
+                        <li>24/7 on-site security personnel</li>
+                        <li>Biometric access controls</li>
+                        <li>Video surveillance</li>
+                        <li>Environmental protections</li>
+                        <li>Redundant power and network connectivity</li>
+                    </ul>
+
+                    <h3>3.2 Network Security</h3>
+                    <p>Our network architecture incorporates multiple security layers:</p>
+                    <ul>
+                        <li>Enterprise-grade firewalls and intrusion detection systems</li>
+                        <li>DDoS protection and mitigation</li>
+                        <li>Network segmentation and isolation</li>
+                        <li>Regular vulnerability scanning and penetration testing</li>
+                        <li>Continuous monitoring for suspicious activities</li>
+                    </ul>
+
+                    <h3>3.3 Server Hardening</h3>
+                    <p>All servers are configured according to industry-leading security standards:</p>
+                    <ul>
+                        <li>Minimal installation of required components</li>
+                        <li>Regular security patches and updates</li>
+                        <li>Secure configuration based on CIS benchmarks</li>
+                        <li>Host-based intrusion detection</li>
+                        <li>File integrity monitoring</li>
+                    </ul>
+
+                    <h3>3.4 Redundancy and Reliability</h3>
+                    <p>Our infrastructure is designed for high availability through:</p>
+                    <ul>
+                        <li>Geographic distribution across multiple regions</li>
+                        <li>Automated failover mechanisms</li>
+                        <li>Regular backup procedures</li>
+                        <li>Disaster recovery planning and testing</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="access-controls">
+                    <h2>4. Access Controls</h2>
+                    <p>We implement strict access controls to protect both user data and our systems:</p>
+
+                    <h3>4.1 User Authentication</h3>
+                    <p>Chatlify provides robust authentication mechanisms to secure user accounts:</p>
+                    <ul>
+                        <li>Strong password requirements and secure password storage using industry-standard hashing
+                            algorithms</li>
+                        <li>Two-factor authentication (2FA) option for all accounts</li>
+                        <li>Biometric authentication support on compatible devices</li>
+                        <li>Suspicious login detection and notification</li>
+                        <li>Session management with automatic timeouts</li>
+                    </ul>
+
+                    <h3>4.2 Internal Access Controls</h3>
+                    <p>Access to production systems and user data by Chatlify personnel is strictly controlled:</p>
+                    <ul>
+                        <li>Role-based access control (RBAC) with principle of least privilege</li>
+                        <li>Multi-factor authentication required for all staff</li>
+                        <li>Just-in-time access provisioning for administrative functions</li>
+                        <li>Comprehensive audit logging of all access</li>
+                        <li>Regular access reviews and promptly removing access when no longer needed</li>
+                    </ul>
+
+                    <h3>4.3 Third-Party Access</h3>
+                    <p>We carefully manage any third-party access to our systems:</p>
+                    <ul>
+                        <li>Rigorous vendor security assessment process</li>
+                        <li>Limited, monitored access provided only when necessary</li>
+                        <li>Contractual security and confidentiality obligations</li>
+                        <li>Regular review of third-party access and permissions</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="security-practices">
+                    <h2>5. Security Practices</h2>
+                    <p>Our security program incorporates comprehensive practices to ensure continuous protection:</p>
+
+                    <h3>5.1 Secure Development</h3>
+                    <p>Chatlify follows secure software development lifecycle (SDLC) practices:</p>
+                    <ul>
+                        <li>Security requirements integrated into product design</li>
+                        <li>Security code reviews and static analysis</li>
+                        <li>Dependency scanning for vulnerabilities</li>
+                        <li>Pre-release security testing</li>
+                        <li>Regular security training for development teams</li>
+                    </ul>
+
+                    <h3>5.2 Employee Security</h3>
+                    <p>We maintain a strong security culture among our team:</p>
+                    <ul>
+                        <li>Background checks for all employees</li>
+                        <li>Comprehensive security training upon hiring and regularly thereafter</li>
+                        <li>Security awareness programs and phishing simulations</li>
+                        <li>Clear security policies and procedures</li>
+                        <li>Confidentiality agreements</li>
+                    </ul>
+
+                    <h3>5.3 Data Handling</h3>
+                    <p>Our approach to data handling emphasizes privacy and security:</p>
+                    <ul>
+                        <li>Data minimization principles</li>
+                        <li>Strict data classification and handling procedures</li>
+                        <li>Secure data transfer protocols</li>
+                        <li>Secure disposal of data when no longer needed</li>
+                        <li>Regular data protection impact assessments</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="vulnerability">
+                    <h2>6. Vulnerability Management</h2>
+                    <p>We proactively identify and address security vulnerabilities through a comprehensive management
+                        program:</p>
+
+                    <h3>6.1 Vulnerability Assessments</h3>
+                    <p>Regular security assessments are conducted to identify potential vulnerabilities:</p>
+                    <ul>
+                        <li>Automated vulnerability scanning of all systems</li>
+                        <li>Third-party penetration testing at least annually</li>
+                        <li>Code security reviews</li>
+                        <li>Architecture risk analysis</li>
+                    </ul>
+
+                    <h3>6.2 Patch Management</h3>
+                    <p>We maintain a robust patch management process to address vulnerabilities promptly:</p>
+                    <ul>
+                        <li>Continuous monitoring for security updates and patches</li>
+                        <li>Risk-based prioritization of patches</li>
+                        <li>Expedited deployment of critical security patches</li>
+                        <li>Regular maintenance windows for non-critical updates</li>
+                        <li>Validation testing after patch deployment</li>
+                    </ul>
+
+                    <h3>6.3 Bug Bounty Program</h3>
+                    <p>Chatlify maintains a bug bounty program to encourage responsible disclosure of security
+                        vulnerabilities by security researchers. For more information on participating in our bug bounty
+                        program, please visit our security page or contact our security team.</p>
+                </div>
+
+                <div class="legal-section" id="incident-response">
+                    <h2>7. Incident Response</h2>
+                    <p>Despite our best preventive measures, we maintain readiness to respond to security incidents:</p>
+
+                    <h3>7.1 Incident Response Plan</h3>
+                    <p>Our comprehensive incident response plan includes:</p>
+                    <ul>
+                        <li>Defined roles and responsibilities</li>
+                        <li>Detailed response procedures for various incident types</li>
+                        <li>Communication protocols</li>
+                        <li>Escalation procedures</li>
+                        <li>Regular testing through tabletop exercises and simulations</li>
+                    </ul>
+
+                    <h3>7.2 Monitoring and Detection</h3>
+                    <p>We implement advanced monitoring capabilities to detect potential security incidents:</p>
+                    <ul>
+                        <li>24/7 security monitoring of all systems</li>
+                        <li>Automated alerting for suspicious activities</li>
+                        <li>Security information and event management (SIEM) system</li>
+                        <li>Behavioral analytics to detect anomalous patterns</li>
+                    </ul>
+
+                    <h3>7.3 Incident Communication</h3>
+                    <p>In the event of a security incident affecting our users, we are committed to:</p>
+                    <ul>
+                        <li>Prompt notification to affected users</li>
+                        <li>Transparent communication about the nature and impact of the incident</li>
+                        <li>Clear guidance on steps users should take</li>
+                        <li>Regular updates during incident resolution</li>
+                        <li>Post-incident reporting on causes and preventive measures</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="compliance">
+                    <h2>8. Compliance & Certifications</h2>
+                    <p>Chatlify maintains compliance with relevant security standards and regulations:</p>
+
+                    <h3>8.1 Industry Standards</h3>
+                    <p>Our security program aligns with recognized industry standards:</p>
+                    <ul>
+                        <li>ISO/IEC 27001 Information Security Management</li>
+                        <li>NIST Cybersecurity Framework</li>
+                        <li>OWASP Application Security Verification Standard</li>
+                    </ul>
+
+                    <h3>8.2 Regulatory Compliance</h3>
+                    <p>We adhere to applicable regulatory requirements, including:</p>
+                    <ul>
+                        <li>General Data Protection Regulation (GDPR)</li>
+                        <li>California Consumer Privacy Act (CCPA)</li>
+                        <li>Children's Online Privacy Protection Act (COPPA)</li>
+                    </ul>
+
+                    <h3>8.3 Independent Verification</h3>
+                    <p>Our security controls are regularly assessed by independent third parties:</p>
+                    <ul>
+                        <li>SOC 2 Type II audits</li>
+                        <li>Independent penetration testing</li>
+                        <li>Vulnerability assessments</li>
+                    </ul>
+                    <p>For more information about our certifications or to request documentation, please contact our
+                        security team.</p>
+                </div>
+
+                <div class="legal-section" id="security-tips">
+                    <h2>9. Security Tips for Users</h2>
+                    <p>While we implement robust security measures, users play an important role in maintaining the
+                        security of their accounts and communications:</p>
+
+                    <h3>9.1 Account Security</h3>
+                    <ul>
+                        <li>Use a strong, unique password for your Chatlify account</li>
+                        <li>Enable two-factor authentication</li>
+                        <li>Regularly review your account activity and connected devices</li>
+                        <li>Be cautious of phishing attempts seeking your Chatlify credentials</li>
+                        <li>Log out of your account when using shared or public devices</li>
+                    </ul>
+
+                    <h3>9.2 Device Security</h3>
+                    <ul>
+                        <li>Keep your devices and operating systems updated</li>
+                        <li>Use device encryption and screen locks</li>
+                        <li>Install reputable security software</li>
+                        <li>Download Chatlify only from official sources</li>
+                        <li>Be cautious when granting permissions to the Chatlify app</li>
+                    </ul>
+
+                    <h3>9.3 Communication Security</h3>
+                    <ul>
+                        <li>Verify the identity of contacts before sharing sensitive information</li>
+                        <li>Use disappearing messages for sensitive conversations</li>
+                        <li>Regularly verify security keys for important contacts</li>
+                        <li>Be cautious about clicking on links or opening attachments</li>
+                        <li>Report suspicious messages or behavior</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="reporting">
+                    <h2>10. Reporting Security Issues</h2>
+                    <p>We take security issues seriously and appreciate the community's help in keeping Chatlify secure:
+                    </p>
+
+                    <h3>10.1 Responsible Disclosure</h3>
+                    <p>If you discover a potential security vulnerability in Chatlify, we encourage you to report it to
+                        us through our responsible disclosure program. We commit to:</p>
+                    <ul>
+                        <li>Acknowledging receipt of your report in a timely manner</li>
+                        <li>Providing updates on our investigation and resolution</li>
+                        <li>Protecting your privacy and not sharing your information without consent</li>
+                        <li>Not pursuing legal action against researchers who report vulnerabilities responsibly</li>
+                        <li>Recognizing researchers who help improve our security</li>
+                    </ul>
+
+                    <h3>10.2 Contact Information</h3>
+                    <p>To report security vulnerabilities, please contact our security team at:</p>
+                    <p>Email: <a href="mailto:security@chatlify.com">security@chatlify.com</a></p>
+                    <p>For sensitive reports, you can use our PGP key, which is available on our security page.</p>
+
+                    <h3>10.3 Security Updates</h3>
+                    <p>We publish security advisories for significant vulnerabilities after they have been addressed.
+                        You can find these advisories on our security blog or subscribe to receive security
+                        notifications.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <svg class="logo-svg" width="40" height="40" viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="footer-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6a11cb" />
+                            <stop offset="100%" stop-color="#2575fc" />
+                        </linearGradient>
+                        <filter id="footer-glow">
+                            <feGaussianBlur stdDeviation="5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                        <clipPath id="footer-circle-clip">
+                            <circle cx="100" cy="100" r="85" />
+                        </clipPath>
+                    </defs>
+                    <!-- Main Logo Circle -->
+                    <circle cx="100" cy="100" r="85" fill="#16213e" stroke="url(#footer-gradient)" stroke-width="5"
+                        opacity="0.7" />
+                    <!-- Logo Path -->
+                    <path class="logo-path"
+                        d="M100,30 C60,30 30,60 30,100 C30,140 60,170 100,170 C140,170 170,140 170,100" fill="none"
+                        stroke="url(#footer-gradient)" stroke-width="10" stroke-linecap="round"
+                        filter="url(#footer-glow)" />
+                    <!-- C Letter -->
+                    <text x="75" y="125" class="logo-text" fill="white" font-size="80" font-family="Poppins, sans-serif"
+                        font-weight="bold" filter="url(#footer-glow)">C</text>
+                </svg>
+                <span>CHATLIFY</span>
+            </div>
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><a href="#">Voice Chat</a></li>
+                        <li><a href="#">Chatlify Premium</a></li>
+                        <li><a href="#">Communities</a></li>
+                        <li><a href="#">Integrations</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press Room</a></li>
+                        <li><a href="../contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                        <li><a href="#">Announcements</a></li>
+                        <li><a href="#">Developer API</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="security.html" class="active">Security</a></li>
+                        <li><a href="data-protection.html">Data Protection</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://x.com/Chatlifyapp" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/chatlifyapp/" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-instagram"></i></a>
+                <a href="https://www.youtube.com/@Chatlify" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-youtube"></i></a>
+                <a href="https://www.tiktok.com/@chatlifyapp" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-tiktok"></i></a>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Chatlify Inc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
