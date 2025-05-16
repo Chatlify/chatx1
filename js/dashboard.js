@@ -1236,15 +1236,13 @@ function buildContextMenuContent(menu, userId, username, avatar) {
         { label: 'Profil', icon: 'fa-user', action: () => openProfilePanel(userId, username, avatar) },
         {
             label: 'Mesaj Gönder', icon: 'fa-comment', action: () => {
-                // DM listesindeki avatarı bulup openChatPanel'e göndermek daha doğru olabilir
-                // Şimdilik dataset'ten gelen avatarı kullanıyoruz
                 openChatPanel(userId, username, avatar);
             }
         },
         {
             label: 'Arkadaşlıktan Çıkar',
             icon: 'fa-user-times',
-            action: () => showRemoveFriendConfirmation(userId, username, avatar),
+            action: () => showRemoveFriendConfirmation(userId, username, avatar), // Bu fonksiyonu çağır
             danger: true
         }
     ];
@@ -2881,14 +2879,16 @@ function setupAddFriendModal() {
 
         try {
             // Girilen kullanıcı adını ve mevcut kullanıcı ID'sini alıyoruz
+            // DÜZELTME: 'profiles' yerine 'users' tablosunda arama yap
             const { data: targetUser, error: userError } = await supabase
-                .from('profiles')
-                .select('id, username')
+                .from('users') // 'profiles' yerine 'users' olarak değiştirildi
+                .select('id, username') // 'avatar' alanı da seçilebilir, ancak şu an için gerekli değil
                 .eq('username', username)
                 .single();
 
             if (userError || !targetUser) {
-                showMessage(`${username} adlı kullanıcı bulunamadı`, 'error');
+                console.error('Kullanıcı arama hatası:', userError);
+                showMessage(`${username} adlı kullanıcı bulunamadı. (Hata: ${userError ? userError.message : 'Bilinmeyen'})`, 'error');
                 return;
             }
 
@@ -3308,5 +3308,188 @@ async function getUserJoinDate(userId) {
     } catch (error) {
         console.error('Kullanıcı katılma tarihi alınırken hata:', error);
         return 'Bilinmiyor';
+    }
+}
+
+// Arkadaşlıktan Çıkarma Onay Modalı
+function showRemoveFriendConfirmation(userId, username, avatar) {
+    console.log(`Arkadaşlıktan çıkarma onayı isteniyor: ${username} (ID: ${userId})`);
+
+    // Mevcut bir modal varsa kaldır
+    const existingModalOverlay = document.getElementById('removeFriendModalOverlay');
+    if (existingModalOverlay) {
+        existingModalOverlay.remove();
+    }
+
+    // Modal overlay oluştur
+    const modalOverlay = document.createElement('div');
+    modalOverlay.id = 'removeFriendModalOverlay';
+    modalOverlay.className = 'modal-overlay open'; // Başlangıçta görünür yap
+
+    // Modal container oluştur
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'removeFriendModal';
+    modalContainer.className = 'modal-container';
+
+    modalContainer.innerHTML = `
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <span class="modal-icon"><i class="fas fa-user-times"></i></span>
+                <h3>Arkadaşı Çıkar</h3>
+            </div>
+            <button class="close-modal-btn" title="Kapat"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-content">
+            <div class="remove-friend-info">
+                <img src="${avatar || defaultAvatar}" alt="${username}" class="remove-friend-avatar" onerror="this.src='${defaultAvatar}'">
+                <p class="remove-friend-text"><strong>${username}</strong> adlı kullanıcıyı arkadaş listenizden çıkarmak istediğinize emin misiniz?</p>
+            </div>
+            <div class="modal-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Bu işlem geri alınamaz.</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-action-btn cancel-button">İptal</button>
+            <button class="modal-action-btn confirm-button danger">Evet, Çıkar</button>
+        </div>
+        <div class="modal-message-area" style="display: none;"></div>
+    `;
+
+    modalOverlay.appendChild(modalContainer);
+    document.body.appendChild(modalOverlay);
+
+    // Elementleri seç
+    const closeModalBtn = modalContainer.querySelector('.close-modal-btn');
+    const cancelButton = modalContainer.querySelector('.cancel-button');
+    const confirmButton = modalContainer.querySelector('.confirm-button');
+    const messageArea = modalContainer.querySelector('.modal-message-area');
+
+    // Modalı kapatma fonksiyonu
+    function closeModal() {
+        modalOverlay.classList.remove('open');
+        modalOverlay.classList.add('closing'); // Kapanma animasyonu için
+        setTimeout(() => {
+            modalOverlay.remove();
+        }, 300); // CSS transition süresiyle eşleşmeli
+    }
+
+    // Olay dinleyicileri
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelButton.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeModal();
+        }
+    });
+
+    function escKeyHandler(e) {
+        if (e.key === 'Escape' && document.getElementById('removeFriendModalOverlay')) {
+            closeModal();
+            document.removeEventListener('keydown', escKeyHandler); // Dinleyiciyi kaldır
+        }
+    }
+    document.addEventListener('keydown', escKeyHandler);
+
+    confirmButton.addEventListener('click', async () => {
+        confirmButton.disabled = true;
+        confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Çıkarılıyor...';
+        messageArea.style.display = 'none';
+
+        try {
+            await removeFriend(userId, username);
+            messageArea.textContent = `${username} başarıyla arkadaşlıktan çıkarıldı.`;
+            messageArea.className = 'modal-message-area success';
+            messageArea.style.display = 'block';
+            setTimeout(() => {
+                closeModal();
+                // Arkadaş listelerini ve DM listesini yeniden yükle
+                loadAllFriends({
+                    onlineList: document.querySelector('.online-friends'),
+                    offlineList: document.querySelector('.offline-friends'),
+                    dmList: document.querySelector('#friends-group .dm-items'),
+                    onlineSection: document.querySelector('.online-section-title'),
+                    offlineSection: document.querySelector('.offline-section-title')
+                });
+            }, 2000);
+        } catch (error) {
+            console.error('Arkadaş çıkarma hatası (modal içinde):', error);
+            messageArea.textContent = `Hata: ${error.message || 'Arkadaş çıkarılamadı.'}`;
+            messageArea.className = 'modal-message-area error';
+            messageArea.style.display = 'block';
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = 'Evet, Çıkar';
+        }
+    });
+
+    // Modalı göster (animasyonla)
+    setTimeout(() => modalContainer.classList.add('open'), 10);
+}
+
+
+// Arkadaşı veritabanından silme fonksiyonu
+async function removeFriend(friendId, friendUsername) {
+    if (!currentUserId || !friendId) {
+        throw new Error('Geçerli kullanıcı veya arkadaş ID'si bulunamadı.');
+    }
+
+    console.log(`${currentUserId} kullanıcısı, ${friendUsername} (ID: ${friendId}) adlı arkadaşı siliyor.`);
+
+    try {
+        // Arkadaşlık kaydını bul ve sil
+        // user_id_1 ve user_id_2 kombinasyonlarını kontrol et
+        const { error: deleteError1 } = await supabase
+            .from('friendships')
+            .delete()
+            .match({ user_id_1: currentUserId, user_id_2: friendId, status: 'accepted' });
+
+        if (deleteError1 && deleteError1.code !== 'PGRST116') { // PGRST116: No rows found
+            console.error('Arkadaşlık silinirken hata (durum 1):', deleteError1);
+            // İkinci durumu denemeden önce burada bir hata fırlatmak yerine, her iki durumu da deneyebiliriz.
+        }
+
+        const { error: deleteError2 } = await supabase
+            .from('friendships')
+            .delete()
+            .match({ user_id_1: friendId, user_id_2: currentUserId, status: 'accepted' });
+
+        if (deleteError2 && deleteError2.code !== 'PGRST116') {
+            console.error('Arkadaşlık silinirken hata (durum 2):', deleteError2);
+        }
+
+        // Eğer her iki silme denemesi de PGRST116 (kayıt bulunamadı) dışında bir hata verdiyse 
+        // veya hiç kayıt bulunamadıysa (bu durum normalde olmamalı, arkadaşsa kayıt olmalı)
+        // bir hata fırlat.
+        if ((deleteError1 && deleteError1.code !== 'PGRST116') && (deleteError2 && deleteError2.code !== 'PGRST116')) {
+            throw new Error(`Arkadaşlık silinirken birincil hata: ${deleteError1.message}, ikincil hata: ${deleteError2.message}`);
+        }
+        // İki denemeden en az birinin başarılı olması veya hiç kayıt olmaması (zaten arkadaş değil durumu)
+        // bu noktada bir hata fırlatılmamışsa işlem başarılı kabul edilebilir veya zaten silinmiş.
+
+        console.log(`${friendUsername} başarıyla arkadaşlıktan çıkarıldı veya zaten arkadaş değil.`);
+
+        // Arayüzden arkadaşı kaldır (DM listesi, online/offline listeleri)
+        // DM öğesini kaldır
+        const dmItem = document.querySelector(`.dm-item[data-user-id='${friendId}']`);
+        if (dmItem) dmItem.remove();
+
+        // Arkadaş listelerinden kaldır
+        const friendRowOnline = document.querySelector(`.online-friends .friend-row[data-user-id='${friendId}']`);
+        if (friendRowOnline) friendRowOnline.remove();
+        const friendRowOffline = document.querySelector(`.offline-friends .friend-row[data-user-id='${friendId}']`);
+        if (friendRowOffline) friendRowOffline.remove();
+
+        // Sayaçları güncelle
+        updateFriendCounters();
+
+        // Eğer aktif sohbet bu kullanıcıylaysa, sohbet panelini kapat
+        const chatPanel = document.querySelector('.chat-panel');
+        if (chatPanel && chatPanel.dataset.activeChatUserId === friendId && !chatPanel.classList.contains('hidden')) {
+            closeChatPanel();
+        }
+
+    } catch (error) {
+        console.error(`'${friendUsername}' arkadaşlıktan çıkarılırken hata:`, error);
+        throw error; // Hatanın modalda gösterilmesi için tekrar fırlat
     }
 }
