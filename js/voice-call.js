@@ -14,7 +14,6 @@ let isCallActive = false;
 let isMuted = false;
 let isInitiator = false;
 let ringtoneAudio = null; // Zil sesi için ses nesnesi
-let pendingCandidates = []; // Gelen ICE adayları için kuyruk
 
 // ICE sunucu yapılandırması - STUN sunucuları
 const iceServers = {
@@ -351,10 +350,7 @@ async function startCall(userId, username, avatar) {
 
         // Mikrofon erişimi iste
         localStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                noiseSuppression: true,
-                echoCancellation: true
-            },
+            audio: true,
             video: false
         });
 
@@ -524,8 +520,6 @@ async function handleCallAnswer(signal) {
         try {
             console.log('📞 Arama cevabı alındı, uzak açıklama ayarlanıyor...');
             await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
-            console.log('📞 Uzak answer ayarlandı (başlatıcı). Bekleyen ICE adayları işleniyor.');
-            await processPendingIceCandidates(); // Bekleyen adayları işle
         } catch (error) {
             console.error('📞 Uzak açıklama ayarlanırken hata oluştu:', error);
         }
@@ -535,17 +529,11 @@ async function handleCallAnswer(signal) {
 // ICE adayı alındığında
 async function handleIceCandidate(signal) {
     if (peerConnection && peerConnection.signalingState !== 'closed' && signal.candidate) {
-        const candidate = new RTCIceCandidate(signal.candidate);
-        if (peerConnection.remoteDescription) { // remoteDescription ayarlı mı kontrol et
-            try {
-                console.log('📞 ICE adayı alınıp hemen işleniyor:', candidate);
-                await peerConnection.addIceCandidate(candidate);
-            } catch (error) {
-                console.error('📞 ICE adayı eklenirken hata oluştu (hemen işleme):', error);
-            }
-        } else {
-            console.log('📞 ICE adayı alındı, remoteDescription henüz ayarlanmadığı için kuyruğa alınıyor:', candidate);
-            pendingCandidates.push(candidate);
+        try {
+            console.log('📞 ICE adayı alındı:', signal.candidate);
+            await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+        } catch (error) {
+            console.error('📞 ICE adayı eklenirken hata oluştu:', error);
         }
     }
 }
@@ -563,7 +551,7 @@ function createPeerConnection() {
         peerConnection.close();
         peerConnection = null;
     }
-    pendingCandidates = []; // Yeni bağlantı için kuyruğu sıfırla
+
     console.log('📞 Yeni WebRTC bağlantısı oluşturuluyor...');
     peerConnection = new RTCPeerConnection(iceServers);
 
@@ -627,10 +615,7 @@ async function acceptIncomingCall() {
 
         // Mikrofon erişimi iste
         localStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                noiseSuppression: true,
-                echoCancellation: true
-            },
+            audio: true,
             video: false
         });
 
@@ -652,8 +637,6 @@ async function acceptIncomingCall() {
 
         // Uzak tanımlamayı ayarla
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-        console.log('📞 Uzak offer ayarlandı (alıcı). Bekleyen ICE adayları işleniyor.');
-        await processPendingIceCandidates(); // Bekleyen adayları işle
 
         // Cevap oluştur
         const answer = await peerConnection.createAnswer();
@@ -886,23 +869,6 @@ function resetCallState() {
     isMuted = false;
     isInitiator = false;
     callDuration = 0;
-    pendingCandidates = []; // Kuyruğu sıfırla
-}
-
-// Bekleyen ICE adaylarını işleyen fonksiyon
-async function processPendingIceCandidates() {
-    if (peerConnection && pendingCandidates.length > 0) {
-        console.log(`📞 ${pendingCandidates.length} adet bekleyen ICE adayı işleniyor...`);
-        for (const candidate of pendingCandidates) {
-            try {
-                await peerConnection.addIceCandidate(candidate);
-                console.log('📞 Bekleyen ICE adayı başarıyla eklendi:', candidate);
-            } catch (error) {
-                console.error('📞 Bekleyen ICE adayı eklenirken hata oluştu:', error, candidate);
-            }
-        }
-        pendingCandidates = []; // Kuyruğu temizle
-    }
 }
 
 // Sesli arama için hata kontrolü
