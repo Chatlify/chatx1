@@ -353,6 +353,14 @@ function setupCallButtons() {
 
 // Ses filtreleme işlevi
 async function applyNoiseSuppression(stream) {
+    // SORUN: Ses filtreleme karşılıklı konuşmayı engelliyor
+    // Şu an için filtrelemeyi atlayarak direkt akışı döndür
+    console.log('📞 Ses filtreleme basitleştirildi - ham mikrofon akışı kullanılıyor');
+    return stream;
+
+    /* 
+    // NOT: Bu kod şimdilik devre dışı bırakıldı
+    // Ses işlemenin düzgün çalışmadığı tespit edildi
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)({
             latencyHint: 'interactive',
@@ -397,6 +405,46 @@ async function applyNoiseSuppression(stream) {
         console.error('📞 Gürültü bastırma uygulanamadı:', error);
         return stream; // Hata durumunda orijinal akışı kullan
     }
+    */
+}
+
+// Uzak ses akışına işlem uygula
+async function applyRemoteAudioProcessing(stream) {
+    // SORUN: Ses işleme sorunlara neden oluyor
+    // Şu an için direkt akışı döndür
+    console.log('📞 Uzak ses işleme basitleştirildi - ham ses akışı kullanılıyor');
+    return stream;
+
+    /* 
+    // NOT: Bu kod şimdilik devre dışı bırakıldı
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'interactive',
+            sampleRate: 48000
+        });
+    }
+
+    try {
+        // Ses akışı için kaynak oluştur
+        const source = audioContext.createMediaStreamSource(stream);
+
+        // Ses düzeyini daha iyi kontrol etmek için gain node oluştur
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 1.2; // Ses seviyesini hafifçe artır
+
+        // Ses işleme hattı: source -> gain -> çıkış
+        source.connect(gainNode);
+
+        // İşlenmiş ses için çıkış akışı oluştur
+        const destination = audioContext.createMediaStreamDestination();
+        gainNode.connect(destination);
+
+        return destination.stream;
+    } catch (error) {
+        console.error('📞 Uzak ses işleme uygulanamadı:', error);
+        return stream; // Hata durumunda orijinal akışı kullan
+    }
+    */
 }
 
 // Sesli arama butonuna tıklandığında
@@ -493,16 +541,9 @@ async function startCall(userId, username, avatar) {
             throw profileError;
         }
 
-        // Mikrofon erişimi iste - gelişmiş ses kalitesi ayarları
+        // Mikrofon erişimi iste - temel ayarlar
         const constraints = {
-            audio: {
-                echoCancellation: { ideal: true },
-                noiseSuppression: { ideal: true },
-                autoGainControl: { ideal: true },
-                channelCount: { ideal: 1 }, // Mono
-                sampleRate: { ideal: 48000 }, // Yüksek ses kalitesi
-                sampleSize: { ideal: 16 }  // 16-bit
-            },
+            audio: true,
             video: false
         };
 
@@ -510,52 +551,21 @@ async function startCall(userId, username, avatar) {
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
         console.log('📞 Mikrofon erişimi sağlandı:', localStream.getAudioTracks());
 
-        // Mikrofon işleme için Web Audio API'yi kullan
-        const processedStream = await applyNoiseSuppression(localStream);
-        console.log('📞 Ses işleme tamamlandı:', processedStream.getAudioTracks());
-
         // WebRTC bağlantısını kur
         createPeerConnection();
         console.log('📞 WebRTC bağlantısı kuruldu');
 
-        // SDP teklif oluşturma öncesi her iki ortam da eklensin
-        // Önce orijinal yerel akışı ekle (güvenilirlik için)
+        // Ses akışını ekle
         localStream.getAudioTracks().forEach(track => {
-            console.log('📞 Orijinal ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
+            console.log('📞 Ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
             peerConnection.addTrack(track, localStream);
-        });
-
-        // Sonra işlenmiş akışı ekle (kalite için)
-        processedStream.getAudioTracks().forEach(track => {
-            console.log('📞 İşlenmiş ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
-            peerConnection.addTrack(track, processedStream);
-        });
-
-        // Ses gönderim kalitesini en baştan ayarla
-        peerConnection.getSenders().forEach(sender => {
-            if (sender.track && sender.track.kind === 'audio') {
-                // Parametreleri al
-                const params = sender.getParameters();
-                // Yeni değerler ayarla (en iyi ses kalitesi için)
-                if (params.encodings && params.encodings.length > 0) {
-                    params.encodings[0].maxBitrate = 48000; // 48 kbps
-                    params.encodings[0].priority = 'high';
-
-                    try {
-                        sender.setParameters(params);
-                    } catch (err) {
-                        console.warn('📞 Gönderici parametreleri ayarlanamadı:', err);
-                    }
-                }
-            }
         });
 
         // SDP teklifini oluştur
         console.log('📞 Teklif oluşturuluyor...');
         const offerOptions = {
             offerToReceiveAudio: true,
-            offerToReceiveVideo: false,
-            voiceActivityDetection: true
+            offerToReceiveVideo: false
         };
 
         const offer = await peerConnection.createOffer(offerOptions);
@@ -821,9 +831,6 @@ function createPeerConnection() {
                 if (!isCallActive) {
                     console.log('📞 Sesli arama bağlantısı kuruldu!');
                     showActiveCallUI();
-
-                    // Ses kalitesi iyileştirmesi
-                    applyAudioOptimizations();
                 }
                 break;
 
@@ -874,68 +881,34 @@ function createPeerConnection() {
     peerConnection.ontrack = (event) => {
         console.log('📞 Uzak ses akışı alındı:', event.streams[0]);
 
-        // Ses işleme uygulanmış uzak akışı al ve çal
-        applyRemoteAudioProcessing(event.streams[0]).then(processedStream => {
-            // Mevcut ses elementini temizle
-            const existingAudio = document.getElementById('remoteAudio');
-            if (existingAudio) {
-                existingAudio.srcObject = null;
-                existingAudio.remove();
-            }
+        // Mevcut ses elementini temizle
+        const existingAudio = document.getElementById('remoteAudio');
+        if (existingAudio) {
+            existingAudio.srcObject = null;
+            existingAudio.remove();
+        }
 
-            // Yeni ses elementi oluştur
-            const remoteAudio = document.createElement('audio');
-            remoteAudio.id = 'remoteAudio';
-            remoteAudio.autoplay = true;
-            remoteAudio.volume = 1.0; // Ses seviyesini maksimuma ayarla
+        // Yeni ses elementi oluştur
+        const remoteAudio = document.createElement('audio');
+        remoteAudio.id = 'remoteAudio';
+        remoteAudio.autoplay = true;
+        remoteAudio.volume = 1.0; // Ses seviyesini maksimuma ayarla
 
-            // Safari uyumluluğu için ek ayarlar
-            remoteAudio.muted = false;
-            remoteAudio.playsInline = true;
+        // Safari uyumluluğu için ek ayarlar
+        remoteAudio.muted = false;
+        remoteAudio.playsInline = true;
 
-            // Ses elementine akışı bağla
-            remoteAudio.srcObject = processedStream;
-            document.body.appendChild(remoteAudio);
+        // Ses elementine akışı doğrudan bağla (ses işleme olmadan)
+        remoteAudio.srcObject = event.streams[0];
+        document.body.appendChild(remoteAudio);
 
-            // Oynatmayı zorla (Safari için)
-            remoteAudio.play().catch(e =>
-                console.warn('📞 Otomatik oynatma başlatılamadı:', e)
-            );
-        });
+        // Oynatmayı zorla (Safari için)
+        remoteAudio.play().catch(e =>
+            console.warn('📞 Otomatik oynatma başlatılamadı:', e)
+        );
     };
 
     return peerConnection;
-}
-
-// Uzak ses akışına işlem uygula
-async function applyRemoteAudioProcessing(stream) {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)({
-            latencyHint: 'interactive',
-            sampleRate: 48000
-        });
-    }
-
-    try {
-        // Ses akışı için kaynak oluştur
-        const source = audioContext.createMediaStreamSource(stream);
-
-        // Ses düzeyini daha iyi kontrol etmek için gain node oluştur
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = 1.2; // Ses seviyesini hafifçe artır
-
-        // Ses işleme hattı: source -> gain -> çıkış
-        source.connect(gainNode);
-
-        // İşlenmiş ses için çıkış akışı oluştur
-        const destination = audioContext.createMediaStreamDestination();
-        gainNode.connect(destination);
-
-        return destination.stream;
-    } catch (error) {
-        console.error('📞 Uzak ses işleme uygulanamadı:', error);
-        return stream; // Hata durumunda orijinal akışı kullan
-    }
 }
 
 // Gelen aramayı kabul et
@@ -949,26 +922,15 @@ async function acceptIncomingCall() {
             ringtoneAudio.currentTime = 0;
         }
 
-        // Mikrofon erişimi iste - gelişmiş ses kalitesi ayarları
+        // Mikrofon erişimi iste - temel ayarlar
         const constraints = {
-            audio: {
-                echoCancellation: { ideal: true },
-                noiseSuppression: { ideal: true },
-                autoGainControl: { ideal: true },
-                channelCount: { ideal: 1 }, // Mono
-                sampleRate: { ideal: 48000 }, // Yüksek ses kalitesi
-                sampleSize: { ideal: 16 }  // 16-bit
-            },
+            audio: true,
             video: false
         };
 
         console.log('📞 Mikrofon erişimi isteniyor...');
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
         console.log('📞 Mikrofon erişimi sağlandı:', localStream.getAudioTracks());
-
-        // Mikrofon işleme için Web Audio API'yi kullan
-        const processedStream = await applyNoiseSuppression(localStream);
-        console.log('📞 Ses işleme tamamlandı:', processedStream.getAudioTracks());
 
         // Gelen offer bilgisini al
         const offerStr = incomingCallPanel.dataset.offer;
@@ -982,36 +944,10 @@ async function acceptIncomingCall() {
         createPeerConnection();
         console.log('📞 WebRTC bağlantısı kuruldu');
 
-        // SDP teklif kabulü öncesi her iki ortam da eklensin
-        // Önce orijinal yerel akışı ekle (güvenilirlik için)
+        // Ses akışını ekle
         localStream.getAudioTracks().forEach(track => {
-            console.log('📞 Orijinal ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
+            console.log('📞 Ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
             peerConnection.addTrack(track, localStream);
-        });
-
-        // Sonra işlenmiş akışı ekle (kalite için)
-        processedStream.getAudioTracks().forEach(track => {
-            console.log('📞 İşlenmiş ses kanalı ekleniyor:', track.label, track.enabled, track.readyState);
-            peerConnection.addTrack(track, processedStream);
-        });
-
-        // Ses gönderim kalitesini en baştan ayarla
-        peerConnection.getSenders().forEach(sender => {
-            if (sender.track && sender.track.kind === 'audio') {
-                // Parametreleri al
-                const params = sender.getParameters();
-                // Yeni değerler ayarla (en iyi ses kalitesi için)
-                if (params.encodings && params.encodings.length > 0) {
-                    params.encodings[0].maxBitrate = 48000; // 48 kbps
-                    params.encodings[0].priority = 'high';
-
-                    try {
-                        sender.setParameters(params);
-                    } catch (err) {
-                        console.warn('📞 Gönderici parametreleri ayarlanamadı:', err);
-                    }
-                }
-            }
         });
 
         // Uzak tanımlamayı ayarla
@@ -1020,11 +956,7 @@ async function acceptIncomingCall() {
 
         // Cevap oluştur
         console.log('📞 Cevap oluşturuluyor...');
-        const answerOptions = {
-            voiceActivityDetection: true
-        };
-
-        const answer = await peerConnection.createAnswer(answerOptions);
+        const answer = await peerConnection.createAnswer();
         console.log('📞 Yerel tanım ayarlanıyor:', answer);
         await peerConnection.setLocalDescription(answer);
 
