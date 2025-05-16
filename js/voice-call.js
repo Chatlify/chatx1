@@ -13,6 +13,10 @@ let currentCallUserAvatar = null;
 let isCallActive = false;
 let isMuted = false;
 let isInitiator = false;
+let audioContext = null; // AudioContext'i global yap
+let localAnalyserNode = null;
+let remoteAnalyserNode = null;
+let visualizerAnimationId = null;
 
 // ICE sunucu yapılandırması - STUN sunucuları
 const iceServers = {
@@ -365,6 +369,9 @@ function createPeerConnection() {
 
     console.log('📞 Yeni WebRTC bağlantısı oluşturuluyor...');
     peerConnection = new RTCPeerConnection(iceServers);
+    if (!audioContext) { // Sadece bir kere oluştur
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
     // ICE adayı alındığında
     peerConnection.onicecandidate = (event) => {
@@ -401,13 +408,20 @@ function createPeerConnection() {
     // Uzak akış alındığında
     peerConnection.ontrack = (event) => {
         console.log('📞 Uzak ses akışı alındı:', event.streams[0]);
-        // Ses çalma mantığını burada uygulayabiliriz
-        // Örneğin bir audio elementi oluşturup atayabiliriz
         const remoteAudio = document.createElement('audio');
         remoteAudio.id = 'remoteAudio';
         remoteAudio.autoplay = true;
         remoteAudio.srcObject = event.streams[0];
         document.body.appendChild(remoteAudio);
+
+        // Uzak akış için görselleştiriciyi ayarla (aktif arama panelindeki)
+        if (activeCallPanel && activeCallPanel.style.display === 'flex') {
+            const remoteVisualizerCanvas = activeCallPanel.querySelector('.voice-visualizer');
+            if (remoteVisualizerCanvas) {
+                remoteAnalyserNode = setupVisualizer(event.streams[0], remoteVisualizerCanvas, audioContext, 'remote');
+                drawVisualization(remoteVisualizerCanvas, remoteAnalyserNode, 'remote');
+            }
+        }
     };
 
     return peerConnection;
@@ -584,10 +598,8 @@ function showIncomingCallUI(username, avatar) {
     if (callAvatar) callAvatar.src = avatar || 'images/DefaultAvatar.png';
     if (callUsername) callUsername.textContent = `${username} arıyor...`;
 
-    // Bildirim sesi çalabiliriz
-    const ringtone = new Audio('sounds/ringtone.mp3');
-    ringtone.loop = true;
-    ringtone.play().catch(e => console.warn('Ses çalınamadı:', e));
+    // Bildirim sesi çal
+    ringtoneAudio.play().catch(e => console.warn('Ses çalınamadı:', e));
     incomingCallPanel.dataset.ringtone = 'playing';
 
     // Paneli göster
@@ -608,17 +620,21 @@ function showActiveCallUI() {
 
     // Eğer çalan bir zil sesi varsa durdur
     if (incomingCallPanel.dataset.ringtone === 'playing') {
-        const ringtone = new Audio();
-        ringtone.pause();
+        const ringtoneAudio = document.querySelector('#ringtoneAudio');
+        if (ringtoneAudio) {
+            ringtoneAudio.pause();
+            ringtoneAudio.currentTime = 0;
+        }
         incomingCallPanel.dataset.ringtone = '';
     }
 
     // Avatar ve kullanıcı adını ayarla
-    const callAvatar = activeCallPanel.querySelector('.call-avatar');
-    const callUsername = activeCallPanel.querySelector('.call-username');
+    const callAvatarElement = activeCallPanel.querySelector('.call-avatar');
+    const callUsernameElement = activeCallPanel.querySelector('.call-username');
+    const visualizerCanvas = activeCallPanel.querySelector('.voice-visualizer'); // Canvas'ı seç
 
-    if (callAvatar) callAvatar.src = currentCallUserAvatar || 'images/DefaultAvatar.png';
-    if (callUsername) callUsername.textContent = `${currentCallUsername} ile görüşülüyor`;
+    if (callAvatarElement) callAvatarElement.src = currentCallUserAvatar || 'images/DefaultAvatar.png';
+    if (callUsernameElement) callUsernameElement.textContent = `${currentCallUsername} ile görüşülüyor`;
 
     // Arama süresini başlat
     callDuration = 0;
@@ -642,6 +658,20 @@ function showActiveCallUI() {
 
     // Arama aktif olarak işaretle
     isCallActive = true;
+
+    // Görselleştiriciyi başlat
+    if (visualizerCanvas && localStream) {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        // Yerel akış için görselleştirici (her zaman aktif paneldeki canvas'ı kullanırız)
+        localAnalyserNode = setupVisualizer(localStream, visualizerCanvas, audioContext, 'local');
+
+        // Uzak akış zaten varsa, onu da aynı canvas'a bağlayabiliriz veya ayrı bir canvas.
+        // Şimdilik, remote ontrack'te ayarlanacak.
+        // Çizimi başlat
+        drawVisualization(visualizerCanvas, localAnalyserNode, 'local'); // Başlangıçta sadece yerel için
+    }
 }
 
 // Tüm arama panellerini gizle
@@ -658,6 +688,18 @@ function hideAllCallPanels() {
         incomingCallPanel.style.display = 'none';
         activeCallPanel.style.display = 'none';
     }, 300);
+
+    // Görselleştirici animasyonunu durdur
+    if (visualizerAnimationId) {
+        cancelAnimationFrame(visualizerAnimationId);
+        visualizerAnimationId = null;
+    }
+    // Analyser node'ları temizle
+    if (localAnalyserNode) localAnalyserNode.disconnect();
+    if (remoteAnalyserNode) remoteAnalyserNode.disconnect();
+    localAnalyserNode = null;
+    remoteAnalyserNode = null;
+    // AudioContext'i kapatma, diğer aramalar için kullanılabilir
 }
 
 // Arama durumunu sıfırla
@@ -679,4 +721,86 @@ export function checkVoiceCallSupport() {
     }
 
     return true;
-} 
+}
+
+// Ses Görselleştirici Fonksiyonları
+function setupVisualizer(stream, canvasElement, audioCtx, type) {
+    if (!stream || !canvasElement || !audioCtx) {
+        console.warn(`Görselleştirici için eksik parametreler (${type}):`, { stream, canvasElement, audioCtx });
+        return null;
+    }
+    console.log(`🎙️ ${type} akışı için görselleştirici ayarlanıyor.`);
+
+    const analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    // analyser.connect(audioCtx.destination); // Sesi tekrar çalmamak için bunu bağlamıyoruz, sadece analiz için.
+
+    analyser.fftSize = 256; // Daha az detay, daha büyük çubuklar/dalga
+    // analyser.smoothingTimeConstant = 0.85; // Daha yumuşak geçişler
+    return analyser;
+}
+
+function drawVisualization(canvas, analyserNode, type) {
+    if (!canvas || !analyserNode) {
+        // console.warn(`Çizim için eksik parametreler (${type}):`, { canvas, analyserNode });
+        if (visualizerAnimationId) cancelAnimationFrame(visualizerAnimationId); // Eğer bir önceki animasyon varsa durdur
+        return;
+    }
+
+    const canvasCtx = canvas.getContext('2d');
+    const bufferLength = analyserNode.frequencyBinCount; // fftSize / 2
+    const dataArray = new Uint8Array(bufferLength);
+
+    // Canvas boyutlarını stil ile eşleştir (önemli!)
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 10; // Kenarlardan 10px boşluk bırak
+
+    function draw() {
+        visualizerAnimationId = requestAnimationFrame(draw);
+
+        analyserNode.getByteFrequencyData(dataArray); // Frekans verilerini al
+
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (2 * Math.PI * radius) / bufferLength * 0.8; // Barlar arası boşluk için 0.8 ile çarp
+        let angle = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            const barHeight = dataArray[i] * 0.5; // Yüksekliği biraz azaltalım
+
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            const xEnd = centerX + (radius + barHeight) * Math.cos(angle);
+            const yEnd = centerY + (radius + barHeight) * Math.sin(angle);
+
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(x, y);
+            canvasCtx.lineTo(xEnd, yEnd);
+
+            // Renkleri ses şiddetine göre ayarla (örnek)
+            const hue = i / bufferLength * 360; // Renk tekerleğinde dön
+            // const saturation = '100%';
+            // const lightness = Math.max(20, Math.min(80, barHeight * 0.8)) + '%'; // Parlaklığı ayarla
+            // canvasCtx.strokeStyle = `hsl(${hue}, ${saturation}, ${lightness})`;
+
+            // Veya sabit bir renk
+            canvasCtx.strokeStyle = 'rgba(var(--primary-color-rgb), ' + Math.min(1, dataArray[i] / 255 + 0.2) + ')'; // Ana renk, opaklık sesle değişsin
+            canvasCtx.lineWidth = barWidth;
+            canvasCtx.stroke();
+
+            angle += (2 * Math.PI) / bufferLength;
+        }
+    }
+    draw();
+}
+
+// Zil sesi için audio elementi
+const ringtoneAudio = new Audio('sounds/ringtone.mp3');
+ringtoneAudio.id = 'ringtoneAudio'; // ID ekleyelim
+ringtoneAudio.loop = true;
+document.body.appendChild(ringtoneAudio); // Sayfaya ekleyelim 
