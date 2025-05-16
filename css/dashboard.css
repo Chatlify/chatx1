@@ -7674,11 +7674,13 @@ emoji-picker {
 .chat-header-actions .chat-action-btn:hover i.fa-phone-alt {
     color: var(--success-color);
     transform: scale(1.1);
+    transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .chat-header-actions .chat-action-btn:hover i.fa-video {
     color: var(--primary-color);
     transform: scale(1.1);
+    transition: transform 0.3s ease, color 0.3s ease;
 }
 
 /* Bildirim Kutusu Stilleri */
@@ -8942,3 +8944,17 @@ emoji-picker {
 }
 
 /* ... existing code ... */
+
+/* Aktif arama butonu vurgu stili */
+.chat-action-btn.active-call-btn i.fa-phone-alt {
+    transform: scale(1.2);
+    color: var(--success-color) !important;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+/* Sesli arama butonuna hover olduğunda renk değişimi */
+.chat-header-actions .chat-action-btn:hover i.fa-phone-alt {
+    color: var(--success-color);
+    transform: scale(1.1);
+    transition: transform 0.3s ease, color 0.3s ease;
+}

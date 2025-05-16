@@ -1,4 +1,5 @@
 import { supabase } from './auth_config.js'; // Supabase istemcisini import et
+import { initVoiceCallSystem, checkVoiceCallSupport } from './voice-call.js'; // Sesli arama modülünü import et
 
 // Global değişkenler tanımları
 let currentUserId = null;
@@ -159,6 +160,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Bekleyen arkadaşlık istekleri için realtime aboneliğini kur
         setupPendingFriendRequestSubscription();
+
+        // Sesli arama sistemini başlat
+        if (checkVoiceCallSupport()) {
+            initVoiceCallSystem();
+        } else {
+            console.warn('Sesli arama özelliği bu tarayıcıda desteklenmiyor.');
+        }
 
         console.log('Dashboard JS başlatma tamamlandı.');
     } catch (error) {
@@ -1418,116 +1426,33 @@ function closeChatPanel() {
 
 // Sohbet paneli header butonlarını ayarlama
 function setupChatHeaderActions(userId, username, avatar) {
+    // Chat header butonlarını ayarla
     const chatHeader = document.querySelector('.chat-panel .chat-header');
-    if (!chatHeader) {
-        console.error("Chat header not found in setupChatHeaderActions");
-        return;
-    }
-
-    const actionsContainer = chatHeader.querySelector('.chat-header-actions');
-    if (!actionsContainer) {
-        console.error("Chat header actions container not found");
-        return;
-    }
-
-    // Butonları seç
-    const closeBtn = actionsContainer.querySelector('.chat-close-btn');
-    const profileBtn = actionsContainer.querySelector('.profile-btn');
-    const voiceCallBtn = actionsContainer.querySelector('#voice-call-btn');
-    const videoCallBtn = actionsContainer.querySelector('.chat-action-btn[title="Görüntülü Arama"]'); // Görüntülü arama butonu
-
-    // Olay dinleyicilerini yeniden bağlamak için butonları klonla ve değiştir
-    const reattachEventListener = (originalBtn, eventType, eventHandler) => {
-        if (originalBtn) {
-            const newBtn = originalBtn.cloneNode(true);
-            originalBtn.parentNode.replaceChild(newBtn, originalBtn);
-            newBtn.addEventListener(eventType, eventHandler);
-            return newBtn; // Yeni butonu döndür, belki ileride lazım olur
-        }
-        return null;
-    };
+    const closeBtn = chatHeader?.querySelector('.chat-close-btn');
+    const profileBtn = chatHeader?.querySelector('.profile-btn');
 
     // Sohbeti kapatma butonu
-    reattachEventListener(closeBtn, 'click', closeChatPanel);
+    if (closeBtn) {
+        // Eski event listener'ları temizle
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+
+        // Yeni event listener ekle
+        newCloseBtn.addEventListener('click', closeChatPanel);
+    }
 
     // Profil butonu
-    reattachEventListener(profileBtn, 'click', () => {
-        openProfilePanel(userId, username, avatar);
-    });
+    if (profileBtn) {
+        // Eski event listener'ları temizle
+        const newProfileBtn = profileBtn.cloneNode(true);
+        profileBtn.parentNode.replaceChild(newProfileBtn, profileBtn);
 
-    // Sesli Arama Butonu
-    reattachEventListener(voiceCallBtn, 'click', () => {
-        console.log(`Sesli arama başlatılıyor: Kullanıcı ID: ${userId}, Adı: ${username}`);
-        const callOverlay = document.querySelector('.call-panel-overlay');
-        const outgoingCallPanel = callOverlay?.querySelector('.outgoing-call');
-        const incomingCallPanel = callOverlay?.querySelector('.incoming-call');
-        const activeCallPanel = callOverlay?.querySelector('.active-call');
-
-        if (callOverlay && outgoingCallPanel && incomingCallPanel && activeCallPanel) {
-            // Tüm panelleri gizle
-            outgoingCallPanel.style.display = 'none';
-            incomingCallPanel.style.display = 'none';
-            activeCallPanel.style.display = 'none';
-
-            // Giden arama panelini göster ve bilgileri doldur
-            const outgoingAvatar = outgoingCallPanel.querySelector('#outgoing-call-avatar');
-            const outgoingUsername = outgoingCallPanel.querySelector('#outgoing-call-username');
-            if (outgoingAvatar) outgoingAvatar.src = avatar || defaultAvatar;
-            if (outgoingUsername) outgoingUsername.textContent = `${username} aranıyor...`;
-
-            outgoingCallPanel.style.display = ''; // Varsayılan stili (block) kullanır
-            callOverlay.classList.add('active');
-        } else {
-            console.error('Sesli arama paneli elementleri bulunamadı.');
-        }
-    });
-
-    // Görüntülü Arama Butonu (Yeni eklendi)
-    if (videoCallBtn) {
-        reattachEventListener(videoCallBtn, 'click', () => {
-            // Görüntülü arama işlevselliği buraya eklenecek
-            // Şimdilik konsola bir mesaj yazdıralım
-            console.log(`Görüntülü arama başlatılıyor (Kullanıcı: ${username}, ID: ${userId})`);
-            // Örnek: Görüntülü arama panelini aç
-            // const videoCallOverlay = document.querySelector('.video-call-panel-overlay');
-            // if (videoCallOverlay) {
-            //     videoCallOverlay.classList.add('active');
-            // } else {
-            //     console.error('Görüntülü arama paneli bulunamadı.');
-            // }
-            alert(`Görüntülü arama özelliği henüz aktif değil. ${username} ile görüntülü arama başlatılacaktı.`);
+        // Profil butonuna tıklayınca profil panelini aç
+        newProfileBtn.addEventListener('click', function () {
+            openProfilePanel(userId, username, avatar);
         });
-    } else {
-        console.warn('Görüntülü arama butonu bulunamadı.');
     }
 }
-
-// Giden arama panelindeki kapatma butonu için olay dinleyicisi
-document.addEventListener('DOMContentLoaded', () => {
-    const outgoingHangupBtn = document.querySelector('#outgoing-hangup-btn');
-    const callOverlay = document.querySelector('.call-panel-overlay');
-    const outgoingCallPanel = callOverlay?.querySelector('.outgoing-call');
-
-    if (outgoingHangupBtn && callOverlay && outgoingCallPanel) {
-        outgoingHangupBtn.addEventListener('click', () => {
-            outgoingCallPanel.style.display = 'none';
-            callOverlay.classList.remove('active');
-            console.log('Giden arama sonlandırıldı.');
-        });
-    }
-
-    // Overlay'a tıklayınca kapat (isteğe bağlı, şimdilik eklemiyorum)
-    // if (callOverlay) {
-    //     callOverlay.addEventListener('click', (e) => {
-    //         if (e.target === callOverlay) { // Sadece overlay'in kendisine tıklandıysa
-    //             callOverlay.classList.remove('active');
-    //             if(outgoingCallPanel) outgoingCallPanel.style.display = 'none';
-    //             // Diğer panelleri de gizle...
-    //             console.log('Arama paneli overlay dışına tıklanarak kapatıldı.');
-    //         }
-    //     });
-    // }
-});
 
 // Kullanıcının mesajlarını yükleme
 async function loadConversationMessages(conversationId) {
