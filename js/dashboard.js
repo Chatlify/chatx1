@@ -3310,3 +3310,159 @@ async function getUserJoinDate(userId) {
         return 'Bilinmiyor';
     }
 }
+
+// Arkadaş çıkarma onay paneli gösterme fonksiyonu
+function showRemoveFriendConfirmation(userId, username, avatar) {
+    // Mevcut modal varsa temizle
+    let existingModal = document.querySelector('.confirmation-modal');
+    if (existingModal) {
+        document.body.removeChild(existingModal);
+    }
+
+    // Yeni modal oluştur
+    const modal = document.createElement('div');
+    modal.className = 'confirmation-modal';
+    modal.innerHTML = `
+        <div class="confirmation-modal-content">
+            <div class="confirmation-header">
+                <h3>Arkadaşı Çıkar</h3>
+                <button class="close-modal-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="confirmation-body">
+                <div class="user-info">
+                    <img src="${avatar || 'assets/images/default-avatar.png'}" alt="${username}" class="user-avatar">
+                    <p><strong>${username}</strong> adlı kullanıcıyı arkadaş listenizden çıkarmak istediğinize emin misiniz?</p>
+                </div>
+                <div class="confirmation-actions">
+                    <button class="btn btn-secondary cancel-btn">İptal</button>
+                    <button class="btn btn-danger confirm-btn">Arkadaşlıktan Çıkar</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Modal'ı sayfaya ekle
+    document.body.appendChild(modal);
+
+    // Modal kapanış düğmesi
+    const closeBtn = modal.querySelector('.close-modal-btn');
+    closeBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+
+    // İptal düğmesi
+    const cancelBtn = modal.querySelector('.cancel-btn');
+    cancelBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+
+    // Onaylama düğmesi
+    const confirmBtn = modal.querySelector('.confirm-btn');
+    confirmBtn.addEventListener('click', async () => {
+        try {
+            // Arkadaşlıktan çıkarma işlemini başlat
+            const result = await removeFriend(userId);
+
+            // Modal'ı kapat
+            document.body.removeChild(modal);
+
+            // Başarılı işlem mesajı göster
+            showNotification(`${username} arkadaş listenizden çıkarıldı.`, 'success');
+
+            // UI'ı güncelle (arkadaş listeleri vs.)
+            updateFriendCounters();
+
+            // DM/Arkadaş listesini yeniden yükle
+            refreshFriendLists();
+        } catch (error) {
+            console.error('Arkadaşlıktan çıkarma hatası:', error);
+            showNotification('Arkadaşlıktan çıkarma işlemi başarısız oldu.', 'error');
+        }
+    });
+
+    // Dışarı tıklama ile kapatma
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+}
+
+// Arkadaşlıktan çıkarma API işlemi
+async function removeFriend(friendId) {
+    try {
+        // API endpoint'i ve istek bilgileri
+        const response = await fetch(`${API_BASE_URL}/friends/remove`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getAuthToken()}`
+            },
+            body: JSON.stringify({ friendId })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Arkadaşlıktan çıkarma işlemi başarısız oldu');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Arkadaşlıktan çıkarma API hatası:', error);
+        throw error;
+    }
+}
+
+// Arkadaş listelerini yenileme fonksiyonu
+function refreshFriendLists() {
+    // UI elementlerini seç
+    const onlineListElement = document.querySelector('#online-list');
+    const offlineListElement = document.querySelector('#offline-list');
+    const dmListElement = document.querySelector('#dm-list');
+    const onlineSectionElement = document.querySelector('#online-section');
+    const offlineSectionElement = document.querySelector('#offline-section');
+
+    if (onlineListElement && offlineListElement && dmListElement) {
+        // Arkadaş listelerini yeniden yükle
+        loadAllFriends({
+            onlineList: onlineListElement,
+            offlineList: offlineListElement,
+            dmList: dmListElement,
+            onlineSection: onlineSectionElement,
+            offlineSection: offlineSectionElement
+        });
+    }
+}
+
+// Bildirim gösterme fonksiyonu - mevcut değilse ekleyelim
+function showNotification(message, type = 'info') {
+    // Mevcut bildirim sistemi yoksa basit bir bildirim oluştur
+    if (typeof showToast === 'function') {
+        // Eğer showToast fonksiyonu varsa onu kullan
+        showToast(message, type);
+        return;
+    }
+
+    // Basit bildirim oluştur
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    // Bildirimi sayfaya ekle
+    document.body.appendChild(notification);
+
+    // Belirli bir süre sonra kaldır
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
