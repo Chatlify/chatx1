@@ -1244,7 +1244,10 @@ function buildContextMenuContent(menu, userId, username, avatar) {
         {
             label: 'Arkadaşlıktan Çıkar',
             icon: 'fa-user-times',
-            action: () => showRemoveFriendConfirmation(userId, username, avatar),
+            action: function () {
+                console.log("Arkadaşlıktan çıkar butonuna tıklandı:", userId, username, avatar);
+                showRemoveFriendConfirmation(userId, username, avatar);
+            },
             danger: true
         }
     ];
@@ -1259,9 +1262,15 @@ function buildContextMenuContent(menu, userId, username, avatar) {
             <i class="fas ${itemData.icon}"></i>
             <span>${itemData.label}</span>
         `;
-        menuItem.addEventListener('click', () => {
+        menuItem.addEventListener('click', (e) => {
+            console.log(`Menü öğesine tıklandı: ${itemData.label}`);
+            e.stopPropagation(); // Event balonlanmasını engelle
+
+            // Action'ı çağır
             itemData.action();
-            hideContextMenu(menu); // İşlem sonrası menüyü gizle
+
+            // Menüyü gizle
+            hideContextMenu(menu);
         });
         menu.appendChild(menuItem);
     });
@@ -3313,6 +3322,8 @@ async function getUserJoinDate(userId) {
 
 // Arkadaş çıkarma onay paneli gösterme fonksiyonu
 function showRemoveFriendConfirmation(userId, username, avatar) {
+    console.log("showRemoveFriendConfirmation çağrıldı:", userId, username, avatar);
+
     // Mevcut modal varsa temizle
     let existingModal = document.querySelector('.confirmation-modal');
     if (existingModal) {
@@ -3322,20 +3333,31 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
     // Yeni modal oluştur
     const modal = document.createElement('div');
     modal.className = 'confirmation-modal';
+    modal.style.display = 'flex';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '9999';
+
     modal.innerHTML = `
-        <div class="confirmation-modal-content">
-            <div class="confirmation-header">
-                <h3>Arkadaşı Çıkar</h3>
-                <button class="close-modal-btn"><i class="fas fa-times"></i></button>
+        <div class="confirmation-modal-content" style="background-color: #2d3558; border-radius: 8px; padding: 20px; max-width: 400px; width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
+            <div class="confirmation-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: white; margin: 0;">Arkadaşı Çıkar</h3>
+                <button class="close-modal-btn" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 18px;"><i class="fas fa-times"></i></button>
             </div>
             <div class="confirmation-body">
-                <div class="user-info">
-                    <img src="${avatar || 'assets/images/default-avatar.png'}" alt="${username}" class="user-avatar">
-                    <p><strong>${username}</strong> adlı kullanıcıyı arkadaş listenizden çıkarmak istediğinize emin misiniz?</p>
+                <div class="user-info" style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="${avatar || 'assets/images/default-avatar.png'}" alt="${username}" class="user-avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px;">
+                    <p style="color: white; margin: 0;"><strong>${username}</strong> adlı kullanıcıyı arkadaş listenizden çıkarmak istediğinize emin misiniz?</p>
                 </div>
-                <div class="confirmation-actions">
-                    <button class="btn btn-secondary cancel-btn">İptal</button>
-                    <button class="btn btn-danger confirm-btn">Arkadaşlıktan Çıkar</button>
+                <div class="confirmation-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button class="btn btn-secondary cancel-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background-color: #4a5377; color: white; cursor: pointer;">İptal</button>
+                    <button class="btn btn-danger confirm-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background-color: #f44336; color: white; cursor: pointer;">Arkadaşlıktan Çıkar</button>
                 </div>
             </div>
         </div>
@@ -3343,25 +3365,30 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
 
     // Modal'ı sayfaya ekle
     document.body.appendChild(modal);
+    console.log("Modal oluşturuldu ve eklendi");
 
     // Modal kapanış düğmesi
     const closeBtn = modal.querySelector('.close-modal-btn');
     closeBtn.addEventListener('click', () => {
+        console.log("Modal kapatılıyor (kapat butonuyla)");
         document.body.removeChild(modal);
     });
 
     // İptal düğmesi
     const cancelBtn = modal.querySelector('.cancel-btn');
     cancelBtn.addEventListener('click', () => {
+        console.log("Modal kapatılıyor (iptal butonuyla)");
         document.body.removeChild(modal);
     });
 
     // Onaylama düğmesi
     const confirmBtn = modal.querySelector('.confirm-btn');
     confirmBtn.addEventListener('click', async () => {
+        console.log("Arkadaşlıktan çıkarma onaylandı:", userId);
         try {
             // Arkadaşlıktan çıkarma işlemini başlat
             const result = await removeFriend(userId);
+            console.log("Arkadaşlıktan çıkarma başarılı:", result);
 
             // Modal'ı kapat
             document.body.removeChild(modal);
@@ -3383,6 +3410,7 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
     // Dışarı tıklama ile kapatma
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
+            console.log("Modal kapatılıyor (dışarı tıklamayla)");
             document.body.removeChild(modal);
         }
     });
