@@ -3391,24 +3391,21 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
 // Arkadaşlıktan çıkarma API işlemi
 async function removeFriend(friendId) {
     try {
-        // API endpoint'i ve istek bilgileri
-        const response = await fetch(`${API_BASE_URL}/friends/remove`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`
-            },
-            body: JSON.stringify({ friendId })
-        });
+        // Supabase ile arkadaşlık kaydını sil
+        const { data, error } = await supabase
+            .from('friendships')
+            .delete()
+            .or(`user_id_1.eq.${currentUserId},user_id_2.eq.${friendId}`)
+            .or(`user_id_1.eq.${friendId},user_id_2.eq.${currentUserId}`);
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Arkadaşlıktan çıkarma işlemi başarısız oldu');
+        if (error) {
+            console.error('Arkadaşlık silme hatası:', error);
+            throw new Error('Arkadaşlık kaydı silinirken bir hata oluştu');
         }
 
-        return await response.json();
+        return data;
     } catch (error) {
-        console.error('Arkadaşlıktan çıkarma API hatası:', error);
+        console.error('Arkadaşlıktan çıkarma işlemi hatası:', error);
         throw error;
     }
 }
