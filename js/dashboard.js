@@ -3424,19 +3424,40 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
 // Arkadaşlıktan çıkarma API işlemi
 async function removeFriend(friendId) {
     try {
-        // Supabase ile arkadaşlık kaydını sil
-        const { data, error } = await supabase
+        console.log(`Arkadaşlık silinmeye çalışılıyor: currentUser=${currentUserId}, friendId=${friendId}`);
+
+        // İlk sorgu - current user 1. kullanıcı, friend 2. kullanıcı
+        const { data: data1, error: error1 } = await supabase
             .from('friendships')
             .delete()
-            .or(`user_id_1.eq.${currentUserId},user_id_2.eq.${friendId}`)
-            .or(`user_id_1.eq.${friendId},user_id_2.eq.${currentUserId}`);
+            .eq('user_id_1', currentUserId)
+            .eq('user_id_2', friendId);
 
-        if (error) {
-            console.error('Arkadaşlık silme hatası:', error);
+        if (error1) {
+            console.error('İlk silme sorgusu hatası:', error1);
+        } else {
+            console.log('İlk silme sorgusu sonucu:', data1);
+        }
+
+        // İkinci sorgu - friend 1. kullanıcı, current user 2. kullanıcı
+        const { data: data2, error: error2 } = await supabase
+            .from('friendships')
+            .delete()
+            .eq('user_id_1', friendId)
+            .eq('user_id_2', currentUserId);
+
+        if (error2) {
+            console.error('İkinci silme sorgusu hatası:', error2);
+        } else {
+            console.log('İkinci silme sorgusu sonucu:', data2);
+        }
+
+        // Her iki sorguda da hata varsa hata fırlat
+        if (error1 && error2) {
             throw new Error('Arkadaşlık kaydı silinirken bir hata oluştu');
         }
 
-        // Silme işlemi başarılı olsa bile data null olabilir
+        // Silme işlemi başarılı
         console.log('Arkadaşlık başarıyla silindi');
 
         // Okunmamış mesaj sayaçlarını temizle
