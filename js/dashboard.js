@@ -1212,6 +1212,8 @@ function createContextMenuElement() {
 
 // Menü içeriğini dinamik olarak oluşturur
 function buildContextMenuContent(menu, userId, username, avatar) {
+    console.debug("buildContextMenuContent çağrıldı:", userId, username, avatar); // Debug log
+
     // Önceki içeriği temizle
     menu.innerHTML = '';
 
@@ -1233,9 +1235,19 @@ function buildContextMenuContent(menu, userId, username, avatar) {
 
     // Menü Öğeleri
     const items = [
-        { label: 'Profil', icon: 'fa-user', action: () => openProfilePanel(userId, username, avatar) },
         {
-            label: 'Mesaj Gönder', icon: 'fa-comment', action: () => {
+            label: 'Profil',
+            icon: 'fa-user',
+            action: function () {
+                console.debug("Profil butonuna tıklandı, openProfilePanel çağrılıyor:", userId, username, avatar); // Debug log
+                openProfilePanel(userId, username, avatar);
+            }
+        },
+        {
+            label: 'Mesaj Gönder',
+            icon: 'fa-comment',
+            action: function () {
+                console.debug("Mesaj butonuna tıklandı, openChatPanel çağrılıyor:", userId, username, avatar); // Debug log
                 // DM listesindeki avatarı bulup openChatPanel'e göndermek daha doğru olabilir
                 // Şimdilik dataset'ten gelen avatarı kullanıyoruz
                 openChatPanel(userId, username, avatar);
@@ -1245,7 +1257,7 @@ function buildContextMenuContent(menu, userId, username, avatar) {
             label: 'Arkadaşlıktan Çıkar',
             icon: 'fa-user-times',
             action: function () {
-                console.log("Arkadaşlıktan çıkar butonuna tıklandı:", userId, username, avatar);
+                console.debug("Arkadaşlıktan çıkar butonuna tıklandı:", userId, username, avatar); // Debug log
                 showRemoveFriendConfirmation(userId, username, avatar);
             },
             danger: true
@@ -1263,7 +1275,7 @@ function buildContextMenuContent(menu, userId, username, avatar) {
             <span>${itemData.label}</span>
         `;
         menuItem.addEventListener('click', (e) => {
-            console.log(`Menü öğesine tıklandı: ${itemData.label}`);
+            console.debug(`Menü öğesine tıklandı: ${itemData.label}`); // Debug log
             e.stopPropagation(); // Event balonlanmasını engelle
 
             // Action'ı çağır
@@ -2889,6 +2901,9 @@ function setupAddFriendModal() {
         }
 
         try {
+            // Önce "Kontrol ediliyor..." mesajı göster
+            showMessage('Kullanıcı kontrol ediliyor...', 'info');
+
             // Girilen kullanıcı adını ve mevcut kullanıcı ID'sini alıyoruz
             const { data: targetUser, error: userError } = await supabase
                 .from('users')
@@ -2907,15 +2922,24 @@ function setupAddFriendModal() {
                 return;
             }
 
-            // Zaten arkadaşlık durumu var mı kontrol et - sorgu formatını düzelttim
-            const { data: existingFriendship, error: checkError } = await supabase
+            // Mevcut arkadaşlık durumunu kontrol et
+            const { data: existingFriendships, error: checkError } = await supabase
                 .from('friendships')
                 .select('*')
-                .or(`user_id_1.eq.${currentUserId},user_id_2.eq.${targetUser.id}`)
-                .or(`user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUserId}`)
-                .single();
+                .or(`and(user_id_1.eq.${currentUserId},user_id_2.eq.${targetUser.id}),and(user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUserId})`)
+                .limit(1);
 
-            if (!checkError && existingFriendship) {
+            // Sorgu hata verirse
+            if (checkError) {
+                console.error('Arkadaşlık durumu kontrol hatası:', checkError);
+                showMessage('Arkadaşlık durumu kontrol edilirken bir hata oluştu', 'error');
+                return;
+            }
+
+            // Zaten bir arkadaşlık ilişkisi varsa
+            if (existingFriendships && existingFriendships.length > 0) {
+                const existingFriendship = existingFriendships[0];
+
                 if (existingFriendship.status === 'accepted') {
                     showMessage(`${username} zaten arkadaş listenizde`, 'error');
                 } else if (existingFriendship.status === 'pending') {
@@ -2928,20 +2952,26 @@ function setupAddFriendModal() {
                 return;
             }
 
-            // Yeni arkadaşlık isteği oluştur (created_at sütununu kaldırdım)
+            // İstek gönderiyor mesajı göster
+            showMessage(`${username} kullanıcısına istek gönderiliyor...`, 'info');
+
+            // Yeni arkadaşlık isteği oluştur
             const { data: newRequest, error: insertError } = await supabase
                 .from('friendships')
                 .insert({
                     user_id_1: currentUserId,
                     user_id_2: targetUser.id,
                     status: 'pending'
-                })
-                .select()
-                .single();
+                });
 
             if (insertError) {
-                console.error('Arkadaşlık isteği gönderme hatası:', insertError);
-                showMessage('Arkadaşlık isteği gönderilirken bir hata oluştu', 'error');
+                // Hata detaylarını kontrol et
+                if (insertError.code === '23505') { // Birincil anahtar çakışması
+                    showMessage(`${username} kullanıcısıyla zaten bir arkadaşlık durumu mevcut`, 'error');
+                } else {
+                    console.error('Arkadaşlık isteği gönderme hatası:', insertError);
+                    showMessage('Arkadaşlık isteği gönderilirken bir hata oluştu', 'error');
+                }
                 return;
             }
 
