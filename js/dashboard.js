@@ -3387,8 +3387,8 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
         console.log("Arkadaşlıktan çıkarma onaylandı:", userId);
         try {
             // Arkadaşlıktan çıkarma işlemini başlat
-            const result = await removeFriend(userId);
-            console.log("Arkadaşlıktan çıkarma başarılı:", result);
+            const success = await removeFriend(userId);
+            console.log("Arkadaşlıktan çıkarma başarılı:", success);
 
             // Modal'ı kapat
             document.body.removeChild(modal);
@@ -3401,6 +3401,11 @@ function showRemoveFriendConfirmation(userId, username, avatar) {
 
             // DM/Arkadaş listesini yeniden yükle
             refreshFriendLists();
+
+            // 1 saniye sonra sayfayı yenile (en güvenilir yöntem)
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } catch (error) {
             console.error('Arkadaşlıktan çıkarma hatası:', error);
             showNotification('Arkadaşlıktan çıkarma işlemi başarısız oldu.', 'error');
@@ -3431,7 +3436,27 @@ async function removeFriend(friendId) {
             throw new Error('Arkadaşlık kaydı silinirken bir hata oluştu');
         }
 
-        return data;
+        // Silme işlemi başarılı olsa bile data null olabilir
+        console.log('Arkadaşlık başarıyla silindi');
+
+        // Okunmamış mesaj sayaçlarını temizle
+        if (unreadCounts[friendId]) {
+            delete unreadCounts[friendId];
+        }
+
+        // UI'dan DM satırını tamamen kaldır
+        const dmItems = document.querySelectorAll(`.dm-item[data-user-id="${friendId}"]`);
+        dmItems.forEach(item => {
+            item.remove();
+        });
+
+        // UI'dan arkadaş satırlarını kaldır
+        const friendRows = document.querySelectorAll(`.friend-row[data-user-id="${friendId}"]`);
+        friendRows.forEach(row => {
+            row.remove();
+        });
+
+        return true; // İşlem başarılı
     } catch (error) {
         console.error('Arkadaşlıktan çıkarma işlemi hatası:', error);
         throw error;
