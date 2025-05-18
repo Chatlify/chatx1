@@ -3151,6 +3151,8 @@ function insertEmojiToTextarea(emoji) {
 
 // Profil paneli fonksiyonları
 function openProfilePanel(userId, username, avatar) {
+    console.log("openProfilePanel çağrıldı:", userId, username, avatar); // Debug log
+
     // Profil panelini seç
     const profilePanel = document.querySelector('.profile-panel');
     if (!profilePanel) {
@@ -3160,65 +3162,74 @@ function openProfilePanel(userId, username, avatar) {
 
     // Paneli temizle ve içeriği oluştur
     const profileContent = profilePanel.querySelector('.profile-panel-content');
-    if (profileContent) {
-        // Kullanıcı bilgilerini güvenli bir şekilde kontrol et
-        const safeUsername = username || 'Kullanıcı';
-        const safeAvatar = avatar || defaultAvatar;
-
-        // Profil içeriğini oluştur
-        profileContent.innerHTML = `
-            <div class="profile-header">
-                <button class="profile-close-btn" title="Kapat">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3>Kullanıcı Profili</h3>
-            </div>
-            <div class="profile-content">
-                <div class="profile-avatar">
-                    <img src="${safeAvatar}" alt="${safeUsername}" onerror="this.src='${defaultAvatar}'">
-                    <div class="profile-status ${onlineFriends.has(userId) ? 'online' : 'offline'}"></div>
-                </div>
-                <div class="profile-info">
-                    <h2 class="profile-username">${safeUsername}</h2>
-                    <div class="profile-status-text">${onlineFriends.has(userId) ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
-                </div>
-                <div class="profile-actions">
-                    <button class="profile-action-btn message-btn" data-user-id="${userId}">
-                        <i class="fas fa-comment"></i>
-                        <span>Mesaj Gönder</span>
-                    </button>
-                </div>
-                <div class="profile-details">
-                    <div class="profile-section">
-                        <h4>Kullanıcı Bilgileri</h4>
-                        <div class="profile-id">ID: ${userId}</div>
-                        <div class="profile-join-date">Katılma Tarihi: <span>Yükleniyor...</span></div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Kullanıcının katılma tarihini al
-        getUserJoinDate(userId).then(joinDate => {
-            const joinDateElement = profileContent.querySelector('.profile-join-date span');
-            if (joinDateElement) {
-                joinDateElement.textContent = joinDate || 'Bilinmiyor';
-            }
-        });
-
-        // Profil panelini göster
-        profilePanel.classList.add('show');
-
-        // Olay dinleyicilerini ekle
-        addProfilePanelListeners(profilePanel, userId, username, avatar);
-
-        // Vücut scroll'unu engelle (isteğe bağlı)
-        document.body.style.overflow = 'hidden';
+    if (!profileContent) {
+        console.error('Profil panelinin içerik alanı bulunamadı');
+        return;
     }
+
+    // Kullanıcı bilgilerini güvenli bir şekilde kontrol et
+    const safeUsername = username || 'Kullanıcı';
+    const safeAvatar = avatar || defaultAvatar;
+    const isOnline = onlineFriends.has(userId);
+
+    console.log("Profil bilgileri:", { safeUsername, safeAvatar, isOnline }); // Debug log
+
+    // Profil içeriğini oluştur
+    profileContent.innerHTML = `
+        <div class="profile-header">
+            <button class="profile-close-btn" title="Kapat">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3>Kullanıcı Profili</h3>
+        </div>
+        <div class="profile-content">
+            <div class="profile-avatar">
+                <img src="${safeAvatar}" alt="${safeUsername}" onerror="this.src='${defaultAvatar}'">
+                <div class="profile-status ${isOnline ? 'online' : 'offline'}"></div>
+            </div>
+            <div class="profile-info">
+                <h2 class="profile-username">${safeUsername}</h2>
+                <div class="profile-status-text">${isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
+            </div>
+            <div class="profile-actions">
+                <button class="profile-action-btn message-btn" data-user-id="${userId}">
+                    <i class="fas fa-comment"></i>
+                    <span>Mesaj Gönder</span>
+                </button>
+            </div>
+            <div class="profile-details">
+                <div class="profile-section">
+                    <h4>Kullanıcı Bilgileri</h4>
+                    <div class="profile-id">ID: ${userId}</div>
+                    <div class="profile-join-date">Katılma Tarihi: <span>Yükleniyor...</span></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Profil panelini göster
+    profilePanel.classList.add('show');
+    console.log("Profil paneline 'show' sınıfı eklendi"); // Debug log
+
+    // Olay dinleyicilerini ekle
+    addProfilePanelListeners(profilePanel, userId, username, avatar);
+
+    // Kullanıcının katılma tarihini al
+    getUserJoinDate(userId).then(joinDate => {
+        const joinDateElement = profileContent.querySelector('.profile-join-date span');
+        if (joinDateElement) {
+            joinDateElement.textContent = joinDate || 'Bilinmiyor';
+        }
+    });
+
+    // Vücut scroll'unu engelle (isteğe bağlı)
+    document.body.style.overflow = 'hidden';
 }
 
 // Profil panel olay dinleyicilerini ekle
 function addProfilePanelListeners(panel, userId, username, avatar) {
+    console.log("addProfilePanelListeners çağrıldı"); // Debug log
+
     // Kapatma düğmesi
     const closeBtn = panel.querySelector('.profile-close-btn');
     if (closeBtn) {
@@ -3228,8 +3239,11 @@ function addProfilePanelListeners(panel, userId, username, avatar) {
 
         // Yeni dinleyici ekle
         newCloseBtn.addEventListener('click', () => {
+            console.log("Kapat butonuna tıklandı"); // Debug log
             closeProfilePanel(panel);
         });
+    } else {
+        console.error("Profil kapatma butonu bulunamadı");
     }
 
     // Panel dışına tıklama ile kapatma
@@ -3242,9 +3256,12 @@ function addProfilePanelListeners(panel, userId, username, avatar) {
     const messageBtn = panel.querySelector('.message-btn');
     if (messageBtn) {
         messageBtn.addEventListener('click', () => {
+            console.log("Mesaj butonuna tıklandı:", userId, username, avatar); // Debug log
             openChatPanel(userId, username, avatar);
             closeProfilePanel(panel);
         });
+    } else {
+        console.error("Mesaj gönder butonu bulunamadı");
     }
 }
 
@@ -3255,21 +3272,25 @@ function closeProfilePanel(panel) {
     }
 
     if (panel) {
+        console.log("Profil paneli kapatılıyor"); // Debug log
+
         // Kapanma animasyonu ekle
         panel.classList.add('closing');
+        panel.classList.remove('show');
+
+        // Vücut scroll'unu geri yükle
+        document.body.style.overflow = '';
+
+        // Dinleyicileri temizle
+        document.removeEventListener('click', handleProfilePanelOutsideClick);
+        document.removeEventListener('keydown', handleProfilePanelKeydown);
 
         // Animasyon bittikten sonra kaldır
         setTimeout(() => {
-            panel.classList.remove('show');
             panel.classList.remove('closing');
-
-            // Vücut scroll'unu geri yükle
-            document.body.style.overflow = '';
-
-            // Dinleyicileri temizle
-            document.removeEventListener('click', handleProfilePanelOutsideClick);
-            document.removeEventListener('keydown', handleProfilePanelKeydown);
         }, 300); // CSS transition süresiyle eşleştir
+    } else {
+        console.error("Kapatılacak profil paneli bulunamadı");
     }
 }
 
@@ -3277,6 +3298,7 @@ function closeProfilePanel(panel) {
 function handleProfilePanelOutsideClick(event) {
     const panel = document.querySelector('.profile-panel.show');
     if (panel && !panel.contains(event.target)) {
+        console.log("Panel dışına tıklandı, panel kapatılıyor"); // Debug log
         closeProfilePanel(panel);
     }
 }
@@ -3286,10 +3308,13 @@ function handleProfilePanelKeydown(event) {
     if (event.key === 'Escape') {
         const panel = document.querySelector('.profile-panel.show');
         if (panel) {
+            console.log("ESC tuşuna basıldı, panel kapatılıyor"); // Debug log
             closeProfilePanel(panel);
         }
     }
 }
+
+// ... existing code ...
 
 // Kullanıcının katılma tarihini getir
 async function getUserJoinDate(userId) {
