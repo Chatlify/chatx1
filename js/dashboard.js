@@ -2882,7 +2882,7 @@ function setupAddFriendModal() {
         try {
             // Girilen kullanıcı adını ve mevcut kullanıcı ID'sini alıyoruz
             const { data: targetUser, error: userError } = await supabase
-                .from('profiles')
+                .from('users')  // 'profiles' yerine 'users' tablosunu kullan
                 .select('id, username')
                 .eq('username', username)
                 .single();
@@ -2902,14 +2902,14 @@ function setupAddFriendModal() {
             const { data: existingFriendship, error: checkError } = await supabase
                 .from('friendships')
                 .select('*')
-                .or(`(user_id1.eq.${currentUserId},user_id2.eq.${targetUser.id}),(user_id1.eq.${targetUser.id},user_id2.eq.${currentUserId})`)
+                .or(`(user_id_1.eq.${currentUserId},user_id_2.eq.${targetUser.id}),(user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUserId})`)
                 .single();
 
             if (!checkError && existingFriendship) {
                 if (existingFriendship.status === 'accepted') {
                     showMessage(`${username} zaten arkadaş listenizde`, 'error');
                 } else if (existingFriendship.status === 'pending') {
-                    if (existingFriendship.user_id1 === currentUserId) {
+                    if (existingFriendship.user_id_1 === currentUserId) {
                         showMessage(`${username} kullanıcısına zaten bir istek gönderdiniz`, 'error');
                     } else {
                         showMessage(`${username} size zaten bir arkadaşlık isteği göndermiş`, 'error');
@@ -2922,8 +2922,8 @@ function setupAddFriendModal() {
             const { data: newRequest, error: insertError } = await supabase
                 .from('friendships')
                 .insert({
-                    user_id1: currentUserId,
-                    user_id2: targetUser.id,
+                    user_id_1: currentUserId,
+                    user_id_2: targetUser.id,
                     status: 'pending',
                     created_at: new Date()
                 })
