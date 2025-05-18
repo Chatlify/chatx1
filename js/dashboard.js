@@ -2882,7 +2882,7 @@ function setupAddFriendModal() {
         try {
             // Girilen kullanıcı adını ve mevcut kullanıcı ID'sini alıyoruz
             const { data: targetUser, error: userError } = await supabase
-                .from('users')  // 'profiles' yerine 'users' tablosunu kullan
+                .from('users')
                 .select('id, username')
                 .eq('username', username)
                 .single();
@@ -2898,11 +2898,12 @@ function setupAddFriendModal() {
                 return;
             }
 
-            // Zaten arkadaşlık durumu var mı kontrol et
+            // Zaten arkadaşlık durumu var mı kontrol et - sorgu formatını düzelttim
             const { data: existingFriendship, error: checkError } = await supabase
                 .from('friendships')
                 .select('*')
-                .or(`(user_id_1.eq.${currentUserId},user_id_2.eq.${targetUser.id}),(user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUserId})`)
+                .or(`user_id_1.eq.${currentUserId},user_id_2.eq.${targetUser.id}`)
+                .or(`user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUserId}`)
                 .single();
 
             if (!checkError && existingFriendship) {
@@ -2918,14 +2919,13 @@ function setupAddFriendModal() {
                 return;
             }
 
-            // Yeni arkadaşlık isteği oluştur
+            // Yeni arkadaşlık isteği oluştur (created_at sütununu kaldırdım)
             const { data: newRequest, error: insertError } = await supabase
                 .from('friendships')
                 .insert({
                     user_id_1: currentUserId,
                     user_id_2: targetUser.id,
-                    status: 'pending',
-                    created_at: new Date()
+                    status: 'pending'
                 })
                 .select()
                 .single();
