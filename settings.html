@@ -38,7 +38,8 @@
 
             <div class="settings-sidebar-search">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" placeholder="Ayarlarda Ara..." class="search-input" id="settings-search">
+                <input type="text" placeholder="Ayarlarda Ara..." class="search-input" id="settings-search"
+                    style="width: 85%; padding: 12px 15px 12px 40px; font-size: 15px;">
             </div>
 
             <div class="settings-categories">
@@ -49,10 +50,6 @@
                             <i class="fas fa-user-cog"></i>
                             <span>Hesabım</span>
                         </li>
-                        <li class="settings-menu-item" data-section="profile">
-                            <i class="fas fa-id-badge"></i>
-                            <span>Profil</span>
-                        </li>
                         <li class="settings-menu-item" data-section="privacy">
                             <i class="fas fa-user-shield"></i>
                             <span>Gizlilik & Güvenlik</span>
@@ -60,15 +57,6 @@
                         <li class="settings-menu-item" data-section="connections">
                             <i class="fas fa-link"></i>
                             <span>Bağlantılar</span>
-                        </li>
-                        <li class="settings-menu-item" data-section="payment">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Ödeme Bilgileri</span>
-                        </li>
-                        <li class="settings-menu-item" data-section="premium">
-                            <i class="fas fa-gem"></i>
-                            <span>Premium</span>
-                            <span class="new-feature-badge">Yeni</span>
                         </li>
                     </ul>
                 </div>
@@ -124,10 +112,6 @@
                             <i class="fas fa-question-circle"></i>
                             <span>Yardım Merkezi</span>
                         </li>
-                        <li class="settings-menu-item" data-section="changelog">
-                            <i class="fas fa-scroll"></i>
-                            <span>Değişiklik Kaydı</span>
-                        </li>
                         <li class="settings-menu-item" data-section="feedback">
                             <i class="fas fa-comment-alt"></i>
                             <span>Geri Bildirim</span>
@@ -165,7 +149,7 @@
                         <div class="profile-card-content">
                             <div class="profile-image-wrapper">
                                 <div class="profile-image">
-                                    <img src="https://via.placeholder.com/150/3498db/ffffff?text=U" alt="Profil Resmi"
+                                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profil Resmi"
                                         id="profile-image">
                                     <div class="profile-image-edit">
                                         <i class="fas fa-camera"></i>
@@ -173,17 +157,21 @@
                                 </div>
                             </div>
                             <div class="profile-details">
-                                <div class="profile-name" id="profile-name">Kullanıcı Adı</div>
-                                <div class="profile-tag">#1234</div>
+                                <div class="profile-name" id="profile-name">Ahmet Yılmaz</div>
+                                <div class="profile-tag">#2345</div>
                                 <div class="profile-status">
                                     <span class="status-dot online"></span>
                                     <span class="status-text">Çevrimiçi</span>
+                                </div>
+                                <div class="profile-bio">
+                                    Yazılım geliştiricisi ve teknoloji meraklısı. Oyun oynamayı ve yeni şeyler öğrenmeyi
+                                    seviyorum!
                                 </div>
                             </div>
                         </div>
                         <div class="profile-card-actions">
                             <button class="settings-button secondary">
-                                <i class="fas fa-pen"></i> Düzenle
+                                <i class="fas fa-pen"></i> Profili Düzenle
                             </button>
                         </div>
                     </div>
@@ -197,10 +185,10 @@
                         </div>
                         <div class="settings-card-content">
                             <div class="input-field">
-                                <label for="display-name">Görünen İsim</label>
+                                <label for="display-name">Kullanıcı Adı</label>
                                 <div class="input-field-wrapper">
                                     <i class="fas fa-user"></i>
-                                    <input type="text" id="display-name" name="display-name" value="Kullanıcı Adı"
+                                    <input type="text" id="display-name" name="display-name" value="AhmetYılmaz"
                                         disabled>
                                 </div>
                             </div>
@@ -209,7 +197,8 @@
                                 <label for="email">E-posta Adresi</label>
                                 <div class="input-field-wrapper">
                                     <i class="fas fa-envelope"></i>
-                                    <input type="email" id="email" name="email" value="kullanici@domain.com" disabled>
+                                    <input type="email" id="email" name="email" value="ahmet.yilmaz@example.com"
+                                        disabled>
                                 </div>
                             </div>
 
@@ -217,7 +206,7 @@
                                 <label for="phone">Telefon Numarası</label>
                                 <div class="input-field-wrapper">
                                     <i class="fas fa-phone"></i>
-                                    <input type="tel" id="phone" name="phone" placeholder="+90 555 123 4567" disabled>
+                                    <input type="tel" id="phone" name="phone" value="+90 555 123 4567" disabled>
                                 </div>
                                 <p class="input-hint">Hesap güvenliği ve kurtarma için kullanılır</p>
                             </div>
@@ -238,7 +227,7 @@
                                     </div>
                                     <div class="security-item-description">Son değiştirilme: 30 gün önce</div>
                                 </div>
-                                <button class="settings-button secondary">Değiştir</button>
+                                <button class="settings-button secondary" id="change-password-button">Değiştir</button>
                             </div>
 
                             <div class="security-item">
@@ -265,6 +254,21 @@
                                 </div>
                                 <button class="settings-button secondary">Görüntüle</button>
                             </div>
+
+                            <div class="security-item">
+                                <div class="security-item-info">
+                                    <div class="security-item-title">
+                                        <i class="fas fa-bell"></i>
+                                        <span>Güvenlik Bildirimleri</span>
+                                    </div>
+                                    <div class="security-item-description">Şüpheli giriş denemeleri için bildirim alın
+                                    </div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="security-alerts" class="toggle-input" checked>
+                                    <label for="security-alerts" class="toggle-label"></label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -288,33 +292,80 @@
                                     <div class="danger-action-description">Bu işlem geri alınamaz. Tüm verileriniz
                                         kalıcı olarak silinecektir.</div>
                                 </div>
-                                <button class="settings-button-danger">Sil</button>
+                                <button class="settings-button-danger" id="delete-account-button">Sil</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Profil Ayarları -->
-            <section id="profile" class="settings-section">
+            <!-- Dil Ayarları -->
+            <section id="language" class="settings-section">
                 <div class="settings-section-header">
-                    <h2>Profil</h2>
-                    <p>Kişisel profilinizi özelleştirin ve hakkınızda bilgileri düzenleyin.</p>
+                    <h2>Dil Ayarları</h2>
+                    <p>Uygulama dilini ve tercih ettiğiniz dil seçeneklerini yapılandırın.</p>
                 </div>
 
                 <div class="settings-cards">
-                    <div class="settings-card full-width">
+                    <div class="settings-card">
                         <div class="settings-card-header">
-                            <h3>Profil Banner</h3>
+                            <h3>Uygulama Dili</h3>
                         </div>
                         <div class="settings-card-content">
-                            <div class="banner-wrapper">
-                                <div class="profile-banner" id="profile-banner">
-                                    <img src="https://via.placeholder.com/1000x250/2c3e50/ffffff?text=Banner"
-                                        alt="Profil Banner">
-                                    <button class="banner-edit-button">
-                                        <i class="fas fa-camera"></i> Banner Değiştir
-                                    </button>
+                            <div class="language-selector">
+                                <div class="input-field">
+                                    <label for="app-language">Tercih Edilen Dil</label>
+                                    <div class="select-wrapper">
+                                        <select id="app-language" name="app-language" class="language-select">
+                                            <option value="tr" selected>Türkçe</option>
+                                            <option value="en">English (İngilizce)</option>
+                                            <option value="de">Deutsch (Almanca)</option>
+                                            <option value="fr">Français (Fransızca)</option>
+                                            <option value="es">Español (İspanyolca)</option>
+                                            <option value="it">Italiano (İtalyanca)</option>
+                                            <option value="ja">日本語 (Japonca)</option>
+                                            <option value="ko">한국어 (Korece)</option>
+                                            <option value="ru">Русский (Rusça)</option>
+                                            <option value="zh">中文 (Çince)</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down select-arrow"></i>
+                                    </div>
+                                    <p class="input-hint">Değişiklikler uygulamayı yeniden başlattıktan sonra geçerli
+                                        olacaktır.</p>
+                                </div>
+                            </div>
+                            <button class="settings-button">Dili Kaydet</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3>Tarih ve Saat Formatı</h3>
+                        </div>
+                        <div class="settings-card-content">
+                            <div class="settings-toggle-group">
+                                <div class="settings-toggle-item">
+                                    <div class="toggle-info">
+                                        <div class="toggle-title">24 Saat Formatı</div>
+                                        <div class="toggle-desc">Saati 24 saat formatında gösterir (13:00 yerine 13:00)
+                                        </div>
+                                    </div>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="time-format-24h" class="toggle-input" checked>
+                                        <label for="time-format-24h" class="toggle-label"></label>
+                                    </div>
+                                </div>
+
+                                <div class="input-field">
+                                    <label for="date-format">Tarih Formatı</label>
+                                    <div class="select-wrapper">
+                                        <select id="date-format" name="date-format" class="language-select">
+                                            <option value="dd-mm-yyyy" selected>DD-MM-YYYY (31-12-2023)</option>
+                                            <option value="mm-dd-yyyy">MM-DD-YYYY (12-31-2023)</option>
+                                            <option value="yyyy-mm-dd">YYYY-MM-DD (2023-12-31)</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down select-arrow"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -322,59 +373,32 @@
 
                     <div class="settings-card">
                         <div class="settings-card-header">
-                            <h3>Hakkımda</h3>
-                            <button class="edit-card-button">
-                                <i class="fas fa-pen"></i>
-                            </button>
+                            <h3>Dil Çevirisi</h3>
                         </div>
                         <div class="settings-card-content">
-                            <div class="input-field">
-                                <label for="bio">Biyografi</label>
-                                <textarea id="bio" name="bio" rows="4"
-                                    placeholder="Kendiniz hakkında kısa bir bilgi ekleyin..."></textarea>
-                                <p class="input-hint">Maksimum 190 karakter</p>
-                            </div>
+                            <div class="settings-toggle-group">
+                                <div class="settings-toggle-item">
+                                    <div class="toggle-info">
+                                        <div class="toggle-title">Otomatik Çeviri</div>
+                                        <div class="toggle-desc">Farklı dildeki mesajları otomatik olarak dilinize
+                                            çevirir</div>
+                                    </div>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="auto-translate" class="toggle-input">
+                                        <label for="auto-translate" class="toggle-label"></label>
+                                    </div>
+                                </div>
 
-                            <div class="input-field">
-                                <label for="status">Durum</label>
-                                <div class="input-field-wrapper">
-                                    <i class="fas fa-smile"></i>
-                                    <input type="text" id="status" name="status"
-                                        placeholder="Mevcut durumunuzu ayarlayın..." maxlength="60">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="settings-card">
-                        <div class="settings-card-header">
-                            <h3>Bağlantılar</h3>
-                            <button class="add-link-button">
-                                <i class="fas fa-plus"></i> Ekle
-                            </button>
-                        </div>
-                        <div class="settings-card-content">
-                            <div class="social-links">
-                                <div class="social-link-item">
-                                    <i class="fab fa-twitter social-icon"></i>
-                                    <input type="text" placeholder="Twitter Kullanıcı Adı" name="twitter">
-                                    <button class="remove-link-button">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                                <div class="social-link-item">
-                                    <i class="fab fa-instagram social-icon"></i>
-                                    <input type="text" placeholder="Instagram Kullanıcı Adı" name="instagram">
-                                    <button class="remove-link-button">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                                <div class="social-link-item">
-                                    <i class="fab fa-github social-icon"></i>
-                                    <input type="text" placeholder="GitHub Kullanıcı Adı" name="github">
-                                    <button class="remove-link-button">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                                <div class="settings-toggle-item">
+                                    <div class="toggle-info">
+                                        <div class="toggle-title">Çeviri Önerisi</div>
+                                        <div class="toggle-desc">Farklı dildeki mesajlar için çeviri önerisi görüntüler
+                                        </div>
+                                    </div>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="translation-suggestion" class="toggle-input" checked>
+                                        <label for="translation-suggestion" class="toggle-label"></label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -452,7 +476,7 @@
 
                     <div class="settings-card">
                         <div class="settings-card-header">
-                            <h3>Görünüm Ayarları</h3>
+                            <h3>Görsel Efektler</h3>
                         </div>
                         <div class="settings-card-content">
                             <div class="settings-toggle-group">
@@ -478,12 +502,12 @@
                                 </div>
                                 <div class="settings-toggle-item">
                                     <div class="toggle-info">
-                                        <div class="toggle-title">Emoji Otomatik-Tamamlama</div>
-                                        <div class="toggle-desc">Yazarken emoji önerileri gösterir</div>
+                                        <div class="toggle-title">Arka Plan Animasyonu</div>
+                                        <div class="toggle-desc">Hareketli arka plan efektlerini etkinleştirir</div>
                                     </div>
                                     <div class="toggle-switch">
-                                        <input type="checkbox" id="emoji-autocomplete" class="toggle-input" checked>
-                                        <label for="emoji-autocomplete" class="toggle-label"></label>
+                                        <input type="checkbox" id="bg-animation" class="toggle-input" checked>
+                                        <label for="bg-animation" class="toggle-label"></label>
                                     </div>
                                 </div>
                             </div>
@@ -492,7 +516,7 @@
 
                     <div class="settings-card">
                         <div class="settings-card-header">
-                            <h3>Yazı Tipi Ayarları</h3>
+                            <h3>Metin ve İçerik</h3>
                         </div>
                         <div class="settings-card-content">
                             <div class="font-slider-group">
@@ -509,6 +533,31 @@
                                         <input type="range" id="line-height" min="1" max="2" step="0.1" value="1.6"
                                             class="slider">
                                         <div class="slider-value">1.6</div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-toggle-item">
+                                    <div class="toggle-info">
+                                        <div class="toggle-title">Emoji Otomatik-Tamamlama</div>
+                                        <div class="toggle-desc">Yazarken emoji önerileri gösterir</div>
+                                    </div>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="emoji-autocomplete" class="toggle-input" checked>
+                                        <label for="emoji-autocomplete" class="toggle-label"></label>
+                                    </div>
+                                </div>
+
+                                <div class="input-field">
+                                    <label for="font-family">Yazı Tipi</label>
+                                    <div class="select-wrapper">
+                                        <select id="font-family" name="font-family" class="language-select">
+                                            <option value="poppins" selected>Poppins</option>
+                                            <option value="roboto">Roboto</option>
+                                            <option value="opensans">Open Sans</option>
+                                            <option value="montserrat">Montserrat</option>
+                                            <option value="lato">Lato</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down select-arrow"></i>
                                     </div>
                                 </div>
                             </div>
@@ -541,17 +590,13 @@
 
             <!-- Diğer boş bölümler için aynı yer tutucu -->
             <section id="connections" class="settings-section"><!-- Placeholder --></section>
-            <section id="payment" class="settings-section"><!-- Placeholder --></section>
-            <section id="premium" class="settings-section"><!-- Placeholder --></section>
             <section id="accessibility" class="settings-section"><!-- Placeholder --></section>
             <section id="notifications" class="settings-section"><!-- Placeholder --></section>
             <section id="audio-video" class="settings-section"><!-- Placeholder --></section>
             <section id="keybinds" class="settings-section"><!-- Placeholder --></section>
-            <section id="language" class="settings-section"><!-- Placeholder --></section>
             <section id="activity-log" class="settings-section"><!-- Placeholder --></section>
             <section id="devices" class="settings-section"><!-- Placeholder --></section>
             <section id="help-center" class="settings-section"><!-- Placeholder --></section>
-            <section id="changelog" class="settings-section"><!-- Placeholder --></section>
             <section id="feedback" class="settings-section"><!-- Placeholder --></section>
         </main>
     </div>
@@ -568,7 +613,7 @@
     </div>
 
     <!-- Modaller -->
-    <div class="modal-overlay" id="logout-modal">
+    <div class="modal-overlay" id="logout-modal" style="display: none;">
         <div class="modal-container">
             <div class="modal-header">
                 <h3>Çıkış Yap</h3>
@@ -586,6 +631,7 @@
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Menü öğelerinin tıklama işlemleri
@@ -595,6 +641,8 @@
             // Menü öğesi tıklandığında bölüm değiştir
             menuItems.forEach(item => {
                 item.addEventListener('click', function () {
+                    if (this.id === 'logout-button') return; // Çıkış butonu için özel işlem
+
                     const targetSection = this.getAttribute('data-section');
 
                     // Aktif öğeleri kaldır
@@ -617,19 +665,28 @@
             // Açma ve kapama işlemleri
             if (logoutButton) {
                 logoutButton.addEventListener('click', () => {
-                    logoutModal.classList.add('show');
+                    logoutModal.style.display = 'flex';
+                    setTimeout(() => {
+                        logoutModal.classList.add('show');
+                    }, 10);
                 });
             }
 
             if (modalCloseBtn) {
                 modalCloseBtn.addEventListener('click', () => {
                     logoutModal.classList.remove('show');
+                    setTimeout(() => {
+                        logoutModal.style.display = 'none';
+                    }, 300);
                 });
             }
 
             if (modalCancelBtn) {
                 modalCancelBtn.addEventListener('click', () => {
                     logoutModal.classList.remove('show');
+                    setTimeout(() => {
+                        logoutModal.style.display = 'none';
+                    }, 300);
                 });
             }
 

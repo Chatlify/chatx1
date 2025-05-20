@@ -1433,3 +1433,48 @@
         width: 95%;
     }
 }
+
+.profile-bio {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--settings-text-secondary);
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrapper select {
+    width: 100%;
+    background-color: var(--settings-input-bg);
+    border: 1px solid var(--settings-divider);
+    border-radius: 6px;
+    padding: 10px 15px;
+    color: var(--settings-text-primary);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.select-wrapper select:focus {
+    border-color: var(--settings-primary);
+    outline: none;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--settings-text-muted);
+    pointer-events: none;
+}
+
+.language-select {
+    margin-bottom: 5px;
+}

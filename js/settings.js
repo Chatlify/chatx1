@@ -2,6 +2,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tema ayarlarını yükle
     loadThemePreferences();
 
+    // Tüm modalları gizle - EKLENEN KOD 
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.style.display = 'none';
+        modal.classList.remove('active', 'show');
+    });
+
     // Menü geçişlerini ayarla 
     setupSettingsNavigation();
 
@@ -291,9 +297,9 @@ function setupModalHandlers() {
     }
 
     // Tüm modal kapatma düğmelerini ayarla
-    document.querySelectorAll('.modal-close, .cancel-button').forEach(button => {
+    document.querySelectorAll('.modal-close, .cancel-button, .modal-close-btn, .modal-cancel-btn').forEach(button => {
         button.addEventListener('click', (e) => {
-            const modalId = e.target.closest('.modal').id;
+            const modalId = e.target.closest('.modal-overlay').id;
             closeModal(modalId);
         });
     });
@@ -318,7 +324,7 @@ function setupModalHandlers() {
 
     // Modal dışına tıklama
     window.addEventListener('click', (e) => {
-        document.querySelectorAll('.modal').forEach(modal => {
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
             if (e.target === modal) {
                 closeModal(modal.id);
             }
@@ -450,6 +456,7 @@ function openModal(modalId) {
         modal.style.display = 'flex';
         setTimeout(() => {
             modal.classList.add('active');
+            modal.classList.add('show');
         }, 10);
     }
 }
@@ -459,6 +466,7 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
+        modal.classList.remove('show');
         setTimeout(() => {
             modal.style.display = 'none';
         }, 300);
