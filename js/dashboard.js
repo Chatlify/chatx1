@@ -3190,14 +3190,14 @@ function openProfilePanel(userId, username, avatar) {
     modalOverlay.style.zIndex = '9999';
     modalOverlay.style.backdropFilter = 'blur(8px)';
 
-    // Create the modal content - 16:3 aspect ratio
+    // Create the modal content - 16:3 aspect ratio but wider
     const modalContent = document.createElement('div');
     modalContent.style.backgroundColor = '#2d3558';
     modalContent.style.borderRadius = '12px';
-    modalContent.style.width = '80%';
-    modalContent.style.maxWidth = '900px'; // Wide panel
-    modalContent.style.height = 'calc(900px * 3 / 16)'; // 16:3 aspect ratio
-    modalContent.style.maxHeight = '200px';
+    modalContent.style.width = '90%'; // Increased from 80%
+    modalContent.style.maxWidth = '1200px'; // Increased from 900px
+    modalContent.style.height = 'calc(1200px * 3 / 16)'; // 16:3 aspect ratio
+    modalContent.style.maxHeight = '225px'; // Slightly increased
     modalContent.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
     modalContent.style.position = 'relative';
     modalContent.style.color = 'white';
@@ -3207,7 +3207,7 @@ function openProfilePanel(userId, username, avatar) {
 
     // Create left section with avatar and decorative elements
     const leftSection = document.createElement('div');
-    leftSection.style.width = '30%';
+    leftSection.style.width = '25%'; // Reduced from 30%
     leftSection.style.position = 'relative';
     leftSection.style.background = 'linear-gradient(135deg, #3a416f 0%, #1f2542 100%)';
     leftSection.style.display = 'flex';
@@ -3240,8 +3240,8 @@ function openProfilePanel(userId, username, avatar) {
     const avatarContainer = document.createElement('div');
     avatarContainer.style.position = 'relative';
     avatarContainer.style.zIndex = '2';
-    avatarContainer.style.width = '100px';
-    avatarContainer.style.height = '100px';
+    avatarContainer.style.width = '120px'; // Increased from 100px
+    avatarContainer.style.height = '120px'; // Increased from 100px
     avatarContainer.style.borderRadius = '50%';
     avatarContainer.style.boxShadow = '0 0 20px rgba(106, 120, 209, 0.5)';
     avatarContainer.style.border = '3px solid rgba(255, 255, 255, 0.2)';
@@ -3267,7 +3267,7 @@ function openProfilePanel(userId, username, avatar) {
 
     // Create right section with user info
     const rightSection = document.createElement('div');
-    rightSection.style.width = '70%';
+    rightSection.style.width = '75%'; // Increased from 70%
     rightSection.style.padding = '20px 30px';
     rightSection.style.display = 'flex';
     rightSection.style.flexDirection = 'column';
@@ -3296,6 +3296,7 @@ function openProfilePanel(userId, username, avatar) {
     userInfoContainer.style.display = 'flex';
     userInfoContainer.style.flexDirection = 'column';
     userInfoContainer.style.gap = '5px';
+    userInfoContainer.style.width = '100%';
 
     const isOnline = onlineFriends.has(userId);
 
@@ -3309,7 +3310,7 @@ function openProfilePanel(userId, username, avatar) {
     const usernameHeading = document.createElement('h3');
     usernameHeading.textContent = username;
     usernameHeading.style.margin = '0';
-    usernameHeading.style.fontSize = '24px';
+    usernameHeading.style.fontSize = '28px'; // Increased from 24px
     usernameHeading.style.fontWeight = '600';
     usernameHeading.style.color = '#fff';
     usernameHeading.style.textShadow = '0 2px 4px rgba(0,0,0,0.3)';
@@ -3329,12 +3330,13 @@ function openProfilePanel(userId, username, avatar) {
     statusText.style.color = 'rgba(255, 255, 255, 0.7)';
     statusText.style.margin = '0 0 15px 0';
 
-    // Info grid
+    // Info grid - now 3 columns
     const infoGrid = document.createElement('div');
     infoGrid.style.display = 'grid';
-    infoGrid.style.gridTemplateColumns = '1fr 1fr';
+    infoGrid.style.gridTemplateColumns = '1fr 1fr 1fr'; // Changed from 1fr 1fr
     infoGrid.style.gap = '15px';
     infoGrid.style.marginBottom = '20px';
+    infoGrid.style.width = '100%';
 
     // Join date info
     const joinDateInfo = document.createElement('div');
@@ -3381,15 +3383,40 @@ function openProfilePanel(userId, username, avatar) {
     messageInfo.appendChild(messageLabel);
     messageInfo.appendChild(messageValue);
 
+    // Status info (added)
+    const statusInfo = document.createElement('div');
+    statusInfo.style.display = 'flex';
+    statusInfo.style.flexDirection = 'column';
+    statusInfo.style.gap = '3px';
+
+    const statusLabel = document.createElement('span');
+    statusLabel.textContent = 'Durum';
+    statusLabel.style.fontSize = '12px';
+    statusLabel.style.color = 'rgba(255, 255, 255, 0.5)';
+    statusLabel.style.textTransform = 'uppercase';
+    statusLabel.style.letterSpacing = '1px';
+
+    const statusValueText = document.createElement('span');
+    statusValueText.textContent = 'Premium Üye';
+    statusValueText.style.fontSize = '16px';
+    statusValueText.style.color = '#FFD700'; // Gold color for premium
+    statusValueText.style.fontWeight = '500';
+
+    statusInfo.appendChild(statusLabel);
+    statusInfo.appendChild(statusValueText);
+
     // Add info items to grid
     infoGrid.appendChild(joinDateInfo);
     infoGrid.appendChild(messageInfo);
+    infoGrid.appendChild(statusInfo);
 
     // Action buttons container
     const actionButtons = document.createElement('div');
     actionButtons.style.display = 'flex';
     actionButtons.style.gap = '10px';
     actionButtons.style.marginTop = 'auto';
+    actionButtons.style.width = '100%';
+    actionButtons.style.maxWidth = '600px';
 
     // Message button
     const messageButton = document.createElement('button');
@@ -3397,7 +3424,7 @@ function openProfilePanel(userId, username, avatar) {
     messageButton.style.backgroundColor = '#6A78D1';
     messageButton.style.border = 'none';
     messageButton.style.color = 'white';
-    messageButton.style.padding = '8px 15px';
+    messageButton.style.padding = '10px 15px'; // Increased from 8px 15px
     messageButton.style.borderRadius = '6px';
     messageButton.style.cursor = 'pointer';
     messageButton.style.fontWeight = '500';
@@ -3412,7 +3439,7 @@ function openProfilePanel(userId, username, avatar) {
     removeButton.style.backgroundColor = '#d94848';
     removeButton.style.border = 'none';
     removeButton.style.color = 'white';
-    removeButton.style.padding = '8px 15px';
+    removeButton.style.padding = '10px 15px'; // Increased from 8px 15px
     removeButton.style.borderRadius = '6px';
     removeButton.style.cursor = 'pointer';
     removeButton.style.fontWeight = '500';
@@ -3490,323 +3517,284 @@ function openProfilePanel(userId, username, avatar) {
     });
 }
 
-function closeProfilePanel() {
-    const panel = document.getElementById('profile-panel-container');
-    if (panel && panel.parentNode) {
-        panel.parentNode.removeChild(panel);
-    }
-}
+// Now redesign the GIF panel
+function openGifPanel() {
+    const gifPanelContainer = document.createElement('div');
+    gifPanelContainer.id = 'gif-panel';
+    gifPanelContainer.className = 'gif-panel';
+    gifPanelContainer.style.position = 'absolute';
+    gifPanelContainer.style.bottom = '70px';
+    gifPanelContainer.style.right = '20px';
+    gifPanelContainer.style.width = '360px';
+    gifPanelContainer.style.height = '450px';
+    gifPanelContainer.style.backgroundColor = '#2d3558';
+    gifPanelContainer.style.borderRadius = '12px';
+    gifPanelContainer.style.boxShadow = '0 5px 25px rgba(0, 0, 0, 0.3)';
+    gifPanelContainer.style.display = 'flex';
+    gifPanelContainer.style.flexDirection = 'column';
+    gifPanelContainer.style.zIndex = '100';
+    gifPanelContainer.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    gifPanelContainer.style.overflow = 'hidden';
 
-function addProfilePanelStyles() {
-    if (document.getElementById('profile-panel-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'profile-panel-styles';
-    style.textContent = `
-        .profile-panel-container { 
-            position: fixed; 
-            inset: 0; 
-            z-index: 1000; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            pointer-events: none; 
+    // Header
+    const gifPanelHeader = document.createElement('div');
+    gifPanelHeader.style.padding = '12px 15px';
+    gifPanelHeader.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+    gifPanelHeader.style.display = 'flex';
+    gifPanelHeader.style.justifyContent = 'space-between';
+    gifPanelHeader.style.alignItems = 'center';
+
+    const gifPanelTitle = document.createElement('h3');
+    gifPanelTitle.textContent = 'GIF Seçin';
+    gifPanelTitle.style.margin = '0';
+    gifPanelTitle.style.fontSize = '16px';
+    gifPanelTitle.style.fontWeight = '500';
+    gifPanelTitle.style.color = '#fff';
+
+    const closeGifPanelBtn = document.createElement('button');
+    closeGifPanelBtn.innerHTML = '×';
+    closeGifPanelBtn.style.background = 'none';
+    closeGifPanelBtn.style.border = 'none';
+    closeGifPanelBtn.style.color = 'rgba(255, 255, 255, 0.7)';
+    closeGifPanelBtn.style.fontSize = '24px';
+    closeGifPanelBtn.style.cursor = 'pointer';
+    closeGifPanelBtn.style.padding = '0';
+    closeGifPanelBtn.style.lineHeight = '1';
+    closeGifPanelBtn.style.transition = 'color 0.2s';
+    closeGifPanelBtn.title = 'Kapat';
+    closeGifPanelBtn.onmouseover = function () { this.style.color = '#fff'; };
+    closeGifPanelBtn.onmouseout = function () { this.style.color = 'rgba(255, 255, 255, 0.7)'; };
+
+    gifPanelHeader.appendChild(gifPanelTitle);
+    gifPanelHeader.appendChild(closeGifPanelBtn);
+
+    // Search bar
+    const searchContainer = document.createElement('div');
+    searchContainer.style.padding = '10px 15px';
+    searchContainer.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'GIF ara...';
+    searchInput.style.width = '100%';
+    searchInput.style.padding = '8px 12px';
+    searchInput.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+    searchInput.style.border = 'none';
+    searchInput.style.borderRadius = '6px';
+    searchInput.style.color = '#fff';
+    searchInput.style.fontSize = '14px';
+    searchInput.style.outline = 'none';
+    searchInput.style.transition = 'background-color 0.2s';
+
+    searchInput.onfocus = function () {
+        this.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+    };
+
+    searchInput.onblur = function () {
+        this.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+    };
+
+    searchContainer.appendChild(searchInput);
+
+    // GIFs container
+    const gifsContainer = document.createElement('div');
+    gifsContainer.className = 'gifs-container';
+    gifsContainer.style.flex = '1';
+    gifsContainer.style.overflowY = 'auto';
+    gifsContainer.style.padding = '10px';
+    gifsContainer.style.display = 'grid';
+    gifsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    gifsContainer.style.gap = '10px';
+    gifsContainer.style.scrollbarWidth = 'thin';
+    gifsContainer.style.scrollbarColor = '#6A78D1 #2d3558';
+
+    // Custom scrollbar for webkit browsers
+    gifsContainer.style.cssText += `
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        .profile-panel-container.open { 
-            pointer-events: auto; 
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
         }
-        .profile-panel-backdrop { 
-            position: absolute; 
-            inset: 0; 
-            background: rgba(0,0,0,0.7); 
-            opacity: 0;
-            transition: opacity .3s;
+        ::-webkit-scrollbar-thumb {
+            background: #6A78D1;
+            border-radius: 4px;
         }
-        .profile-panel-container.open .profile-panel-backdrop {
-            opacity: 1;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5A68C1;
         }
-        .profile-panel { 
-            background: #2a2c31; 
-            width: 300px; 
-            border-radius: 8px; 
-            text-align: center; 
-            padding: 20px; 
-            z-index: 1; 
-            transform: scale(0.95); 
-            opacity: 0;
-            transition: transform .3s, opacity .3s;
-        }
-        .profile-panel-container.open .profile-panel { 
-            transform: scale(1);
-            opacity: 1;
-        }
-        .profile-panel-header { text-align: right; }
-        .close-profile-panel-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #3c3f46; margin-bottom: 10px; }
-        .profile-username { margin: 0; font-size: 22px; }
-        .profile-status { font-size: 14px; color: #a0a2a7; margin-bottom: 20px; }
-        .profile-info { margin-bottom: 20px; }
-        .remove-friend-btn { background: #d94848; border: none; color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%; }
-    `;
-    document.head.appendChild(style);
-}
-
-async function getUserJoinDate(userId) {
-    try {
-        const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('created_at')
-            .eq('id', userId)
-            .single();
-
-        if (error) throw error;
-
-        if (profile && profile.created_at) {
-            return new Date(profile.created_at).toLocaleDateString('tr-TR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-        return 'Bilgi alınamadı';
-    } catch (error) {
-        console.error('Kullanıcı üyelik tarihi alınamadı:', error);
-        return 'Hata';
-    }
-}
-
-// Arkadaş çıkarma onay paneli gösterme fonksiyonu
-function showRemoveFriendConfirmation(userId, username, avatar) {
-    console.log("showRemoveFriendConfirmation çağrıldı:", userId, username, avatar);
-
-    // Mevcut bir paneli kapat (varsa)
-    const existingModal = document.getElementById('confirmation-modal');
-    if (existingModal) {
-        document.body.removeChild(existingModal);
-    }
-
-    // Yeni modal oluştur
-    const modal = document.createElement('div');
-    modal.className = 'confirmation-modal';
-    modal.style.display = 'flex';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
-    modal.style.zIndex = '9999';
-
-    modal.innerHTML = `
-        <div class="confirmation-modal-content" style="background-color: #2d3558; border-radius: 8px; padding: 20px; max-width: 400px; width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
-            <div class="confirmation-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="color: white; margin: 0;">Arkadaşı Çıkar</h3>
-                <button class="close-modal-btn" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 18px;"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="confirmation-body">
-                <div class="user-info" style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <img src="${avatar || 'assets/images/default-avatar.png'}" alt="${username}" class="user-avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px;">
-                    <p style="color: white; margin: 0;"><strong>${username}</strong> adlı kullanıcıyı arkadaş listenizden çıkarmak istediğinize emin misiniz?</p>
-                </div>
-                <div class="confirmation-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button class="btn btn-secondary cancel-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background-color: #4a5377; color: white; cursor: pointer;">İptal</button>
-                    <button class="btn btn-danger confirm-btn" style="padding: 8px 16px; border-radius: 4px; border: none; background-color: #f44336; color: white; cursor: pointer;">Arkadaşlıktan Çıkar</button>
-                </div>
-            </div>
-        </div>
     `;
 
-    // Modal'ı sayfaya ekle
-    document.body.appendChild(modal);
-    console.log("Modal oluşturuldu ve eklendi");
+    // Loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.style.display = 'flex';
+    loadingIndicator.style.justifyContent = 'center';
+    loadingIndicator.style.alignItems = 'center';
+    loadingIndicator.style.height = '100%';
+    loadingIndicator.style.color = '#fff';
+    loadingIndicator.textContent = 'GIFler yükleniyor...';
 
-    // Modal kapanış düğmesi
-    const closeBtn = modal.querySelector('.close-modal-btn');
-    closeBtn.addEventListener('click', () => {
-        console.log("Modal kapatılıyor (kapat butonuyla)");
-        document.body.removeChild(modal);
-    });
+    gifsContainer.appendChild(loadingIndicator);
 
-    // İptal düğmesi
-    const cancelBtn = modal.querySelector('.cancel-btn');
-    cancelBtn.addEventListener('click', () => {
-        console.log("Modal kapatılıyor (iptal butonuyla)");
-        document.body.removeChild(modal);
-    });
+    // Assemble panel
+    gifPanelContainer.appendChild(gifPanelHeader);
+    gifPanelContainer.appendChild(searchContainer);
+    gifPanelContainer.appendChild(gifsContainer);
 
-    // Onaylama düğmesi
-    const confirmBtn = modal.querySelector('.confirm-btn');
-    confirmBtn.addEventListener('click', async () => {
-        console.log("Arkadaşlıktan çıkarma onaylandı:", userId);
-        try {
-            // Arkadaşlıktan çıkarma işlemini başlat
-            const success = await removeFriend(userId);
-            console.log("Arkadaşlıktan çıkarma başarılı:", success);
+    document.querySelector('.chat-container').appendChild(gifPanelContainer);
 
-            // Modal'ı kapat
-            document.body.removeChild(modal);
+    // Close button event
+    closeGifPanelBtn.addEventListener('click', closeGifPanel);
 
-            // Başarılı işlem mesajı göster
-            showNotification(`${username} arkadaş listenizden çıkarıldı.`, 'success');
+    // Load trending GIFs
+    loadTrendingGifs();
 
-            // UI'ı güncelle (arkadaş listeleri vs.)
-            updateFriendCounters();
+    // Search event
+    let searchTimeout;
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
 
-            // DM/Arkadaş listesini yeniden yükle
-            refreshFriendLists();
-
-            // 1 saniye sonra sayfayı yenile (en güvenilir yöntem)
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } catch (error) {
-            console.error('Arkadaşlıktan çıkarma hatası:', error);
-            showNotification('Arkadaşlıktan çıkarma işlemi başarısız oldu.', 'error');
-        }
-    });
-
-    // Dışarı tıklama ile kapatma
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            console.log("Modal kapatılıyor (dışarı tıklamayla)");
-            document.body.removeChild(modal);
-        }
+        searchTimeout = setTimeout(() => {
+            if (query) {
+                searchGifs(query);
+            } else {
+                loadTrendingGifs();
+            }
+        }, 500);
     });
 }
 
-// Arkadaşlıktan çıkarma API işlemi
-async function removeFriend(friendId) {
-    try {
-        console.log(`Arkadaşlık silinmeye çalışılıyor: currentUser=${currentUserId}, friendId=${friendId}`);
+// Function to load trending GIFs
+function loadTrendingGifs() {
+    const gifsContainer = document.querySelector('.gifs-container');
+    if (!gifsContainer) return;
 
-        // İlk sorgu - current user 1. kullanıcı, friend 2. kullanıcı
-        const { data: data1, error: error1 } = await supabase
-            .from('friendships')
-            .delete()
-            .eq('user_id_1', currentUserId)
-            .eq('user_id_2', friendId);
+    gifsContainer.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #fff;">GIFler yükleniyor...</div>';
 
-        if (error1) {
-            console.error('İlk silme sorgusu hatası:', error1);
-        } else {
-            console.log('İlk silme sorgusu sonucu:', data1);
-        }
-
-        // İkinci sorgu - friend 1. kullanıcı, current user 2. kullanıcı
-        const { data: data2, error: error2 } = await supabase
-            .from('friendships')
-            .delete()
-            .eq('user_id_1', friendId)
-            .eq('user_id_2', currentUserId);
-
-        if (error2) {
-            console.error('İkinci silme sorgusu hatası:', error2);
-        } else {
-            console.log('İkinci silme sorgusu sonucu:', data2);
-        }
-
-        // Her iki sorguda da hata varsa hata fırlat
-        if (error1 && error2) {
-            throw new Error('Arkadaşlık kaydı silinirken bir hata oluştu');
-        }
-
-        // Silme işlemi başarılı
-        console.log('Arkadaşlık başarıyla silindi');
-
-        // Okunmamış mesaj sayaçlarını temizle
-        if (unreadCounts[friendId]) {
-            delete unreadCounts[friendId];
-        }
-
-        // UI'dan DM satırını tamamen kaldır
-        const dmItems = document.querySelectorAll(`.dm-item[data-user-id="${friendId}"]`);
-        dmItems.forEach(item => {
-            item.remove();
+    fetch(`https://api.giphy.com/v1/gifs/trending?api_key=${giphyApiKey}&limit=20`)
+        .then(response => response.json())
+        .then(data => {
+            displayGifs(data.data);
+        })
+        .catch(error => {
+            console.error('Error fetching trending GIFs:', error);
+            gifsContainer.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #fff;">GIFler yüklenemedi.</div>';
         });
-
-        // UI'dan arkadaş satırlarını kaldır
-        const friendRows = document.querySelectorAll(`.friend-row[data-user-id="${friendId}"]`);
-        friendRows.forEach(row => {
-            row.remove();
-        });
-
-        return true; // İşlem başarılı
-    } catch (error) {
-        console.error('Arkadaşlıktan çıkarma işlemi hatası:', error);
-        throw error;
-    }
 }
 
-// Arkadaş listelerini yenileme fonksiyonu
-function refreshFriendLists() {
-    // UI elementlerini seç
-    const onlineListElement = document.querySelector('#online-list');
-    const offlineListElement = document.querySelector('#offline-list');
-    const dmListElement = document.querySelector('#dm-list');
-    const onlineSectionElement = document.querySelector('#online-section');
-    const offlineSectionElement = document.querySelector('#offline-section');
+// Function to search GIFs
+function searchGifs(query) {
+    const gifsContainer = document.querySelector('.gifs-container');
+    if (!gifsContainer) return;
 
-    if (onlineListElement && offlineListElement && dmListElement) {
-        // Arkadaş listelerini yeniden yükle
-        loadAllFriends({
-            onlineList: onlineListElement,
-            offlineList: offlineListElement,
-            dmList: dmListElement,
-            onlineSection: onlineSectionElement,
-            offlineSection: offlineSectionElement
+    gifsContainer.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #fff;">GIFler aranıyor...</div>';
+
+    fetch(`https://api.giphy.com/v1/gifs/search?api_key=${giphyApiKey}&q=${encodeURIComponent(query)}&limit=20`)
+        .then(response => response.json())
+        .then(data => {
+            displayGifs(data.data);
+        })
+        .catch(error => {
+            console.error('Error searching GIFs:', error);
+            gifsContainer.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #fff;">GIFler yüklenemedi.</div>';
         });
-    }
 }
 
-// Bildirim gösterme fonksiyonu - mevcut değilse ekleyelim
-function showNotification(message, type = 'info') {
-    // Mevcut bildirim sistemi yoksa basit bir bildirim oluştur
-    if (typeof showToast === 'function') {
-        // Eğer showToast fonksiyonu varsa onu kullan
-        showToast(message, type);
+// Function to display GIFs
+function displayGifs(gifs) {
+    const gifsContainer = document.querySelector('.gifs-container');
+    if (!gifsContainer) return;
+
+    gifsContainer.innerHTML = '';
+
+    if (gifs.length === 0) {
+        gifsContainer.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #fff;">Sonuç bulunamadı.</div>';
         return;
     }
 
-    // Basit bildirim oluştur
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    gifs.forEach(gif => {
+        const gifItem = document.createElement('div');
+        gifItem.className = 'gif-item';
+        gifItem.style.position = 'relative';
+        gifItem.style.borderRadius = '8px';
+        gifItem.style.overflow = 'hidden';
+        gifItem.style.cursor = 'pointer';
+        gifItem.style.aspectRatio = '16/9'; // Landscape aspect ratio
+        gifItem.style.backgroundColor = '#1f2542';
+        gifItem.style.transition = 'transform 0.2s';
+        gifItem.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
 
-    // Bildirimi sayfaya ekle
-    document.body.appendChild(notification);
+        // Hover effect
+        gifItem.onmouseover = function () {
+            this.style.transform = 'translateY(-3px)';
+            this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+        };
 
-    // Belirli bir süre sonra kaldır
-    setTimeout(() => {
-        notification.classList.add('fade-out');
-        setTimeout(() => {
-            if (document.body.contains(notification)) {
-                document.body.removeChild(notification);
-            }
-        }, 300);
-    }, 3000);
+        gifItem.onmouseout = function () {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+        };
+
+        const gifImg = document.createElement('img');
+        gifImg.src = gif.images.fixed_height.url;
+        gifImg.alt = gif.title;
+        gifImg.style.width = '100%';
+        gifImg.style.height = '100%';
+        gifImg.style.objectFit = 'cover';
+        gifImg.style.objectPosition = 'center';
+        gifImg.loading = 'lazy';
+
+        gifItem.appendChild(gifImg);
+        gifsContainer.appendChild(gifItem);
+
+        // Click event
+        gifItem.addEventListener('click', function () {
+            sendGif(gif.images.original.url);
+            closeGifPanel();
+        });
+    });
 }
 
-// Belirtilen ID'ye sahip kullanıcının profil bilgilerini getirir.
-async function getUserProfile(userId) {
-    try {
-        const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url, created_at')
-            .eq('id', userId)
-            .single();
-
-        if (error) {
-            throw error;
-        }
-        return profile;
-    } catch (error) {
-        console.error(`Profil bilgisi alınırken hata oluştu (ID: ${userId}):`, error.message);
-        return null;
+// Function to close GIF panel
+function closeGifPanel() {
+    const gifPanel = document.getElementById('gif-panel');
+    if (gifPanel) {
+        gifPanel.parentNode.removeChild(gifPanel);
     }
+}
+
+// Function to send a GIF
+function sendGif(gifUrl) {
+    const currentChat = document.querySelector('.chat-messages');
+    if (!currentChat) return;
+
+    const currentUserId = getCurrentUserId();
+    const activeChat = getActiveChat();
+
+    if (!activeChat) {
+        console.error('No active chat found');
+        return;
+    }
+
+    const messageData = {
+        sender: currentUserId,
+        receiver: activeChat.userId,
+        content: gifUrl,
+        type: 'gif',
+        timestamp: new Date().toISOString()
+    };
+
+    // Add to UI
+    addMessageToUI(messageData, true);
+
+    // Save to local storage
+    saveMessageToStorage(messageData);
+
+    // Update last message in chat list
+    updateLastMessageInChatList(activeChat.userId, 'GIF gönderdi', new Date().toISOString());
+
+    // Scroll to bottom
+    scrollToBottom();
 }
