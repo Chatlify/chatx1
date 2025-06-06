@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Element tanımlamaları
         const userPanelUsernameElement = document.querySelector('.dm-footer .dm-user-name');
         const userPanelAvatarElement = document.querySelector('.dm-footer .dm-user-avatar img');
+        const userPanel = document.querySelector('.dm-footer .dm-user');
 
         const tabs = document.querySelectorAll('.dashboard-header .tab');
         const onlineSection = document.querySelector('.online-section-title');
@@ -47,6 +48,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sponsorSidebar = document.querySelector('.sponsor-sidebar');
         const settingsButtonContainer = document.querySelector('.server-sidebar .server-item:has(.server-settings-icon)');
         const chatCloseBtn = chatPanel?.querySelector('.chat-close-btn');
+
+        // Kullanıcı paneline tıklama olayı dinleyicisi ekle
+        if (userPanel) {
+            userPanel.addEventListener('click', () => {
+                // Kullanıcı kendi profilini açmak için
+                const userId = currentUserId;
+                const username = userPanelUsernameElement?.textContent || 'Kullanıcı';
+                const avatar = userPanelAvatarElement?.src || defaultAvatar;
+
+                if (userId) {
+                    openProfilePanel(userId, username, avatar);
+                }
+            });
+            userPanel.style.cursor = 'pointer'; // İmleç stilini değiştir
+        }
 
         // Emoji butonu seçimi güncellendi - .emoji-btn ile arama kaldırıldı
         const chatEmojiBtn = document.querySelector('.chat-input-area .emoji-btn');
@@ -959,6 +975,8 @@ function createFriendRow(userId, username, avatarUrl) {
     const friendRow = document.createElement('div');
     friendRow.className = 'friend-row';
     friendRow.dataset.userId = userId;
+    friendRow.dataset.username = username; // Veri özniteliklerini ekle
+    friendRow.dataset.avatar = avatarUrl || defaultAvatar; // Veri özniteliklerini ekle
 
     const isOnline = onlineFriends.has(userId);
     friendRow.classList.toggle('online', isOnline);
@@ -982,6 +1000,12 @@ function createFriendRow(userId, username, avatarUrl) {
     friendRow.querySelector('.message-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         openChatPanel(userId, username, avatarUrl);
+    });
+
+    // Profil butonuna tıklama olayı dinleyicisi ekle
+    friendRow.querySelector('.profile-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openProfilePanel(userId, username, avatarUrl);
     });
 
     return friendRow;
@@ -3154,23 +3178,32 @@ function openProfilePanel(userId, username, avatar) {
     panelContainer.id = 'profile-panel-container';
     panelContainer.className = 'profile-panel-container';
 
+    // Add inline styles to ensure visibility
+    panelContainer.style.position = 'fixed';
+    panelContainer.style.inset = '0';
+    panelContainer.style.zIndex = '1000';
+    panelContainer.style.display = 'flex';
+    panelContainer.style.alignItems = 'center';
+    panelContainer.style.justifyContent = 'center';
+    panelContainer.style.pointerEvents = 'none';
+
     const isOnline = onlineFriends.has(userId);
 
     panelContainer.innerHTML = `
-        <div class="profile-panel-backdrop"></div>
-        <div class="profile-panel">
+        <div class="profile-panel-backdrop" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); opacity: 0; transition: opacity .3s;"></div>
+        <div class="profile-panel" style="background: #2a2c31; width: 300px; border-radius: 8px; text-align: center; padding: 20px; z-index: 1; transform: scale(0.95); opacity: 0; transition: transform .3s, opacity .3s;">
             <div class="profile-panel-header">
-                <button class="close-profile-panel-btn" title="Kapat">×</button>
+                <button class="close-profile-panel-btn" title="Kapat" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
             </div>
             <div class="profile-panel-content">
-                <img src="${avatar || defaultAvatar}" alt="${username}" class="profile-avatar" onerror="this.src='${defaultAvatar}'">
-                <h3 class="profile-username">${username}</h3>
-                <p class="profile-status">${isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}</p>
-                <div class="profile-info">
+                <img src="${avatar || defaultAvatar}" alt="${username}" class="profile-avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 4px solid #3c3f46; margin-bottom: 10px;" onerror="this.src='${defaultAvatar}'">
+                <h3 class="profile-username" style="margin: 0; font-size: 22px; color: white;">${username}</h3>
+                <p class="profile-status" style="font-size: 14px; color: #a0a2a7; margin-bottom: 20px;">${isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}</p>
+                <div class="profile-info" style="margin-bottom: 20px; color: white;">
                     <strong>Üyelik Tarihi:</strong>
                     <span class="join-date">Yükleniyor...</span>
                 </div>
-                <button class="remove-friend-btn">Arkadaşlıktan Çıkar</button>
+                <button class="remove-friend-btn" style="background: #d94848; border: none; color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%;">Arkadaşlıktan Çıkar</button>
             </div>
         </div>
     `;
@@ -3197,16 +3230,39 @@ function openProfilePanel(userId, username, avatar) {
         if (dateEl) dateEl.textContent = date;
     });
 
+    // Paneli göster
     setTimeout(() => {
-        panelContainer.classList.add('open');
+        panelContainer.style.pointerEvents = 'auto';
+        const backdrop = panelContainer.querySelector('.profile-panel-backdrop');
+        if (backdrop) backdrop.style.opacity = '1';
+
+        const panel = panelContainer.querySelector('.profile-panel');
+        if (panel) {
+            panel.style.transform = 'scale(1)';
+            panel.style.opacity = '1';
+        }
     }, 10);
 }
 
 function closeProfilePanel() {
     const panel = document.getElementById('profile-panel-container');
     if (panel) {
-        panel.classList.remove('open');
-        panel.addEventListener('transitionend', () => panel.remove(), { once: true });
+        // Animate out
+        const backdrop = panel.querySelector('.profile-panel-backdrop');
+        if (backdrop) backdrop.style.opacity = '0';
+
+        const profilePanel = panel.querySelector('.profile-panel');
+        if (profilePanel) {
+            profilePanel.style.transform = 'scale(0.95)';
+            profilePanel.style.opacity = '0';
+        }
+
+        // Remove after animation completes
+        setTimeout(() => {
+            if (panel && panel.parentNode) {
+                panel.parentNode.removeChild(panel);
+            }
+        }, 300);
     }
 }
 
