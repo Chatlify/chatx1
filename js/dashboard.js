@@ -3188,70 +3188,223 @@ function openProfilePanel(userId, username, avatar) {
     modalOverlay.style.justifyContent = 'center';
     modalOverlay.style.alignItems = 'center';
     modalOverlay.style.zIndex = '9999';
+    modalOverlay.style.backdropFilter = 'blur(8px)';
 
-    // Create the modal content
+    // Create the modal content - 16:3 aspect ratio
     const modalContent = document.createElement('div');
     modalContent.style.backgroundColor = '#2d3558';
-    modalContent.style.borderRadius = '8px';
-    modalContent.style.padding = '20px';
-    modalContent.style.maxWidth = '400px';
-    modalContent.style.width = '90%';
-    modalContent.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+    modalContent.style.borderRadius = '12px';
+    modalContent.style.width = '80%';
+    modalContent.style.maxWidth = '900px'; // Wide panel
+    modalContent.style.height = 'calc(900px * 3 / 16)'; // 16:3 aspect ratio
+    modalContent.style.maxHeight = '200px';
+    modalContent.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
     modalContent.style.position = 'relative';
     modalContent.style.color = 'white';
+    modalContent.style.display = 'flex';
+    modalContent.style.overflow = 'hidden';
+    modalContent.style.border = '1px solid rgba(255, 255, 255, 0.1)';
 
-    const isOnline = onlineFriends.has(userId);
+    // Create left section with avatar and decorative elements
+    const leftSection = document.createElement('div');
+    leftSection.style.width = '30%';
+    leftSection.style.position = 'relative';
+    leftSection.style.background = 'linear-gradient(135deg, #3a416f 0%, #1f2542 100%)';
+    leftSection.style.display = 'flex';
+    leftSection.style.alignItems = 'center';
+    leftSection.style.justifyContent = 'center';
+    leftSection.style.padding = '20px';
+    leftSection.style.borderRight = '1px solid rgba(255, 255, 255, 0.1)';
+    leftSection.style.overflow = 'hidden';
 
-    // Create the modal header
-    const modalHeader = document.createElement('div');
-    modalHeader.style.display = 'flex';
-    modalHeader.style.justifyContent = 'flex-end';
-    modalHeader.style.marginBottom = '15px';
+    // Decorative circles
+    const decorCircle1 = document.createElement('div');
+    decorCircle1.style.position = 'absolute';
+    decorCircle1.style.width = '120px';
+    decorCircle1.style.height = '120px';
+    decorCircle1.style.borderRadius = '50%';
+    decorCircle1.style.background = 'radial-gradient(circle, rgba(106, 120, 209, 0.2) 0%, rgba(106, 120, 209, 0) 70%)';
+    decorCircle1.style.top = '-30px';
+    decorCircle1.style.left = '-30px';
 
-    const closeButton = document.createElement('button');
-    closeButton.innerHTML = '×';
-    closeButton.style.background = 'none';
-    closeButton.style.border = 'none';
-    closeButton.style.color = '#aaa';
-    closeButton.style.cursor = 'pointer';
-    closeButton.style.fontSize = '24px';
-    closeButton.title = 'Kapat';
+    const decorCircle2 = document.createElement('div');
+    decorCircle2.style.position = 'absolute';
+    decorCircle2.style.width = '80px';
+    decorCircle2.style.height = '80px';
+    decorCircle2.style.borderRadius = '50%';
+    decorCircle2.style.background = 'radial-gradient(circle, rgba(106, 120, 209, 0.15) 0%, rgba(106, 120, 209, 0) 70%)';
+    decorCircle2.style.bottom = '-20px';
+    decorCircle2.style.right = '20px';
 
-    modalHeader.appendChild(closeButton);
-    modalContent.appendChild(modalHeader);
+    // Avatar container with glow effect
+    const avatarContainer = document.createElement('div');
+    avatarContainer.style.position = 'relative';
+    avatarContainer.style.zIndex = '2';
+    avatarContainer.style.width = '100px';
+    avatarContainer.style.height = '100px';
+    avatarContainer.style.borderRadius = '50%';
+    avatarContainer.style.boxShadow = '0 0 20px rgba(106, 120, 209, 0.5)';
+    avatarContainer.style.border = '3px solid rgba(255, 255, 255, 0.2)';
+    avatarContainer.style.overflow = 'hidden';
+    avatarContainer.style.display = 'flex';
+    avatarContainer.style.justifyContent = 'center';
+    avatarContainer.style.alignItems = 'center';
 
-    // Create the profile content
-    const profileContent = document.createElement('div');
-    profileContent.style.textAlign = 'center';
-
-    // Avatar
+    // Avatar image
     const avatarImg = document.createElement('img');
     avatarImg.src = avatar || defaultAvatar;
     avatarImg.alt = username;
-    avatarImg.style.width = '100px';
-    avatarImg.style.height = '100px';
-    avatarImg.style.borderRadius = '50%';
-    avatarImg.style.border = '4px solid #3a416f';
-    avatarImg.style.marginBottom = '15px';
+    avatarImg.style.width = '100%';
+    avatarImg.style.height = '100%';
+    avatarImg.style.objectFit = 'cover';
     avatarImg.onerror = function () { this.src = defaultAvatar; };
 
-    // Username
+    // Add elements to left section
+    avatarContainer.appendChild(avatarImg);
+    leftSection.appendChild(decorCircle1);
+    leftSection.appendChild(decorCircle2);
+    leftSection.appendChild(avatarContainer);
+
+    // Create right section with user info
+    const rightSection = document.createElement('div');
+    rightSection.style.width = '70%';
+    rightSection.style.padding = '20px 30px';
+    rightSection.style.display = 'flex';
+    rightSection.style.flexDirection = 'column';
+    rightSection.style.justifyContent = 'center';
+    rightSection.style.position = 'relative';
+
+    // Close button
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '×';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '15px';
+    closeButton.style.right = '15px';
+    closeButton.style.background = 'none';
+    closeButton.style.border = 'none';
+    closeButton.style.color = 'rgba(255, 255, 255, 0.7)';
+    closeButton.style.fontSize = '24px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.transition = 'color 0.2s';
+    closeButton.title = 'Kapat';
+    closeButton.style.zIndex = '5';
+    closeButton.onmouseover = function () { this.style.color = '#fff'; };
+    closeButton.onmouseout = function () { this.style.color = 'rgba(255, 255, 255, 0.7)'; };
+
+    // User info container
+    const userInfoContainer = document.createElement('div');
+    userInfoContainer.style.display = 'flex';
+    userInfoContainer.style.flexDirection = 'column';
+    userInfoContainer.style.gap = '5px';
+
+    const isOnline = onlineFriends.has(userId);
+
+    // Username with status indicator
+    const usernameContainer = document.createElement('div');
+    usernameContainer.style.display = 'flex';
+    usernameContainer.style.alignItems = 'center';
+    usernameContainer.style.gap = '10px';
+    usernameContainer.style.marginBottom = '5px';
+
     const usernameHeading = document.createElement('h3');
     usernameHeading.textContent = username;
-    usernameHeading.style.margin = '0 0 5px 0';
-    usernameHeading.style.fontSize = '22px';
+    usernameHeading.style.margin = '0';
+    usernameHeading.style.fontSize = '24px';
+    usernameHeading.style.fontWeight = '600';
+    usernameHeading.style.color = '#fff';
+    usernameHeading.style.textShadow = '0 2px 4px rgba(0,0,0,0.3)';
 
-    // Status
+    // Status indicator
+    const statusIndicator = document.createElement('span');
+    statusIndicator.style.width = '12px';
+    statusIndicator.style.height = '12px';
+    statusIndicator.style.borderRadius = '50%';
+    statusIndicator.style.backgroundColor = isOnline ? '#4CAF50' : '#9e9e9e';
+    statusIndicator.style.boxShadow = isOnline ? '0 0 8px #4CAF50' : 'none';
+
+    // Status text
     const statusText = document.createElement('p');
     statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
     statusText.style.fontSize = '14px';
-    statusText.style.color = '#a0a2a7';
-    statusText.style.marginBottom = '20px';
+    statusText.style.color = 'rgba(255, 255, 255, 0.7)';
+    statusText.style.margin = '0 0 15px 0';
 
-    // Join date
-    const infoDiv = document.createElement('div');
-    infoDiv.style.marginBottom = '20px';
-    infoDiv.innerHTML = '<strong>Üyelik Tarihi:</strong> <span class="join-date">Yükleniyor...</span>';
+    // Info grid
+    const infoGrid = document.createElement('div');
+    infoGrid.style.display = 'grid';
+    infoGrid.style.gridTemplateColumns = '1fr 1fr';
+    infoGrid.style.gap = '15px';
+    infoGrid.style.marginBottom = '20px';
+
+    // Join date info
+    const joinDateInfo = document.createElement('div');
+    joinDateInfo.style.display = 'flex';
+    joinDateInfo.style.flexDirection = 'column';
+    joinDateInfo.style.gap = '3px';
+
+    const joinDateLabel = document.createElement('span');
+    joinDateLabel.textContent = 'Üyelik Tarihi';
+    joinDateLabel.style.fontSize = '12px';
+    joinDateLabel.style.color = 'rgba(255, 255, 255, 0.5)';
+    joinDateLabel.style.textTransform = 'uppercase';
+    joinDateLabel.style.letterSpacing = '1px';
+
+    const joinDateValue = document.createElement('span');
+    joinDateValue.className = 'join-date';
+    joinDateValue.textContent = 'Yükleniyor...';
+    joinDateValue.style.fontSize = '16px';
+    joinDateValue.style.color = '#fff';
+    joinDateValue.style.fontWeight = '500';
+
+    joinDateInfo.appendChild(joinDateLabel);
+    joinDateInfo.appendChild(joinDateValue);
+
+    // Message count info (placeholder)
+    const messageInfo = document.createElement('div');
+    messageInfo.style.display = 'flex';
+    messageInfo.style.flexDirection = 'column';
+    messageInfo.style.gap = '3px';
+
+    const messageLabel = document.createElement('span');
+    messageLabel.textContent = 'Toplam Mesaj';
+    messageLabel.style.fontSize = '12px';
+    messageLabel.style.color = 'rgba(255, 255, 255, 0.5)';
+    messageLabel.style.textTransform = 'uppercase';
+    messageLabel.style.letterSpacing = '1px';
+
+    const messageValue = document.createElement('span');
+    messageValue.textContent = '124';
+    messageValue.style.fontSize = '16px';
+    messageValue.style.color = '#fff';
+    messageValue.style.fontWeight = '500';
+
+    messageInfo.appendChild(messageLabel);
+    messageInfo.appendChild(messageValue);
+
+    // Add info items to grid
+    infoGrid.appendChild(joinDateInfo);
+    infoGrid.appendChild(messageInfo);
+
+    // Action buttons container
+    const actionButtons = document.createElement('div');
+    actionButtons.style.display = 'flex';
+    actionButtons.style.gap = '10px';
+    actionButtons.style.marginTop = 'auto';
+
+    // Message button
+    const messageButton = document.createElement('button');
+    messageButton.textContent = 'Mesaj Gönder';
+    messageButton.style.backgroundColor = '#6A78D1';
+    messageButton.style.border = 'none';
+    messageButton.style.color = 'white';
+    messageButton.style.padding = '8px 15px';
+    messageButton.style.borderRadius = '6px';
+    messageButton.style.cursor = 'pointer';
+    messageButton.style.fontWeight = '500';
+    messageButton.style.flex = '1';
+    messageButton.style.transition = 'background-color 0.2s';
+    messageButton.onmouseover = function () { this.style.backgroundColor = '#5A68C1'; };
+    messageButton.onmouseout = function () { this.style.backgroundColor = '#6A78D1'; };
 
     // Remove friend button
     const removeButton = document.createElement('button');
@@ -3259,25 +3412,52 @@ function openProfilePanel(userId, username, avatar) {
     removeButton.style.backgroundColor = '#d94848';
     removeButton.style.border = 'none';
     removeButton.style.color = 'white';
-    removeButton.style.padding = '10px 15px';
-    removeButton.style.borderRadius = '5px';
+    removeButton.style.padding = '8px 15px';
+    removeButton.style.borderRadius = '6px';
     removeButton.style.cursor = 'pointer';
-    removeButton.style.width = '100%';
+    removeButton.style.fontWeight = '500';
+    removeButton.style.flex = '1';
+    removeButton.style.transition = 'background-color 0.2s';
+    removeButton.onmouseover = function () { this.style.backgroundColor = '#c93838'; };
+    removeButton.onmouseout = function () { this.style.backgroundColor = '#d94848'; };
 
-    // Append elements to profile content
-    profileContent.appendChild(avatarImg);
-    profileContent.appendChild(usernameHeading);
-    profileContent.appendChild(statusText);
-    profileContent.appendChild(infoDiv);
-    profileContent.appendChild(removeButton);
+    // Add buttons to action container
+    actionButtons.appendChild(messageButton);
+    actionButtons.appendChild(removeButton);
 
-    // Append profile content to modal content
-    modalContent.appendChild(profileContent);
+    // Assemble username container
+    usernameContainer.appendChild(usernameHeading);
+    usernameContainer.appendChild(statusIndicator);
 
-    // Append modal content to overlay
+    // Assemble user info
+    userInfoContainer.appendChild(usernameContainer);
+    userInfoContainer.appendChild(statusText);
+    userInfoContainer.appendChild(infoGrid);
+    userInfoContainer.appendChild(actionButtons);
+
+    // Add elements to right section
+    rightSection.appendChild(closeButton);
+    rightSection.appendChild(userInfoContainer);
+
+    // Decorative elements for right section
+    const decorElement = document.createElement('div');
+    decorElement.style.position = 'absolute';
+    decorElement.style.top = '0';
+    decorElement.style.right = '0';
+    decorElement.style.width = '150px';
+    decorElement.style.height = '150px';
+    decorElement.style.background = 'radial-gradient(circle, rgba(106, 120, 209, 0.1) 0%, rgba(106, 120, 209, 0) 70%)';
+    decorElement.style.borderRadius = '50%';
+    decorElement.style.transform = 'translate(30%, -30%)';
+    decorElement.style.zIndex = '1';
+
+    // Add sections to modal content
+    rightSection.appendChild(decorElement);
+    modalContent.appendChild(leftSection);
+    modalContent.appendChild(rightSection);
     modalOverlay.appendChild(modalContent);
 
-    // Append overlay to body
+    // Add to body
     document.body.appendChild(modalOverlay);
 
     // Add event listeners
@@ -3294,6 +3474,11 @@ function openProfilePanel(userId, username, avatar) {
     removeButton.addEventListener('click', () => {
         document.body.removeChild(modalOverlay);
         showRemoveFriendConfirmation(userId, username, avatar);
+    });
+
+    messageButton.addEventListener('click', () => {
+        document.body.removeChild(modalOverlay);
+        openChat(userId, username, avatar);
     });
 
     // Load join date
