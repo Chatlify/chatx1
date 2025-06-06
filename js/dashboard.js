@@ -3169,100 +3169,146 @@ function insertEmojiToTextarea(emoji) {
 
 // Profil paneli fonksiyonları
 function openProfilePanel(userId, username, avatar) {
+    // Remove any existing panel
     const existingPanel = document.getElementById('profile-panel-container');
     if (existingPanel) {
         document.body.removeChild(existingPanel);
     }
 
-    const panelContainer = document.createElement('div');
-    panelContainer.id = 'profile-panel-container';
-    panelContainer.className = 'profile-panel-container';
+    // Create the modal overlay
+    const modalOverlay = document.createElement('div');
+    modalOverlay.id = 'profile-panel-container';
+    modalOverlay.style.position = 'fixed';
+    modalOverlay.style.top = '0';
+    modalOverlay.style.left = '0';
+    modalOverlay.style.width = '100%';
+    modalOverlay.style.height = '100%';
+    modalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    modalOverlay.style.display = 'flex';
+    modalOverlay.style.justifyContent = 'center';
+    modalOverlay.style.alignItems = 'center';
+    modalOverlay.style.zIndex = '9999';
 
-    // Add inline styles to ensure visibility
-    panelContainer.style.position = 'fixed';
-    panelContainer.style.inset = '0';
-    panelContainer.style.zIndex = '1000';
-    panelContainer.style.display = 'flex';
-    panelContainer.style.alignItems = 'center';
-    panelContainer.style.justifyContent = 'center';
-    panelContainer.style.pointerEvents = 'none';
+    // Create the modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.backgroundColor = '#2d3558';
+    modalContent.style.borderRadius = '8px';
+    modalContent.style.padding = '20px';
+    modalContent.style.maxWidth = '400px';
+    modalContent.style.width = '90%';
+    modalContent.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+    modalContent.style.position = 'relative';
+    modalContent.style.color = 'white';
 
     const isOnline = onlineFriends.has(userId);
 
-    panelContainer.innerHTML = `
-        <div class="profile-panel-backdrop" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); opacity: 0; transition: opacity .3s;"></div>
-        <div class="profile-panel" style="background: #2a2c31; width: 300px; border-radius: 8px; text-align: center; padding: 20px; z-index: 1; transform: scale(0.95); opacity: 0; transition: transform .3s, opacity .3s;">
-            <div class="profile-panel-header">
-                <button class="close-profile-panel-btn" title="Kapat" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
-            </div>
-            <div class="profile-panel-content">
-                <img src="${avatar || defaultAvatar}" alt="${username}" class="profile-avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 4px solid #3c3f46; margin-bottom: 10px;" onerror="this.src='${defaultAvatar}'">
-                <h3 class="profile-username" style="margin: 0; font-size: 22px; color: white;">${username}</h3>
-                <p class="profile-status" style="font-size: 14px; color: #a0a2a7; margin-bottom: 20px;">${isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}</p>
-                <div class="profile-info" style="margin-bottom: 20px; color: white;">
-                    <strong>Üyelik Tarihi:</strong>
-                    <span class="join-date">Yükleniyor...</span>
-                </div>
-                <button class="remove-friend-btn" style="background: #d94848; border: none; color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%;">Arkadaşlıktan Çıkar</button>
-            </div>
-        </div>
-    `;
+    // Create the modal header
+    const modalHeader = document.createElement('div');
+    modalHeader.style.display = 'flex';
+    modalHeader.style.justifyContent = 'flex-end';
+    modalHeader.style.marginBottom = '15px';
 
-    document.body.appendChild(panelContainer);
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '×';
+    closeButton.style.background = 'none';
+    closeButton.style.border = 'none';
+    closeButton.style.color = '#aaa';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.fontSize = '24px';
+    closeButton.title = 'Kapat';
 
-    // Stilleri ekle ve sonra dinleyicileri
-    addProfilePanelStyles();
+    modalHeader.appendChild(closeButton);
+    modalContent.appendChild(modalHeader);
 
-    const closeBtn = panelContainer.querySelector('.close-profile-panel-btn');
-    const backdrop = panelContainer.querySelector('.profile-panel-backdrop');
-    const removeBtn = panelContainer.querySelector('.remove-friend-btn');
+    // Create the profile content
+    const profileContent = document.createElement('div');
+    profileContent.style.textAlign = 'center';
 
-    closeBtn.addEventListener('click', () => closeProfilePanel());
-    backdrop.addEventListener('click', () => closeProfilePanel());
-    removeBtn.addEventListener('click', () => {
-        closeProfilePanel();
+    // Avatar
+    const avatarImg = document.createElement('img');
+    avatarImg.src = avatar || defaultAvatar;
+    avatarImg.alt = username;
+    avatarImg.style.width = '100px';
+    avatarImg.style.height = '100px';
+    avatarImg.style.borderRadius = '50%';
+    avatarImg.style.border = '4px solid #3a416f';
+    avatarImg.style.marginBottom = '15px';
+    avatarImg.onerror = function () { this.src = defaultAvatar; };
+
+    // Username
+    const usernameHeading = document.createElement('h3');
+    usernameHeading.textContent = username;
+    usernameHeading.style.margin = '0 0 5px 0';
+    usernameHeading.style.fontSize = '22px';
+
+    // Status
+    const statusText = document.createElement('p');
+    statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+    statusText.style.fontSize = '14px';
+    statusText.style.color = '#a0a2a7';
+    statusText.style.marginBottom = '20px';
+
+    // Join date
+    const infoDiv = document.createElement('div');
+    infoDiv.style.marginBottom = '20px';
+    infoDiv.innerHTML = '<strong>Üyelik Tarihi:</strong> <span class="join-date">Yükleniyor...</span>';
+
+    // Remove friend button
+    const removeButton = document.createElement('button');
+    removeButton.textContent = 'Arkadaşlıktan Çıkar';
+    removeButton.style.backgroundColor = '#d94848';
+    removeButton.style.border = 'none';
+    removeButton.style.color = 'white';
+    removeButton.style.padding = '10px 15px';
+    removeButton.style.borderRadius = '5px';
+    removeButton.style.cursor = 'pointer';
+    removeButton.style.width = '100%';
+
+    // Append elements to profile content
+    profileContent.appendChild(avatarImg);
+    profileContent.appendChild(usernameHeading);
+    profileContent.appendChild(statusText);
+    profileContent.appendChild(infoDiv);
+    profileContent.appendChild(removeButton);
+
+    // Append profile content to modal content
+    modalContent.appendChild(profileContent);
+
+    // Append modal content to overlay
+    modalOverlay.appendChild(modalContent);
+
+    // Append overlay to body
+    document.body.appendChild(modalOverlay);
+
+    // Add event listeners
+    closeButton.addEventListener('click', () => {
+        document.body.removeChild(modalOverlay);
+    });
+
+    modalOverlay.addEventListener('click', (event) => {
+        if (event.target === modalOverlay) {
+            document.body.removeChild(modalOverlay);
+        }
+    });
+
+    removeButton.addEventListener('click', () => {
+        document.body.removeChild(modalOverlay);
         showRemoveFriendConfirmation(userId, username, avatar);
     });
 
-    // Veriyi yükle
+    // Load join date
     getUserJoinDate(userId).then(date => {
-        const dateEl = panelContainer.querySelector('.join-date');
-        if (dateEl) dateEl.textContent = date;
-    });
-
-    // Paneli göster
-    setTimeout(() => {
-        panelContainer.style.pointerEvents = 'auto';
-        const backdrop = panelContainer.querySelector('.profile-panel-backdrop');
-        if (backdrop) backdrop.style.opacity = '1';
-
-        const panel = panelContainer.querySelector('.profile-panel');
-        if (panel) {
-            panel.style.transform = 'scale(1)';
-            panel.style.opacity = '1';
+        const joinDateSpan = modalContent.querySelector('.join-date');
+        if (joinDateSpan) {
+            joinDateSpan.textContent = date;
         }
-    }, 10);
+    });
 }
 
 function closeProfilePanel() {
     const panel = document.getElementById('profile-panel-container');
-    if (panel) {
-        // Animate out
-        const backdrop = panel.querySelector('.profile-panel-backdrop');
-        if (backdrop) backdrop.style.opacity = '0';
-
-        const profilePanel = panel.querySelector('.profile-panel');
-        if (profilePanel) {
-            profilePanel.style.transform = 'scale(0.95)';
-            profilePanel.style.opacity = '0';
-        }
-
-        // Remove after animation completes
-        setTimeout(() => {
-            if (panel && panel.parentNode) {
-                panel.parentNode.removeChild(panel);
-            }
-        }, 300);
+    if (panel && panel.parentNode) {
+        panel.parentNode.removeChild(panel);
     }
 }
 
