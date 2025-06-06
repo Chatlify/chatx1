@@ -1,0 +1,605 @@
+/* Dashboard Bottom Navigation Styles */
+
+/* Container Layout */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #1a1f36;
+    position: relative;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    padding-bottom: 120px; /* Space for bottom nav */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Bottom Navigation */
+.bottom-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: rgba(20, 23, 37, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+    padding: 0 20px;
+}
+
+.nav-container {
+    display: flex;
+    height: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: center;
+    gap: 30px;
+}
+
+/* Navigation Sections */
+.nav-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.servers-section {
+    flex: 0 0 auto;
+}
+
+.dm-section {
+    flex: 1;
+    min-width: 0;
+    max-width: 400px;
+}
+
+.user-section {
+    flex: 0 0 auto;
+}
+
+/* Server Navigation Items */
+.nav-item {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid transparent;
+}
+
+.nav-item:hover {
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+.nav-item.active {
+    border-radius: 20px;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    box-shadow: 0 8px 25px rgba(106, 17, 203, 0.4);
+}
+
+.nav-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    overflow: hidden;
+}
+
+.nav-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.nav-icon i {
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+
+/* Navigation Indicator */
+.nav-indicator {
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 0;
+    background: #ffffff;
+    border-radius: 2px;
+    transition: height 0.3s ease;
+}
+
+.nav-item.active .nav-indicator {
+    height: 40px;
+}
+
+/* Navigation Notifications */
+.nav-notification {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: 2px solid #1a1f36;
+}
+
+/* Navigation Divider */
+.nav-divider {
+    width: 2px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 1px;
+    margin: 0 5px;
+}
+
+/* Add Server Button */
+.add-server {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+}
+
+.add-server:hover {
+    background: rgba(46, 204, 113, 0.2) !important;
+    border-color: #2ecc71 !important;
+}
+
+.add-server .nav-icon i {
+    color: #2ecc71;
+}
+
+/* DM Section */
+.dm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    margin-bottom: 15px;
+}
+
+.dm-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #8892a0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dm-toggle {
+    background: none;
+    border: none;
+    color: #8892a0;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.dm-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.dm-list {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 15px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.dm-list::-webkit-scrollbar {
+    display: none;
+}
+
+.dm-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    border: 2px solid transparent;
+}
+
+.dm-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.dm-item.active {
+    background: rgba(106, 17, 203, 0.2);
+    border-color: #6a11cb;
+}
+
+.dm-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.dm-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dm-status {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #1a1f36;
+}
+
+.dm-status.online {
+    background: #2ecc71;
+}
+
+.dm-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dm-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-activity {
+    font-size: 0.8rem;
+    color: #8892a0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-notification {
+    background: #e74c3c;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* User Section */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-right: 15px;
+}
+
+.user-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-status {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #1a1f36;
+    background: #2ecc71;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.username {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.user-tag {
+    font-size: 0.8rem;
+    color: #8892a0;
+}
+
+.user-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.control-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: #8892a0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.logout-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+/* Tooltips */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1001;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: tooltipFadeIn 0.3s ease forwards;
+}
+
+[data-tooltip]:hover::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    z-index: 1001;
+    margin-bottom: 3px;
+    opacity: 0;
+    animation: tooltipFadeIn 0.3s ease forwards;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .nav-container {
+        gap: 20px;
+    }
+
+    .dm-section {
+        max-width: 300px;
+    }
+
+    .dm-item {
+        min-width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .bottom-navigation {
+        height: 100px;
+        padding: 0 15px;
+    }
+
+    .main-content {
+        padding-bottom: 100px;
+    }
+
+    .nav-container {
+        gap: 15px;
+    }
+
+    .nav-item {
+        width: 50px;
+        height: 50px;
+    }
+
+    .nav-icon i {
+        font-size: 1.2rem;
+    }
+
+    .dm-section {
+        max-width: 250px;
+    }
+
+    .dm-item {
+        min-width: 160px;
+        padding: 10px 12px;
+    }
+
+    .dm-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+    .control-btn {
+        width: 35px;
+        height: 35px;
+    }
+
+    .user-info {
+        padding: 10px 12px;
+    }
+
+    .username {
+        font-size: 0.8rem;
+    }
+
+    .user-tag {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .bottom-navigation {
+        height: 80px;
+        padding: 0 10px;
+    }
+
+    .main-content {
+        padding-bottom: 80px;
+    }
+
+    .nav-container {
+        gap: 10px;
+    }
+
+    .nav-item {
+        width: 45px;
+        height: 45px;
+    }
+
+    .nav-icon i {
+        font-size: 1rem;
+    }
+
+    .dm-section {
+        display: none; /* Hide DM section on very small screens */
+    }
+
+    .user-details {
+        display: none; /* Hide user details text on very small screens */
+    }
+
+    .user-info {
+        padding: 8px;
+        background: transparent;
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Smooth Animations */
+.nav-item,
+.dm-item,
+.control-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover,
+.dm-item:hover,
+.control-btn:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Focus States for Accessibility */
+.nav-item:focus,
+.dm-item:focus,
+.control-btn:focus,
+.dm-toggle:focus {
+    outline: 2px solid #6a11cb;
+    outline-offset: 2px;
+}
+
+/* Loading Animation for Server Icons */
+.nav-icon img {
+    transition: opacity 0.3s ease;
+}
+
+.nav-icon img:not([src]) {
+    opacity: 0;
+}
+
+/* Notification Pulse Animation */
+.nav-notification,
+.dm-notification {
+    animation: notificationPulse 2s infinite;
+}
+
+@keyframes notificationPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Status Indicator Animations */
+.dm-status,
+.user-status {
+    transition: all 0.3s ease;
+}
+
+.dm-status.online,
+.user-status.online {
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}

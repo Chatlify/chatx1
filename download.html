@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Chatlify - The New Dimension of Communication</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/download.css">
+    <link rel="stylesheet" href="css/bg-animation.css">
+    <script src="js/main.js" defer></script>
+    <script src="js/download.js" defer></script>
+</head>
+
+<body>
+    <!-- ARKA PLAN ANİMASYONU: Yıldızlı gökyüzü, hareketli bulutlar ve parıltılar içeren animasyon -->
+    <div class="bg-animation">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="clouds"></div>
+    </div>
+
+    <!-- HEADER BÖLÜMÜ: Logo, navigasyon linkleri ve hesap butonlarını içerir -->
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="assets/logo.png" alt="Chatlify Logo" class="header-logo-img">
+                <span>CHATLIFY</span>
+            </div>
+            <!-- Navigasyon Menüsü -->
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="community.html">Community</a>
+                <a href="support.html">Support</a>
+                <a href="download.html" class="active">Download</a>
+            </div>
+            <!-- Giriş ve İndirme Butonları -->
+            <div class="nav-buttons">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="#" class="download-btn">Download Now</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- HERO BÖLÜMÜ: İndirme sayfasının başlığı ve açıklaması -->
+        <section class="download-hero">
+            <div class="download-hero-content">
+                <h1>DOWNLOAD <span class="highlight">CHATLIFY</span> NOW</h1>
+                <p>Available for all major platforms. Connect with your friends and communities from anywhere!</p>
+            </div>
+        </section>
+
+        <!-- İNDİRME SEÇENEKLERİ BÖLÜMÜ: Farklı platformlar için indirme kartları -->
+        <section class="download-options">
+            <div class="download-container">
+                <!-- Windows İndirme Kartı -->
+                <div class="download-card" data-platform="windows">
+                    <div class="download-icon">
+                        <i class="fab fa-windows"></i>
+                    </div>
+                    <div class="download-info">
+                        <h3>Windows</h3>
+                        <p>Windows 10+ (64-bit)</p>
+                        <a href="#" class="btn btn-primary download-btn-large" data-version="windows"><i
+                                class="fas fa-download"></i> Download for Windows</a>
+                        <span class="version">v0.0.1</span>
+                    </div>
+                </div>
+
+                <!-- macOS İndirme Kartı -->
+                <div class="download-card" data-platform="mac">
+                    <div class="download-icon">
+                        <i class="fab fa-apple"></i>
+                    </div>
+                    <div class="download-info">
+                        <h3>macOS</h3>
+                        <p>macOS 10.13+</p>
+                        <a href="#" class="btn btn-primary download-btn-large" data-version="mac"><i
+                                class="fas fa-download"></i> Download for Mac</a>
+                        <span class="version">v0.0.1</span>
+                    </div>
+                </div>
+
+                <!-- Linux İndirme Kartı -->
+                <div class="download-card" data-platform="linux">
+                    <div class="download-icon">
+                        <i class="fab fa-linux"></i>
+                    </div>
+                    <div class="download-info">
+                        <h3>Linux</h3>
+                        <p>Ubuntu, Debian, Fedora</p>
+                        <a href="#" class="btn btn-primary download-btn-large" data-version="linux"><i
+                                class="fas fa-download"></i> Download for Linux</a>
+                        <span class="version">v0.0.1</span>
+                    </div>
+                </div>
+
+                <!-- Android İndirme Kartı -->
+                <div class="download-card" data-platform="android">
+                    <div class="download-icon">
+                        <i class="fab fa-android"></i>
+                    </div>
+                    <div class="download-info">
+                        <h3>Android</h3>
+                        <p>Android 8.0+</p>
+                        <a href="#" class="btn btn-primary download-btn-large" data-version="android"><i
+                                class="fas fa-download"></i> Download APK</a>
+                        <span class="version">v0.0.1</span>
+                    </div>
+                </div>
+
+                <!-- iOS İndirme Kartı -->
+                <div class="download-card" data-platform="ios">
+                    <div class="download-icon">
+                        <i class="fab fa-app-store-ios"></i>
+                    </div>
+                    <div class="download-info">
+                        <h3>iOS</h3>
+                        <p>iOS 14.0+</p>
+                        <a href="#" class="btn btn-primary download-btn-large" data-version="ios"><i
+                                class="fas fa-download"></i> Download IPA</a>
+                        <span class="version">v0.0.1</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SİSTEM GEREKSİNİMLERİ BÖLÜMÜ: Her platform için sistem gereksinimleri -->
+        <section class="system-requirements">
+            <div class="requirements-container">
+                <h2>SYSTEM <span class="highlight">REQUIREMENTS</span></h2>
+
+                <!-- Platform Seçici - Sekme Navigasyon -->
+                <div class="platform-tabs">
+                    <button class="platform-tab active" data-platform="windows"><i class="fab fa-windows"></i>
+                        Windows</button>
+                    <button class="platform-tab" data-platform="mac"><i class="fab fa-apple"></i> macOS</button>
+                    <button class="platform-tab" data-platform="linux"><i class="fab fa-linux"></i> Linux</button>
+                    <button class="platform-tab" data-platform="android"><i class="fab fa-android"></i> Android</button>
+                    <button class="platform-tab" data-platform="ios"><i class="fab fa-apple"></i> iOS</button>
+                </div>
+
+                <!-- Platform İçerikleri -->
+                <div class="platform-contents">
+                    <!-- Windows Gereksinimleri -->
+                    <div class="platform-content active" id="windows-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-desktop"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>Windows 10/11 (64-bit)</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>Intel Core i3 veya AMD eşdeğeri</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>4 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>500 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-globe"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>Geniş bant internet bağlantısı</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-gamepad"></i></div>
+                                <div class="spec-info">
+                                    <h4>DirectX</h4>
+                                    <p>Sürüm 11</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- macOS Gereksinimleri -->
+                    <div class="platform-content" id="mac-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-desktop"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>macOS 10.13 High Sierra veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>64-bit Intel veya Apple Silicon</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>4 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>500 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-globe"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>Geniş bant internet bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linux Gereksinimleri -->
+                    <div class="platform-content" id="linux-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-desktop"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>Ubuntu 18.04+, Debian 10+, Fedora 33+</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>64-bit Intel veya AMD</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>4 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>500 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-globe"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>Geniş bant internet bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Android Gereksinimleri -->
+                    <div class="platform-content" id="android-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-mobile-alt"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>Android 8.0 (Oreo) veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-microchip"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşlemci</h4>
+                                    <p>1.5 GHz dört çekirdekli veya daha iyi</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-memory"></i></div>
+                                <div class="spec-info">
+                                    <h4>Bellek</h4>
+                                    <p>2 GB RAM</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>200 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-wifi"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>WiFi veya mobil veri bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- iOS Gereksinimleri -->
+                    <div class="platform-content" id="ios-content">
+                        <div class="requirement-specs">
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-mobile-alt"></i></div>
+                                <div class="spec-info">
+                                    <h4>İşletim Sistemi</h4>
+                                    <p>iOS 14.0 veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-tablet-alt"></i></div>
+                                <div class="spec-info">
+                                    <h4>Cihaz</h4>
+                                    <p>iPhone 6s veya daha yeni, iPad 5. nesil veya daha yeni</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-hdd"></i></div>
+                                <div class="spec-info">
+                                    <h4>Depolama</h4>
+                                    <p>200 MB boş alan</p>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-icon"><i class="fas fa-wifi"></i></div>
+                                <div class="spec-info">
+                                    <h4>İnternet</h4>
+                                    <p>WiFi veya mobil veri bağlantısı</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ÇAĞRI BÖLÜMÜ (CTA): Kullanıcıları indirmeye yönlendiren eylem çağrısı -->
+        <section class="cta">
+            <div class="cta-content">
+                <h2>Ready to Join?</h2>
+                <p>Download Chatlify now and start connecting with millions of users worldwide. Our platform is
+                    constantly evolving with new features for the best communication experience.</p>
+                <a href="#download-options" class="btn btn-primary">DOWNLOAD NOW</a>
+            </div>
+            <div class="cta-image">
+                <div class="devices">
+                    <div class="device desktop"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER BÖLÜMÜ: Site haritası, sosyal medya ve telif hakkı bilgileri -->
+    <footer>
+        <div class="footer-content">
+            <!-- Footer Logo -->
+            <div class="footer-logo">
+                <img src="assets/logo.png" alt="Chatlify Logo" class="footer-logo-img">
+                <span>CHATLIFY</span>
+            </div>
+            <!-- Footer Linkleri - Site Haritası -->
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><a href="#">Voice Chat</a></li>
+                        <li><a href="#">Chatlify Premium</a></li>
+                        <li><a href="#">Communities</a></li>
+                        <li><a href="#">Integrations</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press Room</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                        <li><a href="#">Announcements</a></li>
+                        <li><a href="#">Developer API</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="legal/terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="legal/privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="legal/security.html">Security</a></li>
+                        <li><a href="legal/data-protection.html">Data Protection</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Alt Footer - Sosyal Medya ve Telif Hakkı -->
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://x.com/Chatlifyapp" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/chatlifyapp/" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-instagram"></i></a>
+                <a href="https://www.youtube.com/@Chatlify" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-youtube"></i></a>
+                <a href="https://www.tiktok.com/@chatlifyapp" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-tiktok"></i></a>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Chatlify Inc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

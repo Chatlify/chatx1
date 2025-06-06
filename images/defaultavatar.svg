@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8C52FF" />
+      <stop offset="50%" style="stop-color:#6A11CB" />
+      <stop offset="100%" style="stop-color:#2575FC" />
+    </linearGradient>
+  </defs>
+  <!-- Arka plan dairesi -->
+  <circle cx="100" cy="100" r="100" fill="#1a1a2e" />
+  <!-- Gradient kenarlık -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="url(#gradient)" stroke-width="5" />
+  <!-- Kullanıcı simgesi -->
+  <circle cx="100" cy="75" r="35" fill="url(#gradient)" opacity="0.8" />
+  <path d="M100,120 C65,120 35,145 35,185 L165,185 C165,145 135,120 100,120 Z" fill="url(#gradient)" opacity="0.8" />
+</svg> 

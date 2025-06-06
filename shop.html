@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatlify - Premium Shop</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/bg-animation.css">
+    <link rel="stylesheet" href="css/shop.css">
+    <script src="js/main.js" defer></script>
+    <script src="js/shop.js" defer></script>
+</head>
+
+<body class="shop-page">
+    <!-- Animasyonlu Arkaplan -->
+    <div class="bg-animation">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="clouds"></div>
+    </div>
+
+    <!-- Shop Container -->
+    <div class="shop-container">
+        <!-- Shop Header -->
+        <header class="shop-header">
+            <div class="header-container">
+                <div class="header-left">
+                    <div class="logo-section">
+                        <img src="images/BGChatlifyLogo.png" alt="Chatlify" class="logo">
+                        <div class="logo-text">
+                            <span class="brand-name">Chatlify</span>
+                            <span class="brand-subtitle">Premium Shop</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-center">
+                    <nav class="shop-nav">
+                        <a href="#plans" class="nav-link active">Planlar</a>
+                        <a href="#features" class="nav-link">Özellikler</a>
+                        <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    </nav>
+                </div>
+
+                <div class="header-right">
+                    <a href="dashboard.html" class="back-to-dashboard">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Dashboard'a Dön</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="shop-main">
+
+            <!-- Hero Banner -->
+            <section class="hero-banner">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h2 class="hero-title">
+                            <span class="gradient-text">Premium</span> Özelliklerle
+                            <br>Sohbet Deneyiminizi <span class="highlight">Geliştirin</span>
+                        </h2>
+                        <p class="hero-description">
+                            Özel temalar, gelişmiş özellikler ve sınırsız imkanlarla Chatlify'ın tüm gücünü keşfedin.
+                        </p>
+                        <div class="hero-features">
+                            <div class="feature-tag">
+                                <i class="fas fa-check"></i>
+                                <span>HD Video Görüşme</span>
+                            </div>
+                            <div class="feature-tag">
+                                <i class="fas fa-check"></i>
+                                <span>Özel Temalar</span>
+                            </div>
+                            <div class="feature-tag">
+                                <i class="fas fa-check"></i>
+                                <span>Öncelikli Destek</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="premium-showcase">
+                            <div class="showcase-card">
+                                <div class="card-glow"></div>
+                                <i class="fas fa-crown"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Premium Plans -->
+            <section id="plans" class="premium-plans">
+                <div class="section-header">
+                    <h2 class="section-title">Premium Planları</h2>
+                    <p class="section-description">İhtiyaçlarınıza en uygun planı seçin ve premium deneyimin tadını çıkarın</p>
+
+                    <div class="billing-toggle">
+                        <div class="toggle-container">
+                            <span class="toggle-label">Aylık</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="billing-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">Yıllık</span>
+                            <div class="discount-badge">%20 İndirim</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="plans-grid">
+                    <!-- Spark Plan -->
+                    <div class="plan-card spark">
+                        <div class="plan-header">
+                            <div class="plan-badge">Başlangıç</div>
+                            <div class="plan-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 class="plan-name">Spark</h3>
+                            <div class="plan-price">
+                                <span class="currency">₺</span>
+                                <span class="amount monthly">29</span>
+                                <span class="amount annual" style="display: none;">290</span>
+                                <span class="period monthly">/ay</span>
+                                <span class="period annual" style="display: none;">/yıl</span>
+                            </div>
+                            <div class="plan-description">Temel premium özellikler</div>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>HD Ses Kalitesi</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Özel Durum Mesajları</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>25 Özel Emoji</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Temel Profil Özelleştirme</span>
+                                </li>
+                                <li class="not-included">
+                                    <i class="fas fa-times"></i>
+                                    <span>Animasyonlu Avatarlar</span>
+                                </li>
+                                <li class="not-included">
+                                    <i class="fas fa-times"></i>
+                                    <span>Reklamsız Deneyim</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="plan-action">
+                            <button class="plan-btn spark-btn" data-plan="spark">
+                                <span>Başla</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Blaze Plan -->
+                    <div class="plan-card blaze featured">
+                        <div class="plan-header">
+                            <div class="plan-badge popular">En Popüler</div>
+                            <div class="plan-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h3 class="plan-name">Blaze</h3>
+                            <div class="plan-price">
+                                <span class="currency">₺</span>
+                                <span class="amount monthly">59</span>
+                                <span class="amount annual" style="display: none;">590</span>
+                                <span class="period monthly">/ay</span>
+                                <span class="period annual" style="display: none;">/yıl</span>
+                            </div>
+                            <div class="plan-description">Gelişmiş özellikler ve deneyim</div>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>4K Video Görüşme</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Animasyonlu Durum Mesajları</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>100 Özel Emoji</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Gelişmiş Profil Temaları</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Animasyonlu Avatarlar</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Reklamsız Deneyim</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Öncelikli Destek</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="plan-action">
+                            <button class="plan-btn blaze-btn" data-plan="blaze">
+                                <span>Pro Ol</span>
+                                <i class="fas fa-crown"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Master Plan -->
+                    <div class="plan-card master">
+                        <div class="plan-header">
+                            <div class="plan-badge master">Master</div>
+                            <div class="plan-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h3 class="plan-name">Master</h3>
+                            <div class="plan-price">
+                                <span class="currency">₺</span>
+                                <span class="amount monthly">99</span>
+                                <span class="amount annual" style="display: none;">990</span>
+                                <span class="period monthly">/ay</span>
+                                <span class="period annual" style="display: none;">/yıl</span>
+                            </div>
+                            <div class="plan-description">Sınırsız premium deneyim</div>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>8K Ultra HD Video</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Özel Profil Animasyonları</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Sınırsız Özel Emoji</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Özel Premium Temalar</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Özel Animasyonlu Avatarlar</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Tamamen Reklamsız</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>7/24 VIP Destek</span>
+                                </li>
+                                <li class="included">
+                                    <i class="fas fa-check"></i>
+                                    <span>Erken Erişim Özellikleri</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="plan-action">
+                            <button class="plan-btn master-btn" data-plan="master">
+                                <span>Ultimate Ol</span>
+                                <i class="fas fa-star"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Premium Features -->
+            <section id="features" class="premium-features">
+                <div class="section-header">
+                    <h2 class="section-title">Premium Özellikler</h2>
+                    <p class="section-description">Chatlify Premium ile elde edeceğiniz harika özellikler</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h3 class="feature-title">Ultra HD Video</h3>
+                        <p class="feature-description">8K'ya kadar ultra yüksek çözünürlükte video görüşmeler yapın.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <h3 class="feature-title">Özel Temalar</h3>
+                        <p class="feature-description">Kişiselleştirilmiş temalar ve renklerle deneyiminizi özelleştirin.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                        <h3 class="feature-title">Premium Emojiler</h3>
+                        <p class="feature-description">Özel emoji paketleri ve animasyonlu ifadelerle kendinizi ifade edin.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-title">Gelişmiş Güvenlik</h3>
+                        <p class="feature-description">End-to-end şifreleme ve gelişmiş güvenlik özellikleri.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h3 class="feature-title">Sınırsız Depolama</h3>
+                        <p class="feature-description">Dosyalarınızı ve medyalarınızı sınırsız olarak saklayın.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3 class="feature-title">VIP Destek</h3>
+                        <p class="feature-description">7/24 öncelikli destek ve özel yardım hattı.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="payment-modal">
+        <div class="payment-modal-content">
+            <div class="payment-header">
+                <h2 class="payment-title">Ödeme Bilgileri</h2>
+                <button class="close-modal" onclick="closePaymentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="payment-body">
+                <div class="selected-plan">
+                    <div class="plan-summary">
+                        <div class="plan-info">
+                            <h3 id="selectedPlanName">Spark</h3>
+                            <p id="selectedPlanDesc">Temel premium özellikler</p>
+                        </div>
+                        <div class="plan-price-summary">
+                            <span class="price" id="selectedPlanPrice">₺29</span>
+                            <span class="period">/ay</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="payment-form">
+                    <div class="form-group">
+                        <label>Kart Numarası</label>
+                        <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Son Kullanma</label>
+                            <input type="text" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="text" placeholder="123" maxlength="3">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Kart Sahibi</label>
+                        <input type="text" placeholder="Ad Soyad">
+                    </div>
+
+                    <button type="submit" class="payment-btn">
+                        <i class="fas fa-lock"></i>
+                        <span>Güvenli Ödeme Yap</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Billing toggle functionality
+        const billingToggle = document.getElementById('billing-toggle');
+        const monthlyAmounts = document.querySelectorAll('.amount.monthly');
+        const annualAmounts = document.querySelectorAll('.amount.annual');
+        const monthlyPeriods = document.querySelectorAll('.period.monthly');
+        const annualPeriods = document.querySelectorAll('.period.annual');
+
+        billingToggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Show annual pricing
+                monthlyAmounts.forEach(el => el.style.display = 'none');
+                monthlyPeriods.forEach(el => el.style.display = 'none');
+                annualAmounts.forEach(el => el.style.display = 'inline');
+                annualPeriods.forEach(el => el.style.display = 'inline');
+            } else {
+                // Show monthly pricing
+                monthlyAmounts.forEach(el => el.style.display = 'inline');
+                monthlyPeriods.forEach(el => el.style.display = 'inline');
+                annualAmounts.forEach(el => el.style.display = 'none');
+                annualPeriods.forEach(el => el.style.display = 'none');
+            }
+        });
+
+        // Plan button click handlers and payment modal
+        const planButtons = document.querySelectorAll('.plan-btn');
+        const paymentModal = document.getElementById('paymentModal');
+
+        planButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const planType = this.getAttribute('data-plan');
+                openPaymentModal(planType);
+            });
+        });
+
+        function openPaymentModal(planType) {
+            const planNames = {
+                'spark': 'Spark',
+                'blaze': 'Blaze',
+                'master': 'Master'
+            };
+
+            const planDescs = {
+                'spark': 'Temel premium özellikler',
+                'blaze': 'Gelişmiş premium deneyim',
+                'master': 'Sınırsız premium deneyim'
+            };
+
+            const planPrices = {
+                'spark': '₺29',
+                'blaze': '₺59',
+                'master': '₺99'
+            };
+
+            document.getElementById('selectedPlanName').textContent = planNames[planType];
+            document.getElementById('selectedPlanDesc').textContent = planDescs[planType];
+            document.getElementById('selectedPlanPrice').textContent = planPrices[planType];
+
+            paymentModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePaymentModal() {
+            paymentModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Make closePaymentModal global
+        window.closePaymentModal = closePaymentModal;
+
+        // Close modal when clicking outside
+        paymentModal.addEventListener('click', function(e) {
+            if (e.target === paymentModal) {
+                closePaymentModal();
+            }
+        });
+
+        // Form submission
+        document.querySelector('.payment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Ödeme işlemi başarıyla tamamlandı!');
+            closePaymentModal();
+        });
+
+        // Card number formatting
+        document.querySelector('input[placeholder="1234 5678 9012 3456"]').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Expiry date formatting
+        document.querySelector('input[placeholder="MM/YY"]').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

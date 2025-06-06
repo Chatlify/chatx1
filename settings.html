@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatlify - Ayarlar</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/bg-animation.css">
+    <script src="js/main.js" defer></script>
+    <script src="js/settings.js" type="module" defer></script>
+</head>
+
+<body class="dashboard-page settings-page">
+    <!-- Animasyonlu Arkaplan -->
+    <div class="bg-animation">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="clouds"></div>
+    </div>
+
+    <div class="settings-container">
+
+        <!-- Settings Header -->
+        <div class="settings-header">
+            <div class="settings-header-left">
+                <button class="back-button" onclick="window.location.href='dashboard.html'">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="settings-title">
+                    <h1><i class="fas fa-cog"></i> Ayarlar</h1>
+                </div>
+            </div>
+            <div class="settings-header-right">
+                <div class="settings-search">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Ayarlarda ara..." id="settings-search">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Layout -->
+        <div class="settings-layout">
+            <!-- Settings Navigation -->
+            <div class="settings-nav">
+                <!-- Hesap Kategorisi -->
+                <div class="nav-category">
+                    <div class="category-header">HESAP</div>
+                    <div class="nav-item active" data-category="profile">
+                        <div class="nav-icon"><i class="fas fa-user-circle"></i></div>
+                        <div class="nav-label">Profil</div>
+                    </div>
+                    <div class="nav-item" data-category="account">
+                        <div class="nav-icon"><i class="fas fa-user-cog"></i></div>
+                        <div class="nav-label">Hesap</div>
+                    </div>
+                    <div class="nav-item" data-category="security">
+                        <div class="nav-icon"><i class="fas fa-shield-alt"></i></div>
+                        <div class="nav-label">Güvenlik</div>
+                    </div>
+                    <div class="nav-item" data-category="privacy">
+                        <div class="nav-icon"><i class="fas fa-user-secret"></i></div>
+                        <div class="nav-label">Gizlilik</div>
+                    </div>
+                </div>
+
+                <!-- Uygulama Kategorisi -->
+                <div class="nav-category">
+                    <div class="category-header">UYGULAMA</div>
+                    <div class="nav-item" data-category="appearance">
+                        <div class="nav-icon"><i class="fas fa-palette"></i></div>
+                        <div class="nav-label">Görünüm</div>
+                    </div>
+                    <div class="nav-item" data-category="notifications">
+                        <div class="nav-icon"><i class="fas fa-bell"></i></div>
+                        <div class="nav-label">Bildirimler</div>
+                    </div>
+                    <div class="nav-item" data-category="language">
+                        <div class="nav-icon"><i class="fas fa-language"></i></div>
+                        <div class="nav-label">Dil & Bölge</div>
+                    </div>
+                    <div class="nav-item" data-category="accessibility">
+                        <div class="nav-icon"><i class="fas fa-universal-access"></i></div>
+                        <div class="nav-label">Erişilebilirlik</div>
+                    </div>
+                </div>
+
+                <!-- Gelişmiş Kategorisi -->
+                <div class="nav-category">
+                    <div class="category-header">GELİŞMİŞ</div>
+                    <div class="nav-item" data-category="integrations">
+                        <div class="nav-icon"><i class="fas fa-puzzle-piece"></i></div>
+                        <div class="nav-label">Entegrasyonlar</div>
+                    </div>
+                    <div class="nav-item" data-category="subscription">
+                        <div class="nav-icon"><i class="fas fa-crown"></i></div>
+                        <div class="nav-label">Chatlify Premium</div>
+                        <div class="nav-badge">PRO</div>
+                    </div>
+                    <div class="nav-item" data-category="developer">
+                        <div class="nav-icon"><i class="fas fa-code"></i></div>
+                        <div class="nav-label">Geliştirici</div>
+                    </div>
+                    <div class="nav-item" data-category="about">
+                        <div class="nav-icon"><i class="fas fa-info-circle"></i></div>
+                        <div class="nav-label">Hakkında</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="settings-content">
+                <div class="content-header">
+                    <div class="content-header-info">
+                        <h2 class="content-title" id="content-title">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profil Ayarları</span>
+                        </h2>
+                        <p class="content-description" id="content-description">
+                            Profil bilgilerinizi ve görünümünüzü özelleştirin
+                        </p>
+                    </div>
+                    <div class="content-header-actions">
+                        <button class="btn btn-secondary" id="reset-settings">
+                            <i class="fas fa-undo"></i>
+                            <span>Sıfırla</span>
+                        </button>
+                        <button class="btn btn-primary" id="save-settings">
+                            <i class="fas fa-save"></i>
+                            <span>Kaydet</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-body">
+                    <!-- Profil Ayarları -->
+                    <div class="settings-section active" id="profile-section">
+                        <div class="settings-cards">
+                            <!-- Profil Kartı -->
+                            <div class="settings-card profile-card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <i class="fas fa-user-circle"></i>
+                                        <span>Profil Bilgileri</span>
+                                    </div>
+                                </div>
+                                <div class="card-content">
+                                    <div class="profile-section">
+                                        <div class="profile-avatar-area">
+                                            <div class="profile-avatar">
+                                                <img src="https://via.placeholder.com/120/3498db/ffffff?text=U" alt="Profil Resmi" id="profile-avatar-img">
+                                                <div class="avatar-status online"></div>
+                                                <div class="avatar-upload-overlay">
+                                                    <i class="fas fa-camera"></i>
+                                                </div>
+                                            </div>
+                                            <div class="profile-avatar-controls">
+                                                <button class="btn btn-primary btn-sm" id="upload-avatar">
+                                                    <i class="fas fa-upload"></i>
+                                                    Yükle
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" id="remove-avatar">
+                                                    <i class="fas fa-trash"></i>
+                                                    Kaldır
+                                                </button>
+                                            </div>
+                                            <p class="avatar-info">PNG, JPG veya GIF • Max 8MB</p>
+                                        </div>
+
+                                        <div class="profile-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="display-name">Görünen Ad</label>
+                                                    <div class="input-container">
+                                                        <input type="text" id="display-name" value="Kullanıcı Adı" class="form-input">
+                                                        <div class="input-icon">
+                                                            <i class="fas fa-signature"></i>
+                                                        </div>
+                                                    </div>
+                                                    <p class="input-hint">Diğer kullanıcıların göreceği adınız</p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="username">Kullanıcı Adı</label>
+                                                    <div class="input-container">
+                                                        <input type="text" id="username" value="kullaniciadi" class="form-input">
+                                                        <div class="input-icon">
+                                                            <i class="fas fa-at"></i>
+                                                        </div>
+                                                    </div>
+                                                    <p class="input-hint">Benzersiz kullanıcı adınız</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="bio">Hakkımda</label>
+                                                <div class="textarea-container">
+                                                    <textarea id="bio" class="form-textarea" rows="3" placeholder="Kendiniz hakkında bir şeyler yazın...">Merhaba! Ben Chatlify kullanıyorum 👋</textarea>
+                                                    <div class="textarea-counter">
+                                                        <span id="bio-counter">42</span>/190
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="status">Durum</label>
+                                                    <div class="select-container">
+                                                        <select id="status" class="form-select">
+                                                            <option value="online">🟢 Çevrimiçi</option>
+                                                            <option value="idle">🟡 Boşta</option>
+                                                            <option value="dnd">🔴 Rahatsız Etmeyin</option>
+                                                            <option value="invisible">⚫ Görünmez</option>
+                                                        </select>
+                                                        <div class="select-icon">
+                                                            <i class="fas fa-chevron-down"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="custom-status">Özel Durum</label>
+                                                    <div class="input-container">
+                                                        <input type="text" id="custom-status" placeholder="Ne yapıyorsun?" class="form-input">
+                                                        <div class="input-icon">
+                                                            <i class="fas fa-comment-dots"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <!-- Aktivite Kartı -->
+                        <div class="settings-card activity-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Aktivite</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="activity-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-icon">
+                                            <i class="fas fa-comments"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">1,247</div>
+                                            <div class="stat-label">Mesaj</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">23</div>
+                                            <div class="stat-label">Arkadaş</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon">
+                                            <i class="fas fa-server"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">8</div>
+                                            <div class="stat-label">Sunucu</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">127h</div>
+                                            <div class="stat-label">Çevrimiçi</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="activity-chart">
+                                    <div class="chart-header">
+                                        <span>Son 7 Gün</span>
+                                    </div>
+                                    <div class="chart-bars">
+                                        <div class="chart-bar" style="height: 60%;" title="Pazartesi: 45 mesaj"></div>
+                                        <div class="chart-bar" style="height: 80%;" title="Salı: 67 mesaj"></div>
+                                        <div class="chart-bar" style="height: 40%;" title="Çarşamba: 32 mesaj"></div>
+                                        <div class="chart-bar" style="height: 90%;" title="Perşembe: 78 mesaj"></div>
+                                        <div class="chart-bar" style="height: 70%;" title="Cuma: 56 mesaj"></div>
+                                        <div class="chart-bar" style="height: 30%;" title="Cumartesi: 23 mesaj"></div>
+                                        <div class="chart-bar" style="height: 50%;" title="Pazar: 41 mesaj"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rozet Kartı -->
+                        <div class="settings-card badges-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-medal"></i>
+                                    <span>Rozetler</span>
+                                </div>
+                                <div class="card-actions">
+                                    <span class="badge-count">3/12</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="badges-grid">
+                                    <div class="badge-item earned">
+                                        <div class="badge-icon">
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <div class="badge-name">İlk Adım</div>
+                                        <div class="badge-description">İlk mesajını gönder</div>
+                                    </div>
+                                    <div class="badge-item earned">
+                                        <div class="badge-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="badge-name">Sosyal</div>
+                                        <div class="badge-description">10 arkadaş edin</div>
+                                    </div>
+                                    <div class="badge-item earned">
+                                        <div class="badge-icon">
+                                            <i class="fas fa-comments"></i>
+                                        </div>
+                                        <div class="badge-name">Konuşkan</div>
+                                        <div class="badge-description">1000 mesaj gönder</div>
+                                    </div>
+                                    <div class="badge-item locked">
+                                        <div class="badge-icon">
+                                            <i class="fas fa-crown"></i>
+                                        </div>
+                                        <div class="badge-name">Premium</div>
+                                        <div class="badge-description">Premium üye ol</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dil & Bölge Ayarları -->
+                <div class="settings-section" id="language-section" style="display: none;">
+                    <div class="settings-cards">
+                        <!-- Ana Dil Seçimi -->
+                        <div class="settings-card primary-language-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-globe"></i>
+                                    <span>Ana Dil</span>
+                                </div>
+                                <div class="card-badge">Temel</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="language-grid">
+                                    <div class="language-option active" data-lang="tr">
+                                        <div class="language-flag">🇹🇷</div>
+                                        <div class="language-info">
+                                            <div class="language-name">Türkçe</div>
+                                            <div class="language-native">Turkish</div>
+                                        </div>
+                                        <div class="language-check">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="language-option" data-lang="en">
+                                        <div class="language-flag">��</div>
+                                        <div class="language-info">
+                                            <div class="language-name">English</div>
+                                            <div class="language-native">İngilizce</div>
+                                        </div>
+                                        <div class="language-check">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="language-option" data-lang="de">
+                                        <div class="language-flag">🇩🇪</div>
+                                        <div class="language-info">
+                                            <div class="language-name">Deutsch</div>
+                                            <div class="language-native">Almanca</div>
+                                        </div>
+                                        <div class="language-check">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="language-option" data-lang="fr">
+                                        <div class="language-flag">�🇷</div>
+                                        <div class="language-info">
+                                            <div class="language-name">Français</div>
+                                            <div class="language-native">Fransızca</div>
+                                        </div>
+                                        <div class="language-check">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="language-option" data-lang="es">
+                                        <div class="language-flag">🇪🇸</div>
+                                        <div class="language-info">
+                                            <div class="language-name">Español</div>
+                                            <div class="language-native">İspanyolca</div>
+                                        </div>
+                                        <div class="language-check">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="language-option" data-lang="ja">
+                                        <div class="language-flag">��</div>
+                                        <div class="language-info">
+                                            <div class="language-name">日本語</div>
+                                            <div class="language-native">Japonca</div>
+                                        </div>
+                                        <div class="language-check">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="language-features">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-spell-check"></i>
+                                        </div>
+                                        <div class="feature-info">
+                                            <div class="feature-title">Yazım Denetimi</div>
+                                            <div class="feature-desc">Seçilen dilde otomatik yazım kontrolü</div>
+                                        </div>
+                                        <div class="feature-toggle">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-language"></i>
+                                        </div>
+                                        <div class="feature-info">
+                                            <div class="feature-title">Otomatik Çeviri</div>
+                                            <div class="feature-desc">Farklı dillerdeki mesajları otomatik çevir</div>
+                                        </div>
+                                        <div class="feature-toggle">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bölge & Zaman Ayarları -->
+                        <div class="settings-card region-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Bölge & Zaman</span>
+                                </div>
+                                <div class="card-badge">Yerelleştirme</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="timezone-section">
+                                    <div class="current-time-display">
+                                        <div class="time-info">
+                                            <div class="current-time">14:30:25</div>
+                                            <div class="current-date">15 Mart 2024, Cuma</div>
+                                            <div class="timezone-name">İstanbul, Türkiye (UTC+3)</div>
+                                        </div>
+                                        <div class="time-icon">
+                                            <i class="fas fa-globe-europe"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="timezone-selector">
+                                        <label class="section-label">Saat Dilimi Seçin</label>
+                                        <div class="timezone-grid">
+                                            <div class="timezone-option active" data-timezone="Europe/Istanbul">
+                                                <div class="timezone-flag">🇹🇷</div>
+                                                <div class="timezone-info">
+                                                    <div class="timezone-city">İstanbul</div>
+                                                    <div class="timezone-offset">UTC+3</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="timezone-option" data-timezone="Europe/London">
+                                                <div class="timezone-flag">🇬🇧</div>
+                                                <div class="timezone-info">
+                                                    <div class="timezone-city">Londra</div>
+                                                    <div class="timezone-offset">UTC+0</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="timezone-option" data-timezone="America/New_York">
+                                                <div class="timezone-flag">🇺🇸</div>
+                                                <div class="timezone-info">
+                                                    <div class="timezone-city">New York</div>
+                                                    <div class="timezone-offset">UTC-5</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="timezone-option" data-timezone="Asia/Tokyo">
+                                                <div class="timezone-flag">��</div>
+                                                <div class="timezone-info">
+                                                    <div class="timezone-city">Tokyo</div>
+                                                    <div class="timezone-offset">UTC+9</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Format Ayarları -->
+                        <div class="settings-card format-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Format Ayarları</span>
+                                </div>
+                                <div class="card-badge">Görünüm</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="format-options">
+                                    <div class="format-group">
+                                        <label class="format-label">Tarih Formatı</label>
+                                        <div class="format-selector">
+                                            <div class="format-option active" data-format="dd/mm/yyyy">
+                                                <div class="format-preview">15/03/2024</div>
+                                                <div class="format-type">DD/MM/YYYY</div>
+                                            </div>
+                                            <div class="format-option" data-format="mm/dd/yyyy">
+                                                <div class="format-preview">03/15/2024</div>
+                                                <div class="format-type">MM/DD/YYYY</div>
+                                            </div>
+                                            <div class="format-option" data-format="yyyy-mm-dd">
+                                                <div class="format-preview">2024-03-15</div>
+                                                <div class="format-type">YYYY-MM-DD</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="format-group">
+                                        <label class="format-label">Saat Formatı</label>
+                                        <div class="format-selector">
+                                            <div class="format-option active" data-format="24h">
+                                                <div class="format-preview">14:30</div>
+                                                <div class="format-type">24 Saat</div>
+                                            </div>
+                                            <div class="format-option" data-format="12h">
+                                                <div class="format-preview">2:30 PM</div>
+                                                <div class="format-type">12 Saat</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="format-group">
+                                        <label class="format-label">Sayı Formatı</label>
+                                        <div class="format-selector">
+                                            <div class="format-option active" data-format="tr">
+                                                <div class="format-preview">1.234,56</div>
+                                                <div class="format-type">Türkçe</div>
+                                            </div>
+                                            <div class="format-option" data-format="en">
+                                                <div class="format-preview">1,234.56</div>
+                                                <div class="format-type">İngilizce</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="format-features">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-history"></i>
+                                        </div>
+                                        <div class="feature-info">
+                                            <div class="feature-title">Göreceli Zaman</div>
+                                            <div class="feature-desc">"2 dakika önce" şeklinde göster</div>
+                                        </div>
+                                        <div class="feature-toggle">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Klavye Ayarları Kartı -->
+                        <div class="settings-card keyboard-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-keyboard"></i>
+                                    <span>Klavye Ayarları</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="keyboard-section">
+                                    <div class="form-group">
+                                        <label for="keyboard-layout">Klavye Düzeni</label>
+                                        <div class="select-container">
+                                            <select id="keyboard-layout" class="form-select">
+                                                <option value="tr-q" selected>🇹🇷 Türkçe Q</option>
+                                                <option value="tr-f">🇹🇷 Türkçe F</option>
+                                                <option value="en-us">🇺🇸 İngilizce (US)</option>
+                                                <option value="en-uk">🇬🇧 İngilizce (UK)</option>
+                                                <option value="de">🇩🇪 Almanca</option>
+                                                <option value="fr">🇫🇷 Fransızca</option>
+                                            </select>
+                                            <div class="select-icon">
+                                                <i class="fas fa-chevron-down"></i>
+                                            </div>
+                                        </div>
+                                        <p class="input-hint">Varsayılan klavye düzeni</p>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="toggle-container">
+                                            <label class="toggle-label">
+                                                <input type="checkbox" class="toggle-input" id="auto-correct" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-text">Otomatik Düzeltme</span>
+                                            </label>
+                                            <p class="input-hint">Yazım hatalarını otomatik olarak düzelt</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="toggle-container">
+                                            <label class="toggle-label">
+                                                <input type="checkbox" class="toggle-input" id="smart-punctuation">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-text">Akıllı Noktalama</span>
+                                            </label>
+                                            <p class="input-hint">Tırnak işaretleri ve tire işaretlerini otomatik düzenle</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-overlay"></div>
+
+    <!-- Avatar Upload Modal -->
+    <div class="modal" id="avatar-upload-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-camera"></i> Profil Resmi Yükle</h3>
+                <button class="modal-close" onclick="closeModal('avatar-upload-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <p>Dosyayı buraya sürükleyin veya <span class="upload-link">seçin</span></p>
+                        <p class="upload-hint">PNG, JPG veya GIF • Max 8MB</p>
+                    </div>
+                    <input type="file" id="avatar-file-input" accept="image/*" hidden>
+                </div>
+                <div class="upload-preview" id="upload-preview" style="display: none;">
+                    <img id="preview-image" src="" alt="Önizleme">
+                    <div class="preview-actions">
+                        <button class="btn btn-secondary" onclick="removePreview()">
+                            <i class="fas fa-trash"></i> Kaldır
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('avatar-upload-modal')">İptal</button>
+                <button class="btn btn-primary" id="upload-confirm" disabled>Yükle</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        // Settings Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const sections = document.querySelectorAll('.settings-section');
+            const contentTitle = document.getElementById('content-title');
+            const contentDescription = document.getElementById('content-description');
+
+            // Section configurations
+            const sectionConfig = {
+                'profile': {
+                    title: '<i class="fas fa-user-circle"></i> <span>Profil Ayarları</span>',
+                    description: 'Profil bilgilerinizi ve görünümünüzü özelleştirin'
+                },
+                'account': {
+                    title: '<i class="fas fa-user-cog"></i> <span>Hesap Ayarları</span>',
+                    description: 'Hesap bilgilerinizi ve güvenlik ayarlarınızı yönetin'
+                },
+                'security': {
+                    title: '<i class="fas fa-shield-alt"></i> <span>Güvenlik Ayarları</span>',
+                    description: 'Hesabınızın güvenliğini artırın'
+                },
+                'privacy': {
+                    title: '<i class="fas fa-user-secret"></i> <span>Gizlilik Ayarları</span>',
+                    description: 'Gizlilik tercihlerinizi belirleyin'
+                },
+                'appearance': {
+                    title: '<i class="fas fa-palette"></i> <span>Görünüm Ayarları</span>',
+                    description: 'Uygulamanın görünümünü özelleştirin'
+                },
+                'notifications': {
+                    title: '<i class="fas fa-bell"></i> <span>Bildirim Ayarları</span>',
+                    description: 'Bildirim tercihlerinizi yönetin'
+                },
+                'language': {
+                    title: '<i class="fas fa-language"></i> <span>Dil & Bölge Ayarları</span>',
+                    description: 'Dil, bölge ve yerelleştirme ayarlarınızı yapılandırın'
+                },
+                'accessibility': {
+                    title: '<i class="fas fa-universal-access"></i> <span>Erişilebilirlik Ayarları</span>',
+                    description: 'Erişilebilirlik özelliklerini yapılandırın'
+                },
+                'integrations': {
+                    title: '<i class="fas fa-puzzle-piece"></i> <span>Entegrasyon Ayarları</span>',
+                    description: 'Üçüncü taraf uygulamalarla entegrasyonları yönetin'
+                },
+                'subscription': {
+                    title: '<i class="fas fa-crown"></i> <span>Chatlify Premium</span>',
+                    description: 'Premium özelliklerinizi ve aboneliğinizi yönetin'
+                },
+                'developer': {
+                    title: '<i class="fas fa-code"></i> <span>Geliştirici Ayarları</span>',
+                    description: 'Geliştirici araçları ve API ayarları'
+                },
+                'about': {
+                    title: '<i class="fas fa-info-circle"></i> <span>Hakkında</span>',
+                    description: 'Uygulama bilgileri ve sürüm detayları'
+                }
+            };
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+
+                    // Remove active class from all nav items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+
+                    // Add active class to clicked item
+                    this.classList.add('active');
+
+                    // Hide all sections
+                    sections.forEach(section => {
+                        section.style.display = 'none';
+                        section.classList.remove('active');
+                    });
+
+                    // Show selected section
+                    const targetSection = document.getElementById(category + '-section');
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        targetSection.classList.add('active');
+                    }
+
+                    // Update header
+                    if (sectionConfig[category]) {
+                        contentTitle.innerHTML = sectionConfig[category].title;
+                        contentDescription.textContent = sectionConfig[category].description;
+                    }
+                });
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('settings-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+
+                    navItems.forEach(item => {
+                        const label = item.querySelector('.nav-label').textContent.toLowerCase();
+                        const category = item.closest('.nav-category');
+
+                        if (label.includes(searchTerm)) {
+                            item.style.display = 'flex';
+                            category.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+
+                    // Hide empty categories
+                    document.querySelectorAll('.nav-category').forEach(category => {
+                        const visibleItems = category.querySelectorAll('.nav-item[style*="flex"]');
+                        if (visibleItems.length === 0 && searchTerm !== '') {
+                            category.style.display = 'none';
+                        } else if (searchTerm === '') {
+                            category.style.display = 'block';
+                            category.querySelectorAll('.nav-item').forEach(item => {
+                                item.style.display = 'flex';
+                            });
+                        }
+                    });
+                });
+            }
+
+            // Save settings
+            const saveButton = document.getElementById('save-settings');
+            if (saveButton) {
+                saveButton.addEventListener('click', function() {
+                    // Show success toast
+                    showToast('success-toast');
+                });
+            }
+
+            // Reset settings
+            const resetButton = document.getElementById('reset-settings');
+            if (resetButton) {
+                resetButton.addEventListener('click', function() {
+                    if (confirm('Tüm ayarları varsayılan değerlere sıfırlamak istediğinizden emin misiniz?')) {
+                        // Reset logic here
+                        showToast('success-toast');
+                    }
+                });
+            }
+        });
+
+        // Toast functions
+        function showToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+            }
+        }
+
+        // Modal functions
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const overlay = document.getElementById('modal-overlay');
+            if (modal && overlay) {
+                modal.classList.remove('show');
+                overlay.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+
+</html>
