@@ -151,18 +151,11 @@
                     </div>
                     <div class="user-details">
                         <span class="user-name">Kadir</span>
-                        <span class="user-tag">#1234</span>
                     </div>
                 </div>
                 <div class="user-controls">
-                    <button class="control-btn" title="Mikrofon">
-                        <i class="fas fa-microphone"></i>
-                    </button>
-                    <button class="control-btn" title="Kulaklık">
-                        <i class="fas fa-headphones"></i>
-                    </button>
-                    <button class="control-btn" title="Ayarlar">
-                        <i class="fas fa-cog"></i>
+                    <button class="control-btn logout" title="Çıkış Yap">
+                        <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </div>
@@ -290,61 +283,57 @@
             </div>
         </main>
 
-        <!-- Sağ Panel - Üyeler -->
+        <!-- Sağ Panel - Üyeler (Yepyeni Tasarım) -->
         <aside class="members-panel">
             <div class="members-container">
+                <div class="members-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Üyelerde Ara...">
+                </div>
+
                 <div class="member-category">
-                    <h3 class="member-category-title">Çevrimiçi — 5</h3>
+                    <h3 class="member-category-title">Yöneticiler — 2</h3>
                     <div class="member-list">
-                        <div class="member-item online">
-                            <div class="member-avatar-wrapper">
-                                <img src="images/user3.jpg" alt="Mehmet" class="member-avatar">
-                                <div class="member-status-indicator online"></div>
+                        <!-- Yönetici Kartı Örneği -->
+                        <div class="member-card">
+                            <div class="member-card-background"></div>
+                            <div class="member-card-avatar-wrapper">
+                                <img src="images/user2.jpg" alt="Ayşe" class="member-card-avatar">
+                                <div class="member-status online"></div>
                             </div>
-                            <div class="member-info">
-                                <span class="member-name">Mehmet</span>
-                                <span class="member-activity">Visual Studio Code</span>
-                            </div>
-                            <div class="member-badges">
-                                <i class="fas fa-crown member-badge premium" title="Premium"></i>
-                            </div>
-                        </div>
-                        <div class="member-item online">
-                            <div class="member-avatar-wrapper">
-                                <img src="images/user2.jpg" alt="Ayşe" class="member-avatar">
-                                <div class="member-status-indicator online"></div>
-                            </div>
-                            <div class="member-info">
+                            <div class="member-card-info">
                                 <span class="member-name">Ayşe</span>
-                                <span class="member-activity">Spotify dinliyor</span>
+                                <span class.member-tag>#4567</span>
                             </div>
-                            <div class="member-badges">
-                                <i class="fas fa-shield-alt member-badge moderator" title="Moderatör"></i>
+                            <div class="member-card-actions">
+                                <button class="action-btn"><i class="fas fa-comment-dots"></i></button>
+                                <button class="action-btn"><i class="fas fa-user"></i></button>
                             </div>
                         </div>
-                        <!-- Diğer çevrimiçi üyeler buraya eklenebilir -->
+                        <!-- Diğer Yöneticiler -->
                     </div>
                 </div>
 
                 <div class="member-category">
-                    <h3 class="member-category-title">Çevrimdışı — 2</h3>
+                    <h3 class="member-category-title">Çevrimiçi — 3</h3>
                     <div class="member-list">
-                        <div class="member-item offline">
-                            <div class="member-avatar-wrapper">
-                                <img src="images/user4.jpg" alt="Zeynep" class="member-avatar">
+                        <!-- Normal Üye Kartı Örneği -->
+                        <div class="member-card">
+                            <div class="member-card-background"></div>
+                            <div class="member-card-avatar-wrapper">
+                                <img src="images/user3.jpg" alt="Mehmet" class="member-card-avatar">
+                                <div class="member-status online"></div>
                             </div>
-                            <div class="member-info">
-                                <span class="member-name">Zeynep</span>
+                            <div class="member-card-info">
+                                <span class="member-name">Mehmet</span>
+                                <span class="member-tag">#8901</span>
+                            </div>
+                            <div class="member-card-actions">
+                                <button class="action-btn"><i class="fas fa-comment-dots"></i></button>
+                                <button class="action-btn"><i class="fas fa-user"></i></button>
                             </div>
                         </div>
-                        <div class="member-item offline">
-                            <div class="member-avatar-wrapper">
-                                <img src="images/user5.jpg" alt="Ahmet" class="member-avatar">
-                            </div>
-                            <div class="member-info">
-                                <span class="member-name">Ahmet</span>
-                            </div>
-                        </div>
+                        <!-- Diğer Çevrimiçi Üyeler -->
                     </div>
                 </div>
             </div>
