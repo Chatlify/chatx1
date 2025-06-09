@@ -184,7 +184,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log("'Arkadaş Ekle' butonuna tıklandı! (ID ile yakalandı)");
                 const modal = document.querySelector('#add-friend-modal');
                 if (modal) {
+                    console.log("Modal elementi bulundu:", modal);
                     modal.classList.add('active');
+                    console.log("'.active' sınıfı eklendi. Modal'ın güncel sınıfları:", modal.className);
+                } else {
+                    console.error("HATA AYIKLAMA: #add-friend-modal elementi DOM'da bulunamadı!");
                 }
             }
         });
