@@ -3027,24 +3027,12 @@ function setupAddFriendModal() {
 
     // Modal açma fonksiyonu (Animasyonlu)
     function openAddFriendModal() {
-        addFriendModal.style.display = 'flex';
-        setTimeout(() => {
-            addFriendModal.classList.add('active');
-        }, 10); // Tarayıcının 'display' değişikliğini algılaması için küçük bir gecikme
+        addFriendModal.classList.add('active');
     }
 
     // Modal kapatma fonksiyonu (Animasyonlu)
     function closeAddFriendModal() {
         addFriendModal.classList.remove('active');
-        // 'transitionend' olayı, animasyon bitince display'ı none yapmak için kullanılır.
-        // Bu, panel kapalıyken arkadaki elementlerle etkileşimi engeller.
-        addFriendModal.addEventListener('transitionend', function handler() {
-            if (!addFriendModal.classList.contains('active')) {
-                addFriendModal.style.display = 'none';
-            }
-            // Olay dinleyicisini bir kez çalıştıktan sonra kaldır
-            addFriendModal.removeEventListener('transitionend', handler);
-        });
     }
 
     // Kullanıcıya mesaj gösterme fonksiyonu (modal içinde)
