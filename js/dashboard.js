@@ -106,8 +106,15 @@ function populateNewProfileModal(profile, modal) {
     // "Arkadaşlıktan Çıkar" butonu
     removeFriendBtn.onclick = () => {
         const { userId, username, avatarUrl } = modal.dataset;
-        // Mevcut, güvenli onay mekanizmasını kullanıyoruz.
-        showRemoveFriendConfirmation(userId, username, avatarUrl);
+
+        // Önce profil panelini kapat
+        hideModal();
+
+        // Animasyonun bitmesi için kısa bir bekleme süresi sonrası onay panelini aç
+        setTimeout(() => {
+            // Mevcut, güvenli onay mekanizmasını kullanıyoruz.
+            showRemoveFriendConfirmation(userId, username, avatarUrl);
+        }, 300); // Profil paneli kapanma animasyonuyla eşleşen bir süre
     };
 
     // Modalı kapatma olayını ayarla
