@@ -57,12 +57,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (userPanel) {
             userPanel.addEventListener('click', () => {
                 // Kullanıcı kendi profilini açmak için
-                const userId = currentUserId;
-                const username = userPanelUsernameElement?.textContent || 'Kullanıcı';
-                const avatar = userPanelAvatarElement?.src || defaultAvatar;
-
-                if (userId) {
-                    openProfilePanel(userId, username, avatar);
+                if (currentUserId) {
+                    showNewProfileModal(currentUserId);
                 }
             });
             userPanel.style.cursor = 'pointer'; // İmleç stilini değiştir
@@ -194,63 +190,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Sayfa başlatılırken bir hata oluştu. Lütfen sayfayı yenileyiniz.');
     }
 
-    // Yeni Profil Paneli Fonksiyonları
-    function setupProfileModal() {
+    // YENİ, MERKEZİ PROFİL MODAL FONKSİYONLARI
+    async function showNewProfileModal(userId) {
+        if (!userId) {
+            console.error("Profilini göstermek için kullanıcı ID'si gerekli.");
+            return;
+        }
+
         const modalOverlay = document.getElementById('user-profile-modal');
-        const closeModalBtn = document.querySelector('.close-modal-btn');
-        const friendsPanel = document.querySelector('.friends-panel-container');
+        if (!modalOverlay) {
+            console.error('Profil modal elementi (#user-profile-modal) bulunamadı!');
+            return;
+        }
 
-        // Arkadaş listesindeki profil butonlarına tıklama olayı
-        friendsPanel.addEventListener('click', async (e) => {
-            const profileBtn = e.target.closest('.profile-btn');
-            if (profileBtn) {
-                const friendRow = profileBtn.closest('.friend-row');
-                const userId = friendRow.dataset.userId;
+        try {
+            // Yükleniyor durumunu göster (isteğe bağlı)
+            modalOverlay.classList.add('loading');
 
-                // Kullanıcı bilgilerini Supabase'den çek
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
 
-                if (error) {
-                    console.error('Profil bilgileri alınamadı:', error);
-                    return;
-                }
+            modalOverlay.classList.remove('loading');
 
-                populateProfileModal(profile);
-                modalOverlay.classList.add('active');
-            }
-        });
+            if (error) throw error;
+            if (!profile) {
+                alert('Kullanıcı profili bulunamadı.');
+                return;
+            };
 
-        // Modalı kapatma
-        closeModalBtn.addEventListener('click', () => {
-            modalOverlay.classList.remove('active');
-        });
+            populateNewProfileModal(profile, modalOverlay);
 
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                modalOverlay.classList.remove('active');
-            }
-        });
+            // Modalı göster
+            modalOverlay.style.display = 'flex';
+            setTimeout(() => modalOverlay.classList.add('active'), 10);
+
+        } catch (error) {
+            console.error('Profil bilgileri çekilirken hata:', error);
+            alert('Profil bilgileri yüklenirken bir hata oluştu.');
+        }
     }
 
-    function populateProfileModal(profile) {
-        const modal = document.getElementById('user-profile-modal');
-        modal.querySelector('.profile-avatar-modal').src = profile.avatar_url || 'https://via.placeholder.com/100/ffffff/000000?text=U';
-        modal.querySelector('.profile-username').textContent = profile.username || 'Bilinmeyen Kullanıcı';
-        modal.querySelector('.profile-tag').textContent = `${profile.username || 'kullanici'}#${profile.user_id_string || '0000'}`;
-        modal.querySelector('.profile-bio').textContent = profile.bio || 'Henüz bir biyografi eklenmemiş.';
+    function populateNewProfileModal(profile, modal) {
+        modal.querySelector('.profile-avatar-modal').src = profile.avatar_url || defaultAvatar;
+        modal.querySelector('.profile-username').textContent = profile.username || 'Kullanıcı';
 
-        const joinDate = profile.created_at ? new Date(profile.created_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Bilinmiyor';
+        const tag = profile.username + '#' + (profile.id.substring(0, 4) || '0000');
+        modal.querySelector('.profile-tag').textContent = tag;
+
+        modal.querySelector('.profile-bio').textContent = profile.bio || 'Bu kullanıcı henüz bir biyografi eklememiş.';
+
+        const joinDate = profile.created_at
+            ? new Date(profile.created_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })
+            : 'Bilinmiyor';
         modal.querySelector('.profile-membership-date').textContent = joinDate;
-    }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        // ... (diğer kodlar)
-        setupProfileModal(); // Yeni fonksiyonu DOMContentLoaded içinde çağır
-    });
+        // Modalı kapatma olayını ayarla (her seferinde yeniden eklemek yerine bir kere başta yapılabilir)
+        const closeModalBtn = modal.querySelector('.close-modal-btn');
+        const hideModal = () => {
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        };
+        closeModalBtn.onclick = hideModal; // onclick ile basitçe atama
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                hideModal();
+            }
+        };
+    }
 
     // Zorunlu elementlerin varlığını kontrol eden yardımcı fonksiyon
     function validateRequiredElements(elements) {
@@ -1067,7 +1076,7 @@ function createFriendRow(userId, username, avatarUrl) {
     // Profil butonuna tıklama olayı dinleyicisi ekle
     friendRow.querySelector('.profile-btn').addEventListener('click', (e) => {
         e.stopPropagation();
-        openProfilePanel(userId, username, avatarUrl);
+        showNewProfileModal(userId);
     });
 
     return friendRow;
@@ -1354,8 +1363,7 @@ function buildContextMenuContent(menu, userId, username, avatar) {
             label: 'Profil',
             icon: 'fa-user',
             action: function () {
-                console.debug("Profil butonuna tıklandı, openProfilePanel çağrılıyor:", userId, username, avatar); // Debug log
-                openProfilePanel(userId, username, avatar);
+                showNewProfileModal(userId);
             }
         },
         {
@@ -1603,7 +1611,7 @@ function setupChatHeaderActions(userId, username, avatar) {
 
         // Profil butonuna tıklayınca profil panelini aç
         newProfileBtn.addEventListener('click', function () {
-            openProfilePanel(userId, username, avatar);
+            showNewProfileModal(userId);
         });
     }
 }
@@ -2144,7 +2152,7 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
         {
             name: 'Semboller',
             icon: 'fa-icons',
-            emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔']
+            emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚️', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕️', '🛑', '⛔']
         },
         {
             name: 'Bayraklar',
