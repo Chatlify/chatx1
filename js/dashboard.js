@@ -192,6 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // YENİ, MERKEZİ PROFİL MODAL FONKSİYONLARI
     async function showNewProfileModal(userId) {
+        alert(`Profil paneli açma fonksiyonu tetiklendi. Kullanıcı ID: ${userId}`);
         if (!userId) {
             console.error("Profilini göstermek için kullanıcı ID'si gerekli.");
             return;
