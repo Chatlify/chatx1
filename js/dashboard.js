@@ -273,33 +273,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Sunucu panelini kur
         setupServerPanel();
 
-        // --- SAĞ TIK MENÜSÜNÜ BAŞLAT ---
-        const contextMenu = createContextMenuElement();
-        document.body.appendChild(contextMenu);
-
-        const listenArea = document.querySelector('.dashboard-container');
-        if (listenArea) {
-            listenArea.addEventListener('contextmenu', (e) => {
-                const targetItem = e.target.closest('.dm-item, .friend-row');
-                if (targetItem && targetItem.dataset.userId) {
-                    e.preventDefault();
-                    const userId = targetItem.dataset.userId;
-                    const username = targetItem.dataset.username || targetItem.querySelector('.dm-name')?.textContent || targetItem.querySelector('.friend-name')?.textContent;
-                    const avatar = targetItem.dataset.avatar || targetItem.querySelector('img')?.src;
-                    if (userId && username) {
-                        buildContextMenuContent(contextMenu, userId, username, avatar);
-                        showContextMenu(contextMenu, e.clientX, e.clientY);
-                    } else {
-                        hideContextMenu(contextMenu);
-                    }
-                } else {
-                    hideContextMenu(contextMenu);
-                }
-            });
-        }
-        document.addEventListener('click', () => hideContextMenu(contextMenu));
-        window.addEventListener('scroll', () => hideContextMenu(contextMenu), true);
-        // --- SAĞ TIK MENÜSÜ SONU ---
+        // Kontekst menüleri için dinleyicileri ekle
+        addContextMenuListeners();
 
         // Presence takip sistemini başlat
         initializePresence();
@@ -1333,15 +1308,18 @@ function addContextMenuListeners() {
     const contextMenu = createContextMenuElement(); // Menü elementini oluştur veya bul
     document.body.appendChild(contextMenu); // Body'ye ekle (eğer yoksa)
 
-    // Dinlenecek ana konteynerlar
+    // Dinlenecek ana konteynerlar - DÜZELTİLDİ
     const listenAreas = [
-        document.querySelector('.direct-messages'), // DM listesi
+        document.querySelector('#friends-group'), // DM listesi
         document.querySelector('.friends-panel-container') // Arkadaş paneli
         // '.server-sidebar' // Gerekirse sunucu listesi de eklenebilir
     ];
 
     listenAreas.forEach(area => {
-        if (!area) return;
+        if (!area) {
+            console.warn("Context menu için dinlenecek alan bulunamadı:", area);
+            return;
+        };
 
         area.addEventListener('contextmenu', (e) => {
             // Hedef elementi bul
@@ -1619,6 +1597,10 @@ async function openChatPanel(userId, username, avatar) {
 
 // Sohbet panelini kapatma
 function closeChatPanel() {
+    // YENİ EKLENEN KISIM: URL'yi ana görünüme geri döndür
+    history.pushState({}, '', '/channels/@me');
+    console.log(`Sohbet paneli kapatıldı, URL güncellendi: /channels/@me`);
+
     const chatPanel = document.querySelector('.chat-panel');
     const friendsPanelContainer = document.querySelector('.friends-panel-container');
     const sponsorSidebar = document.querySelector('.sponsor-sidebar');
@@ -4015,68 +3997,5 @@ async function removeFriend(friendId) {
     } catch (error) {
         console.error('Arkadaş silinirken hata oluştu:', error);
         alert('Arkadaşlıktan çıkarma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-    }
-}
-
-// --- SAĞ TIK MENÜSÜ FONKSİYONLARI (GLOBAL KAPSAMA TAŞINDI) ---
-
-// Bağlam menüsü elementini oluşturur veya mevcut olanı döndürür
-function createContextMenuElement() {
-    let menu = document.getElementById('custom-context-menu');
-    if (!menu) {
-        menu = document.createElement('div');
-        menu.id = 'custom-context-menu';
-        menu.className = 'context-menu';
-    }
-    return menu;
-}
-
-// Menü içeriğini dinamik olarak oluşturur
-function buildContextMenuContent(menu, userId, username, avatar) {
-    menu.innerHTML = ''; // Önceki içeriği temizle
-
-    const items = [
-        { label: 'Profil', icon: 'fa-user', action: () => showNewProfileModal(userId) },
-        { label: 'Mesaj Gönder', icon: 'fa-comment', action: () => openChatPanel(userId, username, avatar) },
-        { label: 'Arkadaşlıktan Çıkar', icon: 'fa-user-times', danger: true, action: () => showRemoveFriendConfirmation(userId, username, avatar) }
-    ];
-
-    items.forEach(itemData => {
-        const menuItem = document.createElement('div');
-        menuItem.className = 'context-menu-item';
-        if (itemData.danger) {
-            menuItem.classList.add('danger');
-        }
-        menuItem.innerHTML = `<i class="fas ${itemData.icon}"></i><span>${itemData.label}</span>`;
-        menuItem.onclick = (e) => {
-            e.stopPropagation();
-            itemData.action();
-            hideContextMenu(menu);
-        };
-        menu.appendChild(menuItem);
-    });
-}
-
-// Bağlam menüsünü gösterir
-function showContextMenu(menu, x, y) {
-    menu.style.display = 'block';
-    const menuWidth = menu.offsetWidth;
-    const menuHeight = menu.offsetHeight;
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    let finalX = x;
-    let finalY = y;
-    if (x + menuWidth > windowWidth) finalX = windowWidth - menuWidth - 5;
-    if (y + menuHeight > windowHeight) finalY = windowHeight - menuHeight - 5;
-    menu.style.left = `${finalX}px`;
-    menu.style.top = `${finalY}px`;
-    setTimeout(() => menu.classList.add('active'), 0);
-}
-
-// Bağlam menüsünü gizler
-function hideContextMenu(menu) {
-    if (menu && menu.style.display === 'block') {
-        menu.classList.remove('active');
-        setTimeout(() => { menu.style.display = 'none'; }, 150);
     }
 }
