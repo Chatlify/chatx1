@@ -194,6 +194,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Sayfa başlatılırken bir hata oluştu. Lütfen sayfayı yenileyiniz.');
     }
 
+    // Yeni Profil Paneli Fonksiyonları
+    function setupProfileModal() {
+        const modalOverlay = document.getElementById('user-profile-modal');
+        const closeModalBtn = document.querySelector('.close-modal-btn');
+        const friendsPanel = document.querySelector('.friends-panel-container');
+
+        // Arkadaş listesindeki profil butonlarına tıklama olayı
+        friendsPanel.addEventListener('click', async (e) => {
+            const profileBtn = e.target.closest('.profile-btn');
+            if (profileBtn) {
+                const friendRow = profileBtn.closest('.friend-row');
+                const userId = friendRow.dataset.userId;
+
+                // Kullanıcı bilgilerini Supabase'den çek
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (error) {
+                    console.error('Profil bilgileri alınamadı:', error);
+                    return;
+                }
+
+                populateProfileModal(profile);
+                modalOverlay.classList.add('active');
+            }
+        });
+
+        // Modalı kapatma
+        closeModalBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
+        });
+    }
+
+    function populateProfileModal(profile) {
+        const modal = document.getElementById('user-profile-modal');
+        modal.querySelector('.profile-avatar-modal').src = profile.avatar_url || 'https://via.placeholder.com/100/ffffff/000000?text=U';
+        modal.querySelector('.profile-username').textContent = profile.username || 'Bilinmeyen Kullanıcı';
+        modal.querySelector('.profile-tag').textContent = `${profile.username || 'kullanici'}#${profile.user_id_string || '0000'}`;
+        modal.querySelector('.profile-bio').textContent = profile.bio || 'Henüz bir biyografi eklenmemiş.';
+
+        const joinDate = profile.created_at ? new Date(profile.created_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Bilinmiyor';
+        modal.querySelector('.profile-membership-date').textContent = joinDate;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // ... (diğer kodlar)
+        setupProfileModal(); // Yeni fonksiyonu DOMContentLoaded içinde çağır
+    });
+
     // Zorunlu elementlerin varlığını kontrol eden yardımcı fonksiyon
     function validateRequiredElements(elements) {
         const criticalElements = [

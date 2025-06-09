@@ -1,0 +1,23 @@
+/*
+  # This file tells Netlify what HTTP headers to add when serving our site.
+  # Each rule should be on a new line.
+
+  # Rules for all pages:
+  /*
+    # Prevents clickjacking attacks. Disallows the site from being
+    # iframed within another site.
+    X-Frame-Options: SAMEORIGIN
+
+    # Enables the browser's internal XSS filter (extra protection for older browsers).
+    X-XSS-Protection: 1; mode=block
+
+    # Prevents the browser from "sniffing" file types and guessing.
+    # This stops a text file from being executed as a script.
+    X-Content-Type-Options: nosniff
+
+    # Ensures referrer information is only sent for same-site navigation.
+    # This increases user privacy.
+    Referrer-Policy: same-origin
+
+    # Forces the browser to connect only via HTTPS on subsequent visits.
+    Strict-Transport-Security: max-age=31536000; includeSubDomains; preload 
