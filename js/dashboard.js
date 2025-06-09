@@ -22,7 +22,7 @@ const emojiCategories = {
     'hands': ['👋', '🤚', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '💪', '👂', '👃', '👀', '👅', '👄'],
     'animals': ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🦆', '🐓', '🐦', '🐧', '🐢', '🐍', '🦎', '🐙', '🦑', '🦞', '🦀', '🐠', '🐬', '🐋', '🦓', '🦍', '🐘', '🦛', '🦒', '🦘'],
     'food': ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🌽', '🥕', '🧄', '🧅', '🥔', '🍠', '🧀', '🍗', '🍖', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🧆', '🌮', '🌯', '🥗', '🥘', '🍝', '🍜', '🍲', '🍛', '🍣', '🍥', '🥠', '🦪', '🥧', '🍦', '🍩', '🍪', '🍰'],
-    'travel': ['🚗', '🚕', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚚', '🚛', '🚜', '🛴', '🚲', '🛵', '🏍', '🚂', '🚊', '🚀', '✈️', '🛫', '🛬', '🚁', '⛵️', '🚤', '🚢', '⚓️', '🚧', '🚏', '🗿', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲️', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺️', '🏠', '🏡', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩'],
+    'travel': ['🚗', '🚕', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚚', '🚛', '🚜', '🛴', '🚲', '🛵', '🏍', '🚂', '🚊', '🚀', '✈️', '🛫', '🛬', '🚁', '⛵️', '🚤', '🚢', '⚓️', '🚧', '🚏', '🗿', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲️', '🏖', '🏝', '🏜️', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺️', '🏠', '🏡', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩'],
     'symbols': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚️', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕️', '🛑'],
     'flags': ['🇹🇷', '🇦🇿', '🇩🇪', '🇬🇧', '🇺🇸', '🇯🇵', '🇰🇷', '🇷🇺', '🇨🇳', '🇧🇷', '🇮🇳', '🇵🇰', '🇫🇷', '🇪🇸', '🇮🇹', '🇵🇹', '🇳🇱', '🇧🇪', '🇬🇷', '🇨🇭', '🇸🇪', '🇩🇰', '🇳🇴', '🇫🇮', '🇦🇹', '🇮🇪', '🇨🇿', '🇵🇱', '🇭🇺', '🇺🇦', '🇧🇬', '🇷🇴', '🇦🇺', '🇨🇦', '🇲🇽', '🇸🇦', '🇦🇪', '🇶🇦', '🇰🇼', '🇮🇷', '🇮🇶', '🇪🇬', '🇿🇦']
 };
@@ -71,6 +71,12 @@ async function showNewProfileModal(userId) {
 }
 
 function populateNewProfileModal(profile, modal) {
+    // Profil verilerini modal elementinin kendisine `dataset` olarak ekleyelim.
+    // Bu, verileri butonların olay dinleyicilerine temiz bir şekilde taşımamızı sağlar.
+    modal.dataset.userId = profile.id;
+    modal.dataset.username = profile.username;
+    modal.dataset.avatarUrl = profile.avatar_url || defaultAvatar;
+
     modal.querySelector('.profile-avatar-modal').src = profile.avatar_url || defaultAvatar;
     modal.querySelector('.profile-username').textContent = profile.username || 'Kullanıcı';
 
@@ -84,15 +90,39 @@ function populateNewProfileModal(profile, modal) {
         : 'Bilinmiyor';
     modal.querySelector('.profile-membership-date').textContent = joinDate;
 
-    // Modalı kapatma olayını ayarla (her seferinde yeniden eklemek yerine bir kere başta yapılabilir)
+    // --- BUTON İŞLEVSELLİĞİ ---
+    const messageBtn = modal.querySelector('.message-btn-modal');
+    const removeFriendBtn = modal.querySelector('.remove-friend-btn-modal');
+
+    // "Mesaj Gönder" butonu
+    messageBtn.onclick = () => {
+        const { userId, username, avatarUrl } = modal.dataset;
+        hideModal(); // Önce modalı kapat
+        setTimeout(() => { // Pürüzsüz bir geçiş için küçük bir gecikme
+            openChatPanel(userId, username, avatarUrl);
+        }, 300); // Animasyon süresiyle eşleşebilir
+    };
+
+    // "Arkadaşlıktan Çıkar" butonu
+    removeFriendBtn.onclick = () => {
+        const { userId, username, avatarUrl } = modal.dataset;
+        // Mevcut, güvenli onay mekanizmasını kullanıyoruz.
+        showRemoveFriendConfirmation(userId, username, avatarUrl);
+    };
+
+    // Modalı kapatma olayını ayarla
     const closeModalBtn = modal.querySelector('.close-modal-btn');
     const hideModal = () => {
-        modal.classList.remove('active');
-        setTimeout(() => { modal.style.display = 'none'; }, 300);
+        const modalContainer = document.getElementById('user-profile-modal');
+        modalContainer.classList.remove('active');
+        setTimeout(() => { modalContainer.style.display = 'none'; }, 300);
     };
-    closeModalBtn.onclick = hideModal; // onclick ile basitçe atama
-    modal.onclick = (e) => {
-        if (e.target === modal) {
+    closeModalBtn.onclick = hideModal;
+
+    // Arka plana tıklayarak kapatma (zaten vardı ama hideModal'ı kullanacak şekilde güncelleyelim)
+    const modalContainer = document.getElementById('user-profile-modal');
+    modalContainer.onclick = (e) => {
+        if (e.target === modalContainer) {
             hideModal();
         }
     };
