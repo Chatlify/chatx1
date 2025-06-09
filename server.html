@@ -34,16 +34,16 @@
                 </button>
             </header>
 
-            <div class="server-boost-banner">
-                <div class="boost-icon">
-                    <i class="fas fa-rocket"></i>
+            <div class="server-perks-banner">
+                <div class="perks-icon">
+                    <i class="fas fa-star"></i>
                 </div>
-                <div class="boost-info">
-                    <span class="boost-level">Level 3 Server</span>
-                    <span class="boost-count">15 Boost</span>
+                <div class="perks-info">
+                    <span class="perks-title">Sunucu Ayrıcalığı</span>
+                    <span class="perks-level">Seviye 2</span>
                 </div>
-                <div class="boost-progress">
-                    <div class="boost-progress-bar" style="width: 75%"></div>
+                <div class="perks-progress">
+                    <div class="perks-progress-bar" style="width: 45%;"></div>
                 </div>
             </div>
 
@@ -144,9 +144,11 @@
             </div>
 
             <div class="user-panel">
-                <div class="user-info">
-                    <img src="images/user1.jpg" alt="User Avatar" class="user-avatar">
-                    <div class="user-status online"></div>
+                <div class="user-info-wrapper">
+                    <div class="user-avatar-wrapper">
+                        <img src="images/user1.jpg" alt="User Avatar" class="user-avatar">
+                        <div class="user-status online"></div>
+                    </div>
                     <div class="user-details">
                         <span class="user-name">Kadir</span>
                         <span class="user-tag">#1234</span>
@@ -291,50 +293,56 @@
         <!-- Sağ Panel - Üyeler -->
         <aside class="members-panel">
             <div class="members-container">
-                <!-- Online Üyeler -->
                 <div class="member-category">
-                    <h3 class="member-category-title">ONLINE — 8</h3>
+                    <h3 class="member-category-title">Çevrimiçi — 5</h3>
                     <div class="member-list">
-                        <div class="member-item">
-                            <img src="images/user3.jpg" alt="User" class="member-avatar">
-                            <div class="member-status-indicator online"></div>
+                        <div class="member-item online">
+                            <div class="member-avatar-wrapper">
+                                <img src="images/user3.jpg" alt="Mehmet" class="member-avatar">
+                                <div class="member-status-indicator online"></div>
+                            </div>
                             <div class="member-info">
                                 <span class="member-name">Mehmet</span>
                                 <span class="member-activity">Visual Studio Code</span>
                             </div>
                             <div class="member-badges">
-                                <i class="fas fa-crown member-badge premium"></i>
-                                <i class="fas fa-shield-alt member-badge moderator"></i>
+                                <i class="fas fa-crown member-badge premium" title="Premium"></i>
                             </div>
                         </div>
-                        <div class="member-item">
-                            <img src="images/user2.jpg" alt="User" class="member-avatar">
-                            <div class="member-status-indicator online"></div>
+                        <div class="member-item online">
+                            <div class="member-avatar-wrapper">
+                                <img src="images/user2.jpg" alt="Ayşe" class="member-avatar">
+                                <div class="member-status-indicator online"></div>
+                            </div>
                             <div class="member-info">
                                 <span class="member-name">Ayşe</span>
-                                <span class="member-activity">Spotify'da müzik dinliyor</span>
+                                <span class="member-activity">Spotify dinliyor</span>
+                            </div>
+                            <div class="member-badges">
+                                <i class="fas fa-shield-alt member-badge moderator" title="Moderatör"></i>
                             </div>
                         </div>
-                        <div class="member-item">
-                            <img src="images/user1.jpg" alt="User" class="member-avatar">
-                            <div class="member-status-indicator online"></div>
-                            <div class="member-info">
-                                <span class="member-name">Kadir</span>
-                                <span class="member-activity">League of Legends oynuyor</span>
-                            </div>
-                        </div>
+                        <!-- Diğer çevrimiçi üyeler buraya eklenebilir -->
                     </div>
                 </div>
 
-                <!-- Offline Üyeler -->
                 <div class="member-category">
-                    <h3 class="member-category-title">OFFLINE — 15</h3>
+                    <h3 class="member-category-title">Çevrimdışı — 2</h3>
                     <div class="member-list">
                         <div class="member-item offline">
-                            <img src="images/user4.jpg" alt="User" class="member-avatar">
-                            <div class="member-status-indicator offline"></div>
+                            <div class="member-avatar-wrapper">
+                                <img src="images/user4.jpg" alt="Zeynep" class="member-avatar">
+                            </div>
                             <div class="member-info">
                                 <span class="member-name">Zeynep</span>
+                            </div>
+                        </div>
+                        <div class="member-item offline">
+                            <div class="member-avatar-wrapper">
+                                <img src="images/user5.jpg" alt="Ahmet" class="member-avatar">
+                            </div>
+                            <div class="member-info">
+                                <span class="member-name">Ahmet</span>
                             </div>
                         </div>
                     </div>
@@ -343,33 +351,9 @@
         </aside>
     </div>
 
-    <!-- Bağlam Menüsü -->
-    <div class="context-menu" id="memberContextMenu">
-        <div class="context-item">
-            <i class="fas fa-user"></i>
-            <span>Profili Görüntüle</span>
-        </div>
-        <div class="context-item">
-            <i class="fas fa-comment"></i>
-            <span>Mesaj Gönder</span>
-        </div>
-        <div class="context-divider"></div>
-        <div class="context-item">
-            <i class="fas fa-phone"></i>
-            <span>Sesli Arama</span>
-        </div>
-        <div class="context-item">
-            <i class="fas fa-video"></i>
-            <span>Görüntülü Arama</span>
-        </div>
-        <div class="context-divider"></div>
-        <div class="context-item danger">
-            <i class="fas fa-ban"></i>
-            <span>Engelle</span>
-        </div>
-    </div>
+    <!-- Sağ Tık Menüsü -->
+    <div id="contextMenu" class="context-menu"></div>
 
-    <!-- JavaScript -->
     <script src="js/server.js"></script>
 </body>
 

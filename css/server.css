@@ -171,6 +171,64 @@ body.server-page {
     color: var(--text-primary);
 }
 
+/* Sunucu Ayrıcalığı Banner */
+.server-perks-banner {
+    margin: 8px 12px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.1), rgba(var(--accent-premium-rgb), 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.server-perks-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: rgba(var(--accent-primary-rgb), 0.5);
+}
+
+.perks-icon {
+    font-size: 20px;
+    color: var(--accent-premium);
+}
+
+.perks-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.perks-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.perks-level {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.perks-progress {
+    height: 4px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin-top: 4px;
+    grid-column: 1 / -1;
+}
+
+.perks-progress-bar {
+    height: 100%;
+    background-color: var(--accent-premium);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
 /* Sunucu Boost Banner */
 .server-boost-banner {
     background: linear-gradient(135deg, #5865f2 0%, var(--accent-premium) 100%);
@@ -448,11 +506,12 @@ body.server-page {
     color: var(--accent-danger);
 }
 
-/* Kullanıcı Paneli */
+/* Kullanıcı Paneli (Dashboard Stili) */
 .user-panel {
     height: var(--user-panel-height);
-    padding: 0 12px;
-    background-color: var(--bg-tertiary);
+    padding: 0 10px;
+    background-color: #1A1D21;
+    /* Dashboard'dan gelen daha koyu arkaplan */
     border-top: 1px solid var(--border-color);
     display: flex;
     align-items: center;
@@ -460,25 +519,27 @@ body.server-page {
     flex-shrink: 0;
 }
 
-.user-info {
+.user-info-wrapper {
     display: flex;
     align-items: center;
     gap: 10px;
     flex: 1;
     min-width: 0;
-    padding: 8px;
+    padding: 6px;
     border-radius: var(--border-radius-sm);
     transition: var(--transition-fast);
+    cursor: pointer;
 }
 
-.user-info:hover {
+.user-info-wrapper:hover {
     background-color: var(--bg-hover);
 }
 
 .user-avatar-wrapper {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
 }
 
 .user-avatar {
@@ -489,43 +550,32 @@ body.server-page {
 
 .user-status {
     position: absolute;
-    bottom: -1px;
-    right: -1px;
+    bottom: 0px;
+    right: 0px;
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 3px solid var(--bg-tertiary);
+    border: 2px solid #1A1D21;
+    /* Panelin arkaplan rengiyle aynı */
 }
 
 .user-status.online {
     background-color: var(--status-online);
 }
 
-.user-status.idle {
-    background-color: var(--status-idle);
-}
-
-.user-status.dnd {
-    background-color: var(--status-dnd);
-}
-
-.user-status.offline {
-    background-color: var(--status-offline);
-}
+/* Diğer durumlar için stiller buraya eklenebilir. */
 
 .user-details {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    line-height: 1.2;
 }
 
 .user-name {
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .user-tag {
@@ -535,7 +585,7 @@ body.server-page {
 
 .user-controls {
     display: flex;
-    gap: 2px;
+    gap: 0;
 }
 
 .control-btn {
@@ -543,13 +593,14 @@ body.server-page {
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 8px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--border-radius-sm);
-    /* Daire yerine yuvarlak köşeli kare */
     transition: var(--transition-fast);
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .control-btn:hover {
@@ -988,7 +1039,7 @@ body.server-page {
     color: var(--text-primary);
 }
 
-/* Üyeler Paneli */
+/* Üyeler Paneli - Yeni Tasarım */
 .members-panel {
     background-color: var(--bg-secondary);
     border-left: 1px solid var(--border-color);
@@ -1003,33 +1054,31 @@ body.server-page {
     padding: 16px 8px 16px 16px;
 }
 
-/* Üye Kategorileri */
 .member-category {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .member-category-title {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     padding: 0 8px;
 }
 
 .member-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
-/* Üye Öğeleri */
 .member-item {
     display: flex;
     align-items: center;
     padding: 8px;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--border-radius);
     cursor: pointer;
     transition: var(--transition-fast);
 }
@@ -1039,18 +1088,13 @@ body.server-page {
 }
 
 .member-item.offline {
-    opacity: 0.5;
-}
-
-.member-item.offline .member-name,
-.member-item.offline .member-activity {
-    color: var(--text-muted);
+    opacity: 0.6;
 }
 
 .member-avatar-wrapper {
     position: relative;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     margin-right: 12px;
     flex-shrink: 0;
 }
@@ -1065,8 +1109,8 @@ body.server-page {
     position: absolute;
     bottom: -1px;
     right: -1px;
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     border: 3px solid var(--bg-secondary);
 }
@@ -1089,13 +1133,13 @@ body.server-page {
 }
 
 .member-name {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--text-secondary);
+    transition: var(--transition-fast);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: var(--transition-fast);
 }
 
 .member-item:hover .member-name {
@@ -1112,7 +1156,9 @@ body.server-page {
 
 .member-badges {
     display: flex;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
     font-size: 16px;
 }
 
