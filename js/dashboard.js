@@ -4020,38 +4020,6 @@ async function removeFriend(friendId) {
 
 // --- SAĞ TIK MENÜSÜ FONKSİYONLARI (GLOBAL KAPSAMA TAŞINDI) ---
 
-// Bağlam menüsü için olay dinleyicilerini ekler
-function addContextMenuListeners() {
-    const contextMenu = createContextMenuElement();
-    document.body.appendChild(contextMenu);
-
-    const listenArea = document.querySelector('.dashboard-container');
-    if (!listenArea) return;
-
-    listenArea.addEventListener('contextmenu', (e) => {
-        const targetItem = e.target.closest('.dm-item, .friend-row');
-
-        if (targetItem && targetItem.dataset.userId) {
-            e.preventDefault();
-            const userId = targetItem.dataset.userId;
-            const username = targetItem.dataset.username || targetItem.querySelector('.dm-name')?.textContent || targetItem.querySelector('.friend-name')?.textContent;
-            const avatar = targetItem.dataset.avatar || targetItem.querySelector('img')?.src;
-
-            if (!userId || !username) {
-                hideContextMenu(contextMenu);
-                return;
-            }
-            buildContextMenuContent(contextMenu, userId, username, avatar);
-            showContextMenu(contextMenu, e.clientX, e.clientY);
-        } else {
-            hideContextMenu(contextMenu);
-        }
-    });
-
-    document.addEventListener('click', () => hideContextMenu(contextMenu));
-    window.addEventListener('scroll', () => hideContextMenu(contextMenu), true);
-}
-
 // Bağlam menüsü elementini oluşturur veya mevcut olanı döndürür
 function createContextMenuElement() {
     let menu = document.getElementById('custom-context-menu');
