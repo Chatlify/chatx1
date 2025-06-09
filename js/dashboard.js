@@ -174,10 +174,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI)
+    // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI - Event Delegation ile)
     function setupAddFriendModal() {
-        // Genel modal kurulum fonksiyonunu çağır
-        setupModal('.add-friend-btn', '#add-friend-modal', '.close-modal-btn');
+        const header = document.querySelector('.dashboard-header');
+        const modal = document.querySelector('#add-friend-modal');
+
+        if (!header || !modal) {
+            console.warn("Arkadaş Ekle modal kurulumu için header veya modal bulunamadı.");
+            return;
+        }
+
+        // Tıklama olayını doğrudan butona değil, sabit olan header'a bağlıyoruz.
+        header.addEventListener('click', (event) => {
+            // Tıklanan elementin '.add-friend-btn' veya onun bir çocuğu olup olmadığını kontrol et
+            if (event.target.closest('.add-friend-btn')) {
+                modal.classList.add('active');
+            }
+        });
+
+        // Kapatma butonunu ve dışarı tıklamayı ayarla
+        const closeButton = modal.querySelector('.close-modal-btn');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => modal.classList.remove('active'));
+        }
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
 
         // Forma özel işlevselliği ekle
         const addFriendForm = document.getElementById('add-friend-form');
@@ -188,19 +212,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 event.preventDefault();
                 const username = usernameInput.value.trim();
                 if (username) {
-                    // Mevcut, çalışan gönderme fonksiyonunu kullan
                     sendFriendRequest(username);
                 }
             });
-        } else {
-            console.warn("Arkadaş ekle formu veya input'u bulunamadı.");
         }
     }
 
     // Sunucu Ekle/Katıl Modal Kurulumu (YENİ)
     function setupServerModal() {
-        setupModal('.server-add-icon', '#server-modal', '.close-server-modal-btn');
-        // Sunucu paneline özel işlevsellikler (katıl/oluştur sekmeleri vb.) buraya eklenecek.
+        // Bu modal sabit bir butona sahip olduğu için eski yöntemle devam edebilir.
+        const trigger = document.querySelector('.server-add-icon');
+        const modal = document.querySelector('#server-modal');
+        if (!trigger || !modal) return;
+
+        const closeButton = modal.querySelector('.close-server-modal-btn');
+
+        trigger.addEventListener('click', () => modal.classList.add('active'));
+        if (closeButton) {
+            closeButton.addEventListener('click', () => modal.classList.remove('active'));
+        }
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('active');
+        });
     }
 
     try {
