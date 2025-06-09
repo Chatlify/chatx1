@@ -1395,6 +1395,11 @@ async function openChatPanel(userId, username, avatar) {
     console.log(`%cSohbet Kanal ID'si: %c${conversationId}`, 'font-weight: bold; color: blue;', 'color: green;');
     console.log(`Sohbet başlatıldı: ${username} (ID: ${userId})`);
 
+    // YENİ EKLENEN KISIM: URL'yi güncelle
+    const newUrl = `/channels/@me/${conversationId}`;
+    history.pushState({ userId: userId, conversationId: conversationId }, '', newUrl);
+    console.log(`URL güncellendi: ${newUrl}`);
+
     // Okunmamış mesaj sayacını sıfırla ve UI'ı güncelle
     if (unreadCounts[userId] && unreadCounts[userId] > 0) {
         console.log(`Sohbet açıldı, ${username} için okunmamışlar sıfırlanıyor.`);
