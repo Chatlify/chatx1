@@ -177,18 +177,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI - En Sağlam Yöntem: ID ile)
     function setupAddFriendModal() {
         // Olay dinleyicisini sayfanın kendisine (body) bağlıyoruz.
-        // Bu, buton sonradan yaratılsa bile tıklamayı her zaman yakalar.
         document.body.addEventListener('click', function (event) {
             // Tıklanan elementin ID'sinin 'add-friend-button' olup olmadığını kontrol et
             if (event.target.closest('#add-friend-button')) {
-                console.log("'Arkadaş Ekle' butonuna tıklandı! (ID ile yakalandı)");
                 const modal = document.querySelector('#add-friend-modal');
                 if (modal) {
-                    console.log("Modal elementi bulundu:", modal);
                     modal.classList.add('active');
-                    console.log("'.active' sınıfı eklendi. Modal'ın güncel sınıfları:", modal.className);
-                } else {
-                    console.error("HATA AYIKLAMA: #add-friend-modal elementi DOM'da bulunamadı!");
                 }
             }
         });
