@@ -3909,15 +3909,43 @@ function sendGif(gifUrl) {
     scrollToBottom();
 }
 
-// Arkadaşlıktan Çıkarma Onay Modalını Göster
+// Arkadaşlıktan Çıkarma Onay Modalını Göster (YENİ VE GELİŞMİŞ)
 function showRemoveFriendConfirmation(userId, username, avatar) {
-    // Bu fonksiyonun içeriği önceden vardı, şimdi global kapsama taşınıyor.
-    // Onay modalı oluşturma ve gösterme mantığı buraya gelecek.
-    // Örneğin, basit bir confirm kutusu ile:
-    const confirmation = confirm(`'${username}' kişisini arkadaşlıktan çıkarmak istediğinize emin misiniz? Bu işlem geri alınamaz.`);
-    if (confirmation) {
-        removeFriend(userId);
-    }
+    const modal = document.getElementById('confirmation-modal');
+    const title = modal.querySelector('#confirmation-title');
+    const text = modal.querySelector('#confirmation-text');
+    const confirmBtn = modal.querySelector('#confirm-action-btn');
+    const cancelBtn = modal.querySelector('#cancel-confirmation-btn');
+
+    // Modalı doldur
+    title.textContent = `${username} Kişisini Arkadaşlıktan Çıkar`;
+    text.innerHTML = `<strong>${username}</strong> kişisini arkadaş listenizden kalıcı olarak kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.`;
+
+    // Onay butonunu tehlike moduna al
+    confirmBtn.textContent = 'Arkadaşlıktan Çıkar';
+    confirmBtn.className = 'confirmation-btn confirm-btn-danger';
+
+    // Modalı göster
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
+
+    // Kapatma fonksiyonu
+    const closeModal = () => {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            // Olay dinleyicilerini temizle (önemli!)
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+        }, 200);
+    };
+
+    // Buton olaylarını ayarla
+    cancelBtn.onclick = closeModal;
+    confirmBtn.onclick = async () => {
+        await removeFriend(userId);
+        closeModal(); // İşlem bittikten sonra onayı kapat
+    };
 }
 
 // Arkadaşı Silme İşlemi
