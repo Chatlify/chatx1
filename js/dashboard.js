@@ -174,25 +174,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI - Event Delegation ile)
+    // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI - En Sağlam Yöntem)
     function setupAddFriendModal() {
-        const header = document.querySelector('.dashboard-header');
-        const modal = document.querySelector('#add-friend-modal');
-
-        if (!header || !modal) {
-            console.warn("Arkadaş Ekle modal kurulumu için header veya modal bulunamadı.");
-            return;
-        }
-
-        // Tıklama olayını doğrudan butona değil, sabit olan header'a bağlıyoruz.
-        header.addEventListener('click', (event) => {
-            // Tıklanan elementin '.add-friend-btn' veya onun bir çocuğu olup olmadığını kontrol et
+        // Olay dinleyicisini sayfanın kendisine (body) bağlıyoruz.
+        // Bu, buton sonradan yaratılsa bile tıklamayı her zaman yakalar.
+        document.body.addEventListener('click', function (event) {
             if (event.target.closest('.add-friend-btn')) {
-                modal.classList.add('active');
+                const modal = document.querySelector('#add-friend-modal');
+                if (modal) {
+                    modal.classList.add('active');
+                }
             }
         });
 
-        // Kapatma butonunu ve dışarı tıklamayı ayarla
+        // Kapatma mekanizması (modal her zaman DOM'da olduğu için bu şekilde kalabilir)
+        const modal = document.querySelector('#add-friend-modal');
+        if (!modal) {
+            console.warn("Arkadaş Ekle modalı DOM'da bulunamadı.");
+            return;
+        }
+
         const closeButton = modal.querySelector('.close-modal-btn');
         if (closeButton) {
             closeButton.addEventListener('click', () => modal.classList.remove('active'));
@@ -203,13 +204,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Forma özel işlevselliği ekle
+        // Form gönderme işlevselliği
         const addFriendForm = document.getElementById('add-friend-form');
-        const usernameInput = document.getElementById('add-friend-username-input');
-
-        if (addFriendForm && usernameInput) {
+        if (addFriendForm) {
             addFriendForm.addEventListener('submit', (event) => {
                 event.preventDefault();
+                const usernameInput = document.getElementById('add-friend-username-input');
                 const username = usernameInput.value.trim();
                 if (username) {
                     sendFriendRequest(username);
@@ -218,16 +218,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Sunucu Ekle/Katıl Modal Kurulumu (YENİ)
+    // Sunucu Ekle/Katıl Modal Kurulumu
     function setupServerModal() {
-        // Bu modal sabit bir butona sahip olduğu için eski yöntemle devam edebilir.
-        const trigger = document.querySelector('.server-add-icon');
+        document.body.addEventListener('click', function (event) {
+            if (event.target.closest('.server-add-icon')) {
+                const modal = document.querySelector('#server-modal');
+                if (modal) {
+                    modal.classList.add('active');
+                }
+            }
+        });
+
         const modal = document.querySelector('#server-modal');
-        if (!trigger || !modal) return;
-
+        if (!modal) return;
         const closeButton = modal.querySelector('.close-server-modal-btn');
-
-        trigger.addEventListener('click', () => modal.classList.add('active'));
         if (closeButton) {
             closeButton.addEventListener('click', () => modal.classList.remove('active'));
         }
