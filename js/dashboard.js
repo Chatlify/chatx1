@@ -1,6 +1,10 @@
 import { supabase } from './auth_config.js'; // Supabase istemcisini import et
 import { initVoiceCallSystem, checkVoiceCallSupport } from './voice-call.js'; // Sesli arama modülünü import et
 
+// Snowflake ID Üretici Başlatma
+const snowflake = new Snowflake();
+console.log("Dashboard için Snowflake ID üretici hazır.");
+
 // Global değişkenler tanımları
 let currentUserId = null;
 let onlineFriends = new Set();
@@ -1386,6 +1390,11 @@ function initializePresence() {
 }
 
 async function openChatPanel(userId, username, avatar) {
+    // Sohbet paneli açıldığında o sohbete özel bir ID üretelim
+    const conversationId = snowflake.generate();
+    console.log(`%cSohbet Kanal ID'si: %c${conversationId}`, 'font-weight: bold; color: blue;', 'color: green;');
+    console.log(`Sohbet başlatıldı: ${username} (ID: ${userId})`);
+
     // Okunmamış mesaj sayacını sıfırla ve UI'ı güncelle
     if (unreadCounts[userId] && unreadCounts[userId] > 0) {
         console.log(`Sohbet açıldı, ${username} için okunmamışlar sıfırlanıyor.`);
@@ -2057,7 +2066,7 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
         {
             name: 'Yiyecek',
             icon: 'fa-utensils',
-            emojis: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🦴', '🌭', '🍔', '🍟', '🍕', '🫓', '🥪', '🥙', '🧆', '🌮', '🌯', '🫔', '🥗', '🥘', '🫕', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪']
+            emojis: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🦴', '🌭', '🍔', '🍟', '🍕', '🫓', '🥪', '🥙', '🧆', '🌮', '🌯', '🫔', '🥗', '8', '🫕', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪']
         },
         {
             name: 'Etkinlik',

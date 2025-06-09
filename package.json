@@ -1,0 +1,15 @@
+{
+  "name": "chatlify-test",
+  "version": "1.0.0",
+  "description": "Modern ve kullanışlı bir mesajlaşma uygulaması.",
+  "main": "debug.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "snowflake-id": "^1.1.0"
+  }
+}

@@ -1,6 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Cosmic Sunucu JS başlatıldı.");
 
+    // Snowflake ID üreticiyi başlat
+    // Not: Tarayıcıda makine ID'si veya diğer özel ayarlar olmadan temel bir örnek oluşturulur.
+    const snowflake = new Snowflake({
+        worker_id: 1, // Örnek bir worker ID
+        epoch: 1609459200000, // Özel bir başlangıç zamanı (isteğe bağlı), örneğin 1 Ocak 2021
+    });
+    console.log("Snowflake ID üretici hazır.");
+
     // Gerekli tüm DOM elementlerini seç
     const channelItems = document.querySelectorAll('.channel-item, .voice-channel-header');
     const categoryHeaders = document.querySelectorAll('.category-header');
@@ -12,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const membersToggle = document.querySelector('.members-toggle');
     const hamburgerMenu = document.querySelector('.hamburger-menu'); // Mobil için menü butonu
     const chatInput = document.querySelector('.chat-input');
+    const messagesContainer = document.querySelector('.messages-container'); // Mesajların ekleneceği alan
 
     // Yeni eklenenler
     const serverMenuBtn = document.querySelector('.server-menu-btn');
@@ -180,6 +189,52 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.addEventListener('input', () => {
             chatInput.style.height = 'auto';
             chatInput.style.height = `${chatInput.scrollHeight}px`;
+        });
+
+        // Enter tuşuyla mesaj gönderme ve ID üretme
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Enter'ın varsayılan davranışını (yeni satır) engelle
+                const messageText = chatInput.value.trim();
+
+                if (messageText) {
+                    // Yeni bir Snowflake ID üret
+                    const messageId = snowflake.generate();
+
+                    console.log('--- Yeni Mesaj Gönderildi ---');
+                    console.log('Mesaj ID (Snowflake):', messageId);
+                    console.log('Mesaj İçeriği:', messageText);
+
+                    // Örnek olarak mesajı ekrana da basalım (opsiyonel)
+                    // Bu kısım daha sonra gerçek bir mesaj objesiyle değiştirilebilir
+                    const newMessageElement = document.createElement('div');
+                    newMessageElement.classList.add('message-group', 'own-message');
+                    newMessageElement.innerHTML = `
+                        <img src="images/user1.jpg" alt="User" class="message-avatar">
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-author">Sen</span>
+                                <span class="message-time">Şimdi</span>
+                            </div>
+                            <div class="message-text"></div>
+                        </div>
+                    `;
+                    newMessageElement.querySelector('.message-text').textContent = messageText;
+
+                    // Yeni mesaja üretilen ID'yi bir data attribute olarak ekleyelim
+                    newMessageElement.dataset.messageId = messageId;
+
+                    if (messagesContainer) {
+                        messagesContainer.appendChild(newMessageElement);
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Otomatik olarak en alta kaydır
+                    }
+
+
+                    // Input alanını temizle ve yüksekliğini sıfırla
+                    chatInput.value = '';
+                    chatInput.style.height = 'auto';
+                }
+            }
         });
     }
 
