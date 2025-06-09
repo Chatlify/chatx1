@@ -2,7 +2,7 @@ import { supabase } from './auth_config.js'; // Supabase istemcisini import et
 import { initVoiceCallSystem, checkVoiceCallSupport } from './voice-call.js'; // Sesli arama modülünü import et
 
 // Snowflake ID Üretici Başlatma
-const snowflake = new Snowflake();
+const snowflake = new window["Snowflake-ID"]();
 console.log("Dashboard için Snowflake ID üretici hazır.");
 
 // Global değişkenler tanımları
