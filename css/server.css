@@ -102,6 +102,7 @@ body.server-page {
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
     z-index: 10;
+    position: relative;
 }
 
 .server-info {
@@ -1023,10 +1024,24 @@ body.server-page {
 .members-panel {
     background-color: var(--bg-secondary);
     border-left: 1px solid var(--border-color);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     padding: 12px;
+    width: var(--members-width);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transform: translateX(0);
+}
+
+.members-panel.closed {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    padding: 12px 0;
+}
+
+.server-layout.members-closed {
+    grid-template-columns: var(--channels-width) 1fr 0;
 }
 
 .members-container {
@@ -1302,4 +1317,87 @@ body.server-page {
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+.back-to-dashboard-btn {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 18px;
+    margin-right: 12px;
+    padding: 8px;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+}
+
+.back-to-dashboard-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.server-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 16px;
+    width: 240px;
+    background-color: #18191C;
+    /* Koyu arkaplan */
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-lg);
+    padding: 8px;
+    z-index: 1001;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    transform-origin: top right;
+}
+
+.server-menu-dropdown.active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    visibility: visible;
+}
+
+/* Sunucu Tacı Banner */
+.server-crown-banner {
+    margin: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, #2E2A47, #1E1C2E);
+    border: 1px solid #4A446B;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.server-crown-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    border-color: #7B72AF;
+}
+
+.crown-icon {
+    font-size: 24px;
+    color: #FFD700;
+    /* Altın rengi */
+    filter: drop-shadow(0 0 5px #FFD700);
+}
+
+.crown-info {
+    flex: 1;
+}
+
+.crown-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.crown-level {
+    font-size: 13px;
+    color: var(--text-secondary);
 }

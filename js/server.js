@@ -13,6 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const hamburgerMenu = document.querySelector('.hamburger-menu'); // Mobil için menü butonu
     const chatInput = document.querySelector('.chat-input');
 
+    // Yeni eklenenler
+    const serverMenuBtn = document.querySelector('.server-menu-btn');
+    const serverMenuDropdown = document.querySelector('.server-menu-dropdown');
+    const membersToggleBtn = document.querySelector('.members-toggle');
+    const membersPanel = document.querySelector('.members-panel');
+    const serverLayout = document.querySelector('.server-layout');
+
     // Aktif Kanal Değiştirme
     channelItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -49,6 +56,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Sunucu Menüsü (3 nokta) Açma/Kapatma
+    if (serverMenuBtn && serverMenuDropdown) {
+        serverMenuBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Olayın dışarıya yayılmasını engelle
+            serverMenuDropdown.classList.toggle('active');
+        });
+    }
+
+    // Üye Paneli (sağ taraf) Açma/Kapatma
+    if (membersToggleBtn && membersPanel && serverLayout) {
+        membersToggleBtn.addEventListener('click', () => {
+            membersPanel.classList.toggle('closed');
+            serverLayout.classList.toggle('members-closed');
+        });
+    }
+
     // Context Menu (Sağ Tık Menüsü)
     const showContextMenu = (event, items) => {
         event.preventDefault();
@@ -60,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const menuItem = document.createElement('div');
                 menuItem.className = `context-item ${item.class || ''}`;
                 menuItem.innerHTML = `<i class="${item.icon}"></i><span>${item.text}</span>`;
-                menuItem.onclick = () => {
+                menuItem.onclick = (e) => {
+                    e.stopPropagation();
                     item.action();
                     contextMenu.classList.remove('active');
                 };
@@ -73,8 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.classList.add('active');
     };
 
-    // Sağ tık menüsünü gizle
+    // Açık menüleri kapatma
     document.addEventListener('click', () => {
+        if (serverMenuDropdown && serverMenuDropdown.classList.contains('active')) {
+            serverMenuDropdown.classList.remove('active');
+        }
         if (contextMenu.classList.contains('active')) {
             contextMenu.classList.remove('active');
         }
@@ -121,16 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Üye listesini gösterme/gizleme (Responsive)
-    if (membersToggle) {
-        const membersPanel = document.querySelector('.members-panel');
-        membersToggle.addEventListener('click', () => {
-            if (membersPanel) {
-                membersPanel.classList.toggle('visible'); // CSS'de .visible sınıfı eklenecek
-            }
-        });
-    }
-
     // Chat input alanının yüksekliğini içeriğe göre ayarla
     if (chatInput) {
         chatInput.addEventListener('input', () => {
@@ -139,5 +156,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    console.log('Chatlify Server Panel script loaded.');
+    console.log('Chatlify Server Panel script loaded and updated.');
 });

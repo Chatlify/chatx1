@@ -19,6 +19,9 @@
         <!-- Sol Panel - Kanallar -->
         <aside class="channels-panel">
             <header class="server-header">
+                <a href="dashboard.html" class="back-to-dashboard-btn" title="Dashboard'a Geri Dön">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
                 <div class="server-info">
                     <div class="server-icon-wrapper">
                         <img src="images/server1.png" alt="Server Icon" class="server-icon">
@@ -32,18 +35,27 @@
                 <button class="server-menu-btn">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
+                <div class="server-menu-dropdown">
+                    <div class="context-item">
+                        <i class="fas fa-user-plus"></i><span>Arkadaş Davet Et</span>
+                    </div>
+                    <div class="context-item">
+                        <i class="fas fa-cog"></i><span>Sunucu Ayarları</span>
+                    </div>
+                    <div class="context-divider"></div>
+                    <div class="context-item danger">
+                        <i class="fas fa-sign-out-alt"></i><span>Sunucudan Ayrıl</span>
+                    </div>
+                </div>
             </header>
 
-            <div class="server-perks-banner">
-                <div class="perks-icon">
-                    <i class="fas fa-star"></i>
+            <div class="server-crown-banner">
+                <div class="crown-icon">
+                    <i class="fas fa-crown"></i>
                 </div>
-                <div class="perks-info">
-                    <span class="perks-title">Sunucu Ayrıcalığı</span>
-                    <span class="perks-level">Seviye 2</span>
-                </div>
-                <div class="perks-progress">
-                    <div class="perks-progress-bar" style="width: 45%;"></div>
+                <div class.crown-info">
+                    <span class="crown-title">Topluluk Tacı</span>
+                    <span class="crown-level">Seviye 2</span>
                 </div>
             </div>
 
@@ -286,11 +298,6 @@
         <!-- Sağ Panel - Üyeler (Yepyeni Tasarım) -->
         <aside class="members-panel">
             <div class="members-container">
-                <div class="members-search">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Üyelerde Ara...">
-                </div>
-
                 <div class="member-category">
                     <h3 class="member-category-title">Yöneticiler — 2</h3>
                     <div class="member-list">
