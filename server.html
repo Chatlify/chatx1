@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatlify - Server Panel</title>
+    <!-- Font Awesome ve Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- CSS dosyaları -->
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/server.css">
+</head>
+
+<body class="server-page">
+    <div class="server-layout">
+        <!-- Sol Panel - Kanallar -->
+        <aside class="channels-panel">
+            <header class="server-header">
+                <div class="server-info">
+                    <div class="server-icon-wrapper">
+                        <img src="images/server1.png" alt="Server Icon" class="server-icon">
+                        <div class="server-status-indicator"></div>
+                    </div>
+                    <div class="server-details">
+                        <h1 class="server-name">Chatlify Community</h1>
+                        <span class="server-members"><i class="fas fa-users"></i> 1,234 üye</span>
+                    </div>
+                </div>
+                <button class="server-menu-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </header>
+
+            <div class="server-boost-banner">
+                <div class="boost-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="boost-info">
+                    <span class="boost-level">Level 3 Server</span>
+                    <span class="boost-count">15 Boost</span>
+                </div>
+                <div class="boost-progress">
+                    <div class="boost-progress-bar" style="width: 75%"></div>
+                </div>
+            </div>
+
+            <div class="channels-container">
+                <!-- Metin Kanalları -->
+                <div class="channel-category">
+                    <button class="category-header">
+                        <i class="fas fa-chevron-down category-arrow"></i>
+                        <span class="category-name">METIN KANALLARI</span>
+                        <button class="category-add-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </button>
+                    <div class="category-channels">
+                        <div class="channel-item active" data-channel-id="general">
+                            <i class="fas fa-hashtag channel-icon"></i>
+                            <span class="channel-name">genel-sohbet</span>
+                            <div class="channel-badges">
+                                <span class="channel-notification">3</span>
+                            </div>
+                        </div>
+                        <div class="channel-item" data-channel-id="announcements">
+                            <i class="fas fa-bullhorn channel-icon"></i>
+                            <span class="channel-name">duyurular</span>
+                            <i class="fas fa-lock channel-lock"></i>
+                        </div>
+                        <div class="channel-item" data-channel-id="rules">
+                            <i class="fas fa-book channel-icon"></i>
+                            <span class="channel-name">kurallar</span>
+                        </div>
+                        <div class="channel-item" data-channel-id="media">
+                            <i class="fas fa-image channel-icon"></i>
+                            <span class="channel-name">medya</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ses Kanalları -->
+                <div class="channel-category">
+                    <button class="category-header">
+                        <i class="fas fa-chevron-down category-arrow"></i>
+                        <span class="category-name">SES KANALLARI</span>
+                        <button class="category-add-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </button>
+                    <div class="category-channels">
+                        <div class="voice-channel" data-channel-id="voice-general">
+                            <div class="voice-channel-header">
+                                <i class="fas fa-volume-up channel-icon"></i>
+                                <span class="channel-name">Genel Ses</span>
+                                <span class="voice-user-count">5/10</span>
+                            </div>
+                            <div class="voice-users">
+                                <div class="voice-user">
+                                    <img src="images/user1.jpg" alt="User" class="voice-user-avatar">
+                                    <span class="voice-user-name">Kadir</span>
+                                    <i class="fas fa-microphone voice-user-status"></i>
+                                </div>
+                                <div class="voice-user">
+                                    <img src="images/user2.jpg" alt="User" class="voice-user-avatar">
+                                    <span class="voice-user-name">Ayşe</span>
+                                    <i class="fas fa-microphone-slash voice-user-status muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="voice-channel" data-channel-id="voice-gaming">
+                            <div class="voice-channel-header">
+                                <i class="fas fa-gamepad channel-icon"></i>
+                                <span class="channel-name">Oyun Odası</span>
+                                <span class="voice-user-count">0/5</span>
+                            </div>
+                        </div>
+                        <div class="voice-channel" data-channel-id="voice-music">
+                            <div class="voice-channel-header">
+                                <i class="fas fa-music channel-icon"></i>
+                                <span class="channel-name">Müzik</span>
+                                <span class="voice-user-count">2/∞</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Özel Kanallar -->
+                <div class="channel-category">
+                    <button class="category-header">
+                        <i class="fas fa-chevron-down category-arrow"></i>
+                        <span class="category-name">ÖZEL ODALAR</span>
+                    </button>
+                    <div class="category-channels">
+                        <div class="channel-item" data-channel-id="vip">
+                            <i class="fas fa-crown channel-icon premium"></i>
+                            <span class="channel-name">vip-lounge</span>
+                            <i class="fas fa-star channel-badge"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-panel">
+                <div class="user-info">
+                    <img src="images/user1.jpg" alt="User Avatar" class="user-avatar">
+                    <div class="user-status online"></div>
+                    <div class="user-details">
+                        <span class="user-name">Kadir</span>
+                        <span class="user-tag">#1234</span>
+                    </div>
+                </div>
+                <div class="user-controls">
+                    <button class="control-btn" title="Mikrofon">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="control-btn" title="Kulaklık">
+                        <i class="fas fa-headphones"></i>
+                    </button>
+                    <button class="control-btn" title="Ayarlar">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Orta Panel - Mesajlar -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="channel-info">
+                    <i class="fas fa-hashtag"></i>
+                    <h2 class="current-channel-name">genel-sohbet</h2>
+                    <span class="channel-topic">Herkesin sohbet edebildiği ana kanal</span>
+                </div>
+                <div class="chat-actions">
+                    <button class="chat-action-btn" title="Sabitle">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                    <button class="chat-action-btn" title="Bildirimler">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="chat-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Ara">
+                    </div>
+                    <button class="chat-action-btn members-toggle" title="Üye Listesi">
+                        <i class="fas fa-users"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="messages-container">
+                <div class="chat-welcome">
+                    <div class="welcome-icon">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <h3>genel-sohbet kanalına hoş geldiniz!</h3>
+                    <p>Bu, genel-sohbet kanalının başlangıcı.</p>
+                </div>
+
+                <!-- Mesajlar -->
+                <div class="message-group">
+                    <img src="images/user3.jpg" alt="User" class="message-avatar">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-author">Mehmet</span>
+                            <span class="message-badge premium">Premium</span>
+                            <span class="message-time">Bugün 14:32</span>
+                        </div>
+                        <div class="message-text">
+                            Merhaba arkadaşlar! Yeni güncelleme harika olmuş 🎉
+                        </div>
+                        <div class="message-reactions">
+                            <div class="reaction">
+                                <span class="reaction-emoji">👍</span>
+                                <span class="reaction-count">5</span>
+                            </div>
+                            <div class="reaction">
+                                <span class="reaction-emoji">❤️</span>
+                                <span class="reaction-count">3</span>
+                            </div>
+                            <button class="add-reaction">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message-group">
+                    <img src="images/user2.jpg" alt="User" class="message-avatar">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-author">Ayşe</span>
+                            <span class="message-badge moderator">Moderatör</span>
+                            <span class="message-time">Bugün 14:35</span>
+                        </div>
+                        <div class="message-text">
+                            Evet gerçekten çok güzel olmuş! Özellikle yeni tema sistemi
+                        </div>
+                        <div class="message-attachment">
+                            <img src="https://via.placeholder.com/400x200" alt="Attachment" class="attachment-image">
+                            <div class="attachment-info">
+                                <span class="attachment-name">screenshot.png</span>
+                                <span class="attachment-size">1.2 MB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message-divider">
+                    <span>15 Ocak 2025</span>
+                </div>
+
+                <div class="message-group own-message">
+                    <img src="images/user1.jpg" alt="User" class="message-avatar">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-author">Sen</span>
+                            <span class="message-time">Bugün 14:40</span>
+                        </div>
+                        <div class="message-text">
+                            Kesinlikle katılıyorum! Yeni özellikler muhteşem
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <button class="input-addon-btn">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" placeholder="#genel-sohbet kanalına mesaj gönder">
+                    <div class="input-actions">
+                        <button class="input-action-btn">
+                            <i class="fas fa-gift"></i>
+                        </button>
+                        <button class="input-action-btn">
+                            <i class="fas fa-file-image"></i>
+                        </button>
+                        <button class="input-action-btn">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sağ Panel - Üyeler -->
+        <aside class="members-panel">
+            <div class="members-container">
+                <!-- Online Üyeler -->
+                <div class="member-category">
+                    <h3 class="member-category-title">ONLINE — 8</h3>
+                    <div class="member-list">
+                        <div class="member-item">
+                            <img src="images/user3.jpg" alt="User" class="member-avatar">
+                            <div class="member-status-indicator online"></div>
+                            <div class="member-info">
+                                <span class="member-name">Mehmet</span>
+                                <span class="member-activity">Visual Studio Code</span>
+                            </div>
+                            <div class="member-badges">
+                                <i class="fas fa-crown member-badge premium"></i>
+                                <i class="fas fa-shield-alt member-badge moderator"></i>
+                            </div>
+                        </div>
+                        <div class="member-item">
+                            <img src="images/user2.jpg" alt="User" class="member-avatar">
+                            <div class="member-status-indicator online"></div>
+                            <div class="member-info">
+                                <span class="member-name">Ayşe</span>
+                                <span class="member-activity">Spotify'da müzik dinliyor</span>
+                            </div>
+                        </div>
+                        <div class="member-item">
+                            <img src="images/user1.jpg" alt="User" class="member-avatar">
+                            <div class="member-status-indicator online"></div>
+                            <div class="member-info">
+                                <span class="member-name">Kadir</span>
+                                <span class="member-activity">League of Legends oynuyor</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offline Üyeler -->
+                <div class="member-category">
+                    <h3 class="member-category-title">OFFLINE — 15</h3>
+                    <div class="member-list">
+                        <div class="member-item offline">
+                            <img src="images/user4.jpg" alt="User" class="member-avatar">
+                            <div class="member-status-indicator offline"></div>
+                            <div class="member-info">
+                                <span class="member-name">Zeynep</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Bağlam Menüsü -->
+    <div class="context-menu" id="memberContextMenu">
+        <div class="context-item">
+            <i class="fas fa-user"></i>
+            <span>Profili Görüntüle</span>
+        </div>
+        <div class="context-item">
+            <i class="fas fa-comment"></i>
+            <span>Mesaj Gönder</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-item">
+            <i class="fas fa-phone"></i>
+            <span>Sesli Arama</span>
+        </div>
+        <div class="context-item">
+            <i class="fas fa-video"></i>
+            <span>Görüntülü Arama</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-item danger">
+            <i class="fas fa-ban"></i>
+            <span>Engelle</span>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/server.js"></script>
+</body>
+
+</html>
