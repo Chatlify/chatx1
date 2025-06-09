@@ -138,6 +138,71 @@ function populateNewProfileModal(profile, modal) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Dashboard JS başlatılıyor...');
 
+    // "Arkadaş Ekle" ve "Sunucu Ekle" gibi modal pencereleri yönetmek için genel bir fonksiyon
+    function setupModal(triggerSelector, modalSelector, closeSelector) {
+        const trigger = document.querySelector(triggerSelector);
+        const modal = document.querySelector(modalSelector);
+
+        if (!trigger || !modal) {
+            console.warn(`Modal kurulumu için elementler bulunamadı:`, { trigger: triggerSelector, modal: modalSelector });
+            return;
+        }
+
+        const closeButton = modal.querySelector(closeSelector);
+
+        const openModal = () => modal.classList.add('active');
+        const closeModal = () => modal.classList.remove('active');
+
+        trigger.addEventListener('click', openModal);
+
+        if (closeButton) {
+            closeButton.addEventListener('click', closeModal);
+        }
+
+        // Modal dışına tıklayarak kapatma
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // ESC tuşu ile kapatma
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    }
+
+    // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI)
+    function setupAddFriendModal() {
+        // Genel modal kurulum fonksiyonunu çağır
+        setupModal('.add-friend-btn', '#add-friend-modal', '.close-modal-btn');
+
+        // Forma özel işlevselliği ekle
+        const addFriendForm = document.getElementById('add-friend-form');
+        const usernameInput = document.getElementById('add-friend-username-input');
+
+        if (addFriendForm && usernameInput) {
+            addFriendForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const username = usernameInput.value.trim();
+                if (username) {
+                    // Mevcut, çalışan gönderme fonksiyonunu kullan
+                    sendFriendRequest(username);
+                }
+            });
+        } else {
+            console.warn("Arkadaş ekle formu veya input'u bulunamadı.");
+        }
+    }
+
+    // Sunucu Ekle/Katıl Modal Kurulumu (YENİ)
+    function setupServerModal() {
+        setupModal('.server-add-icon', '#server-modal', '.close-server-modal-btn');
+        // Sunucu paneline özel işlevsellikler (katıl/oluştur sekmeleri vb.) buraya eklenecek.
+    }
+
     try {
         // Element tanımlamaları
         const userPanelUsernameElement = document.querySelector('.dm-footer .dm-user-name');
