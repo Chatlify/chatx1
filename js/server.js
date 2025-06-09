@@ -196,43 +196,52 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Enter'ın varsayılan davranışını (yeni satır) engelle
                 const messageText = chatInput.value.trim();
-
                 if (messageText) {
-                    // Yeni bir Snowflake ID üret
                     const messageId = snowflake.generate();
 
-                    console.log('--- Yeni Mesaj Gönderildi ---');
-                    console.log('Mesaj ID (Snowflake):', messageId);
-                    console.log('Mesaj İçeriği:', messageText);
+                    // GÜVENLİ YÖNTEM: Elementleri manuel olarak oluştur
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message';
 
-                    // Örnek olarak mesajı ekrana da basalım (opsiyonel)
-                    // Bu kısım daha sonra gerçek bir mesaj objesiyle değiştirilebilir
-                    const newMessageElement = document.createElement('div');
-                    newMessageElement.classList.add('message-group', 'own-message');
-                    newMessageElement.innerHTML = `
-                        <img src="images/user1.jpg" alt="User" class="message-avatar">
-                        <div class="message-content">
-                            <div class="message-header">
-                                <span class="message-author">Sen</span>
-                                <span class="message-time">Şimdi</span>
-                            </div>
-                            <div class="message-text"></div>
-                        </div>
-                    `;
-                    newMessageElement.querySelector('.message-text').textContent = messageText;
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = "https://i.ibb.co/3k5g78k/siyah.png"; // Statik avatar yolu
+                    avatarImg.alt = "Avatar";
+                    avatarImg.className = "avatar";
 
-                    // Yeni mesaja üretilen ID'yi bir data attribute olarak ekleyelim
-                    newMessageElement.dataset.messageId = messageId;
+                    const messageContentDiv = document.createElement('div');
+                    messageContentDiv.className = 'message-content';
 
-                    if (messagesContainer) {
-                        messagesContainer.appendChild(newMessageElement);
-                        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Otomatik olarak en alta kaydır
-                    }
+                    const messageHeaderDiv = document.createElement('div');
 
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.className = 'username';
+                    usernameSpan.textContent = "Kullanıcı"; // Statik kullanıcı adı
 
-                    // Input alanını temizle ve yüksekliğini sıfırla
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.className = 'timestamp';
+                    timestampSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    const messageTextP = document.createElement('p');
+                    messageTextP.className = 'message-text';
+                    messageTextP.dataset.id = messageId;
+                    // !!! XSS GÜVENLİK DÜZELTMESİ BURADA !!!
+                    // Kullanıcı girdisi .textContent ile atanarak zararsız hale getirilir.
+                    messageTextP.textContent = messageText;
+
+                    // Elementleri birbirine ekle
+                    messageHeaderDiv.appendChild(usernameSpan);
+                    messageHeaderDiv.appendChild(timestampSpan);
+                    messageContentDiv.appendChild(messageHeaderDiv);
+                    messageContentDiv.appendChild(messageTextP);
+                    messageElement.appendChild(avatarImg);
+                    messageElement.appendChild(messageContentDiv);
+
+                    messagesContainer.appendChild(messageElement);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                    console.log(`Mesaj Gönderildi: "${messageText}" | ID: ${messageId}`);
+
                     chatInput.value = '';
-                    chatInput.style.height = 'auto';
                 }
             }
         });
