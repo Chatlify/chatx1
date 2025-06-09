@@ -571,6 +571,39 @@ body.server-page {
     background-color: rgba(240, 71, 71, 0.1);
 }
 
+/* Tarih alanı için yeni stil */
+.date-display {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-right: 10px;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: right;
+}
+
+/* Test Deneme alanı için özel stil */
+.test-deneme-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: #1A1D21;
+    border-top: 1px solid var(--border-color);
+}
+
+.test-deneme-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.test-deneme-date {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 90px;
+    text-align: right;
+}
+
 /* Sohbet Alanı */
 .chat-area {
     background-color: var(--bg-primary);

@@ -19,6 +19,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const membersToggleBtn = document.querySelector('.members-toggle');
     const membersPanel = document.querySelector('.members-panel');
     const serverLayout = document.querySelector('.server-layout');
+    const dateDisplay = document.querySelector('.date-display');
+    const testDenemeDate = document.querySelector('.test-deneme-date');
+
+    // Tarih gösterimi için fonksiyon
+    function updateDateTime() {
+        const now = new Date();
+        const options = {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        };
+        const dateStr = now.toLocaleDateString('tr-TR', options);
+
+        if (dateDisplay) {
+            dateDisplay.textContent = dateStr;
+        }
+
+        if (testDenemeDate) {
+            testDenemeDate.textContent = dateStr;
+        }
+    }
+
+    // Sayfa yüklendiğinde tarihi güncelle
+    updateDateTime();
+
+    // Her dakika tarihi güncelle
+    setInterval(updateDateTime, 60000);
 
     // Aktif Kanal Değiştirme
     channelItems.forEach(item => {
