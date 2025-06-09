@@ -27,6 +27,77 @@ const emojiCategories = {
     'flags': ['🇹🇷', '🇦🇿', '🇩🇪', '🇬🇧', '🇺🇸', '🇯🇵', '🇰🇷', '🇷🇺', '🇨🇳', '🇧🇷', '🇮🇳', '🇵🇰', '🇫🇷', '🇪🇸', '🇮🇹', '🇵🇹', '🇳🇱', '🇧🇪', '🇬🇷', '🇨🇭', '🇸🇪', '🇩🇰', '🇳🇴', '🇫🇮', '🇦🇹', '🇮🇪', '🇨🇿', '🇵🇱', '🇭🇺', '🇺🇦', '🇧🇬', '🇷🇴', '🇦🇺', '🇨🇦', '🇲🇽', '🇸🇦', '🇦🇪', '🇶🇦', '🇰🇼', '🇮🇷', '🇮🇶', '🇪🇬', '🇿🇦']
 };
 
+// YENİ, MERKEZİ PROFİL MODAL FONKSİYONLARI (GLOBAL KAPSAMA TAŞINDI)
+async function showNewProfileModal(userId) {
+    if (!userId) {
+        console.error("Profilini göstermek için kullanıcı ID'si gerekli.");
+        return;
+    }
+
+    const modalOverlay = document.getElementById('user-profile-modal');
+    if (!modalOverlay) {
+        console.error('Profil modal elementi (#user-profile-modal) bulunamadı!');
+        return;
+    }
+
+    try {
+        // Yükleniyor durumunu göster (isteğe bağlı)
+        modalOverlay.classList.add('loading');
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        modalOverlay.classList.remove('loading');
+
+        if (error) throw error;
+        if (!profile) {
+            alert('Kullanıcı profili bulunamadı.');
+            return;
+        };
+
+        populateNewProfileModal(profile, modalOverlay);
+
+        // Modalı göster
+        modalOverlay.style.display = 'flex';
+        setTimeout(() => modalOverlay.classList.add('active'), 10);
+
+    } catch (error) {
+        console.error('Profil bilgileri çekilirken hata:', error);
+        alert('Profil bilgileri yüklenirken bir hata oluştu.');
+    }
+}
+
+function populateNewProfileModal(profile, modal) {
+    modal.querySelector('.profile-avatar-modal').src = profile.avatar_url || defaultAvatar;
+    modal.querySelector('.profile-username').textContent = profile.username || 'Kullanıcı';
+
+    const tag = profile.username + '#' + (profile.id.substring(0, 4) || '0000');
+    modal.querySelector('.profile-tag').textContent = tag;
+
+    modal.querySelector('.profile-bio').textContent = profile.bio || 'Bu kullanıcı henüz bir biyografi eklememiş.';
+
+    const joinDate = profile.created_at
+        ? new Date(profile.created_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })
+        : 'Bilinmiyor';
+    modal.querySelector('.profile-membership-date').textContent = joinDate;
+
+    // Modalı kapatma olayını ayarla (her seferinde yeniden eklemek yerine bir kere başta yapılabilir)
+    const closeModalBtn = modal.querySelector('.close-modal-btn');
+    const hideModal = () => {
+        modal.classList.remove('active');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    };
+    closeModalBtn.onclick = hideModal; // onclick ile basitçe atama
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            hideModal();
+        }
+    };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Dashboard JS başlatılıyor...');
 
@@ -188,78 +259,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Dashboard başlatma hatası:', error);
         alert('Sayfa başlatılırken bir hata oluştu. Lütfen sayfayı yenileyiniz.');
-    }
-
-    // YENİ, MERKEZİ PROFİL MODAL FONKSİYONLARI
-    async function showNewProfileModal(userId) {
-        alert(`Profil paneli açma fonksiyonu tetiklendi. Kullanıcı ID: ${userId}`);
-        if (!userId) {
-            console.error("Profilini göstermek için kullanıcı ID'si gerekli.");
-            return;
-        }
-
-        const modalOverlay = document.getElementById('user-profile-modal');
-        if (!modalOverlay) {
-            console.error('Profil modal elementi (#user-profile-modal) bulunamadı!');
-            return;
-        }
-
-        try {
-            // Yükleniyor durumunu göster (isteğe bağlı)
-            modalOverlay.classList.add('loading');
-
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            modalOverlay.classList.remove('loading');
-
-            if (error) throw error;
-            if (!profile) {
-                alert('Kullanıcı profili bulunamadı.');
-                return;
-            };
-
-            populateNewProfileModal(profile, modalOverlay);
-
-            // Modalı göster
-            modalOverlay.style.display = 'flex';
-            setTimeout(() => modalOverlay.classList.add('active'), 10);
-
-        } catch (error) {
-            console.error('Profil bilgileri çekilirken hata:', error);
-            alert('Profil bilgileri yüklenirken bir hata oluştu.');
-        }
-    }
-
-    function populateNewProfileModal(profile, modal) {
-        modal.querySelector('.profile-avatar-modal').src = profile.avatar_url || defaultAvatar;
-        modal.querySelector('.profile-username').textContent = profile.username || 'Kullanıcı';
-
-        const tag = profile.username + '#' + (profile.id.substring(0, 4) || '0000');
-        modal.querySelector('.profile-tag').textContent = tag;
-
-        modal.querySelector('.profile-bio').textContent = profile.bio || 'Bu kullanıcı henüz bir biyografi eklememiş.';
-
-        const joinDate = profile.created_at
-            ? new Date(profile.created_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })
-            : 'Bilinmiyor';
-        modal.querySelector('.profile-membership-date').textContent = joinDate;
-
-        // Modalı kapatma olayını ayarla (her seferinde yeniden eklemek yerine bir kere başta yapılabilir)
-        const closeModalBtn = modal.querySelector('.close-modal-btn');
-        const hideModal = () => {
-            modal.classList.remove('active');
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        };
-        closeModalBtn.onclick = hideModal; // onclick ile basitçe atama
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                hideModal();
-            }
-        };
     }
 
     // Zorunlu elementlerin varlığını kontrol eden yardımcı fonksiyon
