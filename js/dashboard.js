@@ -1308,11 +1308,10 @@ function addContextMenuListeners() {
     const contextMenu = createContextMenuElement(); // Menü elementini oluştur veya bul
     document.body.appendChild(contextMenu); // Body'ye ekle (eğer yoksa)
 
-    // Dinlenecek ana konteynerlar - DÜZELTİLDİ
+    // Dinlenecek ana konteynerlar - DÜZELTİLDİ VE GENİŞLETİLDİ
     const listenAreas = [
-        document.querySelector('#friends-group'), // DM listesi
-        document.querySelector('.friends-panel-container') // Arkadaş paneli
-        // '.server-sidebar' // Gerekirse sunucu listesi de eklenebilir
+        document.querySelector('#friends-group .dm-items'), // DM listesi
+        document.querySelector('.friends-panel-container')  // Arkadaş paneli
     ];
 
     listenAreas.forEach(area => {
@@ -1597,9 +1596,9 @@ async function openChatPanel(userId, username, avatar) {
 
 // Sohbet panelini kapatma
 function closeChatPanel() {
-    // YENİ EKLENEN KISIM: URL'yi ana görünüme geri döndür
-    history.pushState({}, '', '/channels/@me');
-    console.log(`Sohbet paneli kapatıldı, URL güncellendi: /channels/@me`);
+    // YENİ EKLENEN KISIM: URL'yi ana görünüme geri döndür - DÜZELTİLDİ
+    history.pushState({}, '', '/dashboard');
+    console.log(`Sohbet paneli kapatıldı, URL güncellendi: /dashboard`);
 
     const chatPanel = document.querySelector('.chat-panel');
     const friendsPanelContainer = document.querySelector('.friends-panel-container');
@@ -2996,43 +2995,59 @@ function setupGifPicker(gifButton, textarea) {
  * Arkadaş Ekle modülünü kurar
  */
 function setupAddFriendModal() {
-    const addFriendButton = document.getElementById('add-friend-button');
-    const addFriendModal = document.getElementById('addFriendModal');
-    const closeModalBtn = addFriendModal?.querySelector('.close-modal-btn');
+    const addFriendButton = document.querySelector('.add-friend-btn');
+    const addFriendModal = document.getElementById('add-friend-modal');
+    const closeButton = addFriendModal.querySelector('.close-modal-btn');
     const addFriendForm = document.getElementById('add-friend-form');
     const usernameInput = document.getElementById('add-friend-username-input');
-    const messageArea = addFriendModal?.querySelector('.modal-message-area');
 
-    if (!addFriendButton || !addFriendModal || !closeModalBtn || !addFriendForm || !usernameInput || !messageArea) {
-        console.error('Arkadaş Ekle modalı için gerekli elementler bulunamadı');
+    if (!addFriendButton || !addFriendModal || !closeButton || !addFriendForm) {
+        console.warn('Arkadaş ekle modal bileşenlerinden biri eksik.');
         return;
     }
 
-    // Modalı açma fonksiyonu
+    addFriendButton.addEventListener('click', openAddFriendModal);
+    closeButton.addEventListener('click', closeAddFriendModal);
+
+    // Modal dışına tıklayarak kapatma
+    addFriendModal.addEventListener('click', (event) => {
+        if (event.target === addFriendModal) {
+            closeAddFriendModal();
+        }
+    });
+
+    // Arkadaşlık isteği gönderme formu
+    addFriendForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const username = usernameInput.value.trim();
+        if (username) {
+            sendFriendRequest(username);
+        }
+    });
+
+    // Modal açma fonksiyonu (Animasyonlu)
     function openAddFriendModal() {
         addFriendModal.style.display = 'flex';
-        // Animasyon için zamanlama
         setTimeout(() => {
-            addFriendModal.classList.add('open');
-            usernameInput.focus();
-        }, 10);
+            addFriendModal.classList.add('active');
+        }, 10); // Tarayıcının 'display' değişikliğini algılaması için küçük bir gecikme
     }
 
-    // Modalı kapatma fonksiyonu
+    // Modal kapatma fonksiyonu (Animasyonlu)
     function closeAddFriendModal() {
-        addFriendModal.classList.remove('open');
-        // Animasyon bittikten sonra display:none yap
-        setTimeout(() => {
-            addFriendModal.style.display = 'none';
-            // Formu sıfırla
-            addFriendForm.reset();
-            messageArea.style.display = 'none';
-            messageArea.className = 'modal-message-area';
-            messageArea.innerHTML = '';
-        }, 300);
+        addFriendModal.classList.remove('active');
+        // 'transitionend' olayı, animasyon bitince display'ı none yapmak için kullanılır.
+        // Bu, panel kapalıyken arkadaki elementlerle etkileşimi engeller.
+        addFriendModal.addEventListener('transitionend', function handler() {
+            if (!addFriendModal.classList.contains('active')) {
+                addFriendModal.style.display = 'none';
+            }
+            // Olay dinleyicisini bir kez çalıştıktan sonra kaldır
+            addFriendModal.removeEventListener('transitionend', handler);
+        });
     }
 
-    // Arkadaşlık isteği gönderme fonksiyonu
+    // Kullanıcıya mesaj gösterme fonksiyonu (modal içinde)
     async function sendFriendRequest(username) {
         if (!username) {
             showMessage('Lütfen bir kullanıcı adı girin.', 'error');
@@ -3117,31 +3132,6 @@ function setupAddFriendModal() {
             }, 5000);
         }
     }
-
-    // Event Listeners
-    addFriendButton.addEventListener('click', openAddFriendModal);
-    closeModalBtn.addEventListener('click', closeAddFriendModal);
-
-    // Modal dışı tıklamada kapatma
-    addFriendModal.addEventListener('click', (e) => {
-        if (e.target === addFriendModal) {
-            closeAddFriendModal();
-        }
-    });
-
-    // Form gönderimini yakala
-    addFriendForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = usernameInput.value.trim();
-        sendFriendRequest(username);
-    });
-
-    // ESC tuşu ile kapatma
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && addFriendModal.style.display === 'flex') {
-            closeAddFriendModal();
-        }
-    });
 }
 
 // ... existing code ...

@@ -8940,3 +8940,30 @@ emoji-picker {
 .context-menu-item.danger:hover {
     background-color: rgba(240, 71, 71, 0.1);
 }
+
+#add-friend-modal .modal-container {
+    width: 100%;
+    max-width: 460px;
+    background: var(--background-secondary);
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--background-tertiary);
+    /* Animasyon için eklendi */
+    transform: scale(0.95) translateY(-10px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+}
+
+#add-friend-modal.active .modal-container {
+    /* Animasyon için eklendi */
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+#add-friend-modal .modal-header {
+    padding: 24px;
+    /* ... existing code ... */
+}
