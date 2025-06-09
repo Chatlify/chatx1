@@ -3908,3 +3908,52 @@ function sendGif(gifUrl) {
     // Scroll to bottom
     scrollToBottom();
 }
+
+// Arkadaşlıktan Çıkarma Onay Modalını Göster
+function showRemoveFriendConfirmation(userId, username, avatar) {
+    // Bu fonksiyonun içeriği önceden vardı, şimdi global kapsama taşınıyor.
+    // Onay modalı oluşturma ve gösterme mantığı buraya gelecek.
+    // Örneğin, basit bir confirm kutusu ile:
+    const confirmation = confirm(`'${username}' kişisini arkadaşlıktan çıkarmak istediğinize emin misiniz? Bu işlem geri alınamaz.`);
+    if (confirmation) {
+        removeFriend(userId);
+    }
+}
+
+// Arkadaşı Silme İşlemi
+async function removeFriend(friendId) {
+    if (!currentUserId || !friendId) {
+        console.error("Arkadaş silmek için her iki kullanıcı ID'si de gereklidir.");
+        return;
+    }
+    try {
+        const { error } = await supabase
+            .from('friendships')
+            .delete()
+            .or(`(user_id_1.eq.${currentUserId},and,user_id_2.eq.${friendId}),(user_id_1.eq.${friendId},and,user_id_2.eq.${currentUserId})`);
+
+        if (error) throw error;
+
+        console.log(`Kullanıcı (ID: ${friendId}) arkadaşlıktan başarıyla çıkarıldı.`);
+
+        // Arayüzü güncelle: Arkadaş listesini yeniden yükle
+        await loadAllFriends({
+            onlineList: document.querySelector('.online-friends'),
+            offlineList: document.querySelector('.offline-friends'),
+            dmList: document.querySelector('#friends-group .dm-items'),
+            onlineSection: document.querySelector('.online-section-title'),
+            offlineSection: document.querySelector('.offline-section-title')
+        });
+
+        // Eğer açıksa, profil panelini kapat
+        const modalContainer = document.getElementById('user-profile-modal');
+        if (modalContainer.style.display !== 'none') {
+            modalContainer.classList.remove('active');
+            setTimeout(() => { modalContainer.style.display = 'none'; }, 300);
+        }
+
+    } catch (error) {
+        console.error('Arkadaş silinirken hata oluştu:', error);
+        alert('Arkadaşlıktan çıkarma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+    }
+}
