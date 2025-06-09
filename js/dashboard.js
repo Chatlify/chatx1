@@ -2996,7 +2996,7 @@ function setupGifPicker(gifButton, textarea) {
  */
 function setupAddFriendModal() {
     const addFriendButton = document.querySelector('.add-friend-btn');
-    const addFriendModal = document.getElementById('add-friend-modal');
+    const addFriendModal = document.getElementById('addFriendModal'); // DÜZELTİLDİ: ID 'addFriendModal' olarak güncellendi
     const closeButton = addFriendModal.querySelector('.close-modal-btn');
     const addFriendForm = document.getElementById('add-friend-form');
     const usernameInput = document.getElementById('add-friend-username-input');
