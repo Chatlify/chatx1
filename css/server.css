@@ -11,41 +11,42 @@
     --header-height: 60px;
     --user-panel-height: 64px;
 
-    /* Renkler - Gelişmiş Koyu Tema */
-    --bg-primary: #111317;
+    /* Renkler - Özgün Koyu Tema */
+    --bg-primary: #1D2125;
     /* Ana Arkaplan */
-    --bg-secondary: #181A1F;
+    --bg-secondary: #25292E;
     /* Kanallar/Üyeler Arkaplan */
-    --bg-tertiary: #202329;
+    --bg-tertiary: #31363C;
     /* Kullanıcı Paneli/Header */
-    --bg-hover: rgba(255, 255, 255, 0.04);
-    --bg-active: rgba(88, 101, 242, 0.1);
-    --bg-accent: #5865f2;
+    --bg-hover: rgba(255, 255, 255, 0.06);
+    --bg-active: #00A8FC;
 
     /* Metin Renkleri */
     --text-primary: #f0f4f8;
     --text-secondary: #a0a8b4;
-    --text-muted: #6a7482;
-    --text-link: #5865f2;
+    --text-muted: #788290;
+    --text-link: #00A8FC;
 
     /* Vurgu Renkleri */
-    --accent-primary: #5865f2;
-    --accent-secondary: #4752c4;
-    --accent-success: #3ba55c;
-    --accent-warning: #faa61a;
-    --accent-danger: #ed4245;
-    --accent-premium: #ff73fa;
+    --accent-primary: #00A8FC;
+    /* Canlı Mavi */
+    --accent-secondary: #007EBD;
+    --accent-success: #28a745;
+    --accent-warning: #ffc107;
+    --accent-danger: #dc3545;
+    --accent-premium: #F72585;
+    /* Canlı Pembe */
 
     /* Durum Renkleri */
-    --status-online: #3ba55c;
-    --status-idle: #faa61a;
-    --status-dnd: #ed4245;
-    --status-offline: #747f8d;
+    --status-online: #28a745;
+    --status-idle: #ffc107;
+    --status-dnd: #dc3545;
+    --status-offline: #788290;
 
     /* Kenarlıklar */
-    --border-color: rgba(255, 255, 255, 0.05);
-    --border-radius: 10px;
-    --border-radius-sm: 6px;
+    --border-color: rgba(255, 255, 255, 0.07);
+    --border-radius: 8px;
+    --border-radius-sm: 5px;
 
     /* Gölgeler */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -118,7 +119,8 @@ body.server-page {
 .server-icon {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 50%;
+    /* Kare yerine daire */
     object-fit: cover;
     border: 2px solid var(--bg-primary);
 }
@@ -314,20 +316,15 @@ body.server-page {
 
 .channel-item.active {
     background-color: var(--bg-active);
-    color: var(--text-primary);
-    font-weight: 600;
+    color: #ffffff;
+    /* Aktif kanalda daha parlak beyaz metin */
+    font-weight: 700;
+    /* Daha belirgin font */
 }
 
 .channel-item.active::before {
-    content: '';
-    position: absolute;
-    left: -4px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 20px;
-    background-color: var(--accent-primary);
-    border-radius: 0 4px 4px 0;
+    content: none;
+    /* Soldaki barı kaldır */
 }
 
 .channel-icon {
@@ -357,7 +354,8 @@ body.server-page {
 }
 
 .channel-item.active .channel-name {
-    font-weight: 600;
+    font-weight: 700;
+    /* Kalınlık zaten .channel-item.active'de ayarlandı */
 }
 
 .channel-badges {
@@ -546,7 +544,8 @@ body.server-page {
     color: var(--text-secondary);
     cursor: pointer;
     padding: 8px;
-    border-radius: 50%;
+    border-radius: var(--border-radius-sm);
+    /* Daire yerine yuvarlak köşeli kare */
     transition: var(--transition-fast);
     width: 36px;
     height: 36px;
@@ -622,7 +621,8 @@ body.server-page {
     color: var(--text-secondary);
     cursor: pointer;
     padding: 10px;
-    border-radius: 50%;
+    border-radius: var(--border-radius-sm);
+    /* Daire yerine yuvarlak köşeli kare */
     transition: var(--transition-fast);
     font-size: 18px;
     width: 40px;
@@ -819,7 +819,8 @@ body.server-page {
 
 .reaction:hover {
     border-color: var(--accent-primary);
-    background-color: var(--bg-active);
+    background-color: var(--accent-secondary);
+    /* Daha iyi hover efekti */
 }
 
 .reaction-emoji {
@@ -923,24 +924,33 @@ body.server-page {
     cursor: pointer;
     width: 44px;
     height: 44px;
-    border-radius: 50%;
+    border-radius: var(--border-radius-sm);
+    /* Daire yerine yuvarlak köşeli kare */
     transition: var(--transition-fast);
     font-size: 20px;
 }
 
 .input-addon-btn:hover {
-    color: var(--text-primary);
+    color: #ffffff;
     background-color: var(--accent-primary);
 }
 
 .chat-input-wrapper {
     flex: 1;
     background-color: var(--bg-tertiary);
-    border-radius: 22px;
+    border-radius: var(--border-radius-sm);
+    /* Hap yerine yuvarlak köşeli kare */
     padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 12px;
+    border: 1px solid transparent;
+    transition: var(--transition-fast);
+}
+
+.chat-input-wrapper:focus-within {
+    border-color: var(--accent-primary);
+    background-color: var(--bg-primary);
 }
 
 .chat-input {
@@ -1144,7 +1154,7 @@ body.server-page {
 }
 
 .context-item:hover {
-    background-color: var(--bg-accent);
+    background-color: var(--accent-primary);
     color: var(--text-primary);
 }
 
