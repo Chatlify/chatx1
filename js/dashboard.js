@@ -4027,3 +4027,9 @@ async function removeFriend(friendId) {
         alert('Arkadaşlıktan çıkarma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
     }
 }
+
+// Arama kutusu işlevselliği
+function setupSearchBox() {
+    const searchInput = document.querySelector('.search-box input');
+    // ... existing code ...
+}
