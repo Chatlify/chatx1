@@ -1,0 +1,133 @@
+/* Sunucu Ekle/Katıl Modal Paneline özgü stiller bu dosyada toplanacaktır. */
+/* Gelecekteki adımlı form (stepper) stilleri buraya eklenecek. */
+
+/* Adım İlerleme Göstergesi (Stepper) Stilleri */
+.stepper-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 80%;
+    margin: 0 auto 30px auto;
+    position: relative;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100px;
+    position: relative;
+    z-index: 2;
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--background-tertiary);
+    border: 2px solid var(--background-modifier-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--header-secondary);
+    transition: all 0.4s ease;
+}
+
+.step-label {
+    font-size: 12px;
+    color: var(--header-secondary);
+    margin-top: 8px;
+    font-weight: 500;
+    transition: all 0.4s ease;
+}
+
+/* Aktif Adım Stili */
+.step-item.active .step-circle {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+.step-item.active .step-label {
+    color: var(--header-primary);
+    font-weight: 700;
+}
+
+/* Tamamlanmış Adım Stili */
+.step-item.completed .step-circle {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+    font-size: 18px;
+    /* Checkmark için */
+}
+
+.step-line {
+    flex-grow: 1;
+    height: 2px;
+    background-color: var(--background-modifier-accent);
+    position: relative;
+    top: -14px;
+    /* Dairelerin ortasına hizala */
+    margin: 0 -10px;
+}
+
+/* Form Adımları ve Navigasyon */
+.form-step {
+    display: none;
+    /* Varsayılan olarak tüm adımları gizle */
+}
+
+.form-step.active {
+    display: block;
+    /* Sadece aktif adımı göster */
+    animation: step-fade-in 0.5s ease-in-out;
+}
+
+@keyframes step-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--background-modifier-accent);
+}
+
+.form-navigation .back-to-options-btn {
+    background-color: transparent;
+    border: 1px solid var(--background-modifier-accent);
+    color: var(--header-secondary);
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-navigation .back-to-options-btn:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--header-primary);
+}
+
+.form-navigation .server-create-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

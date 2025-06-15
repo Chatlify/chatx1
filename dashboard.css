@@ -1,4 +1,5 @@
 @import "components/add-friend-modal.css";
+@import "components/server-modal.css";
 
 /* Yeni Kullanıcı Profili Modal Stilleri */
 .modal-overlay {

@@ -1,6 +1,7 @@
 import { supabase } from './auth_config.js'; // Supabase istemcisini import et
 import { initVoiceCallSystem, checkVoiceCallSupport } from './voice-call.js'; // Sesli arama modülünü import et
 import { initAddFriendModal } from './components/addFriendModal.js'; // Arkadaş Ekle modalını import et
+import { initServerModal } from './components/serverModal.js'; // Sunucu Ekle modalını import et
 
 // Snowflake ID Üretici Başlatma
 const snowflake = new window["Snowflake-ID"]();
@@ -139,92 +140,7 @@ function populateNewProfileModal(profile, modal) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Dashboard JS başlatılıyor...');
 
-    // "Sunucu Ekle" gibi modal pencereleri yönetmek için genel bir fonksiyon
-    // NOT: Bu fonksiyon artık SADECE Sunucu Ekle/Katıl Modalı tarafından kullanılıyor.
-    // Arkadaş Ekle Modalı kendi bileşen dosyası içinde kendi setupModal kopyasını kullanıyor.
-    function setupModal(triggerSelector, modalSelector, closeSelector) {
-        const trigger = document.querySelector(triggerSelector);
-        const modal = document.querySelector(modalSelector);
-
-        if (!trigger || !modal) {
-            console.warn(`Modal kurulumu için elementler bulunamadı:`, { trigger: triggerSelector, modal: modalSelector });
-            return;
-        }
-
-        const closeButton = modal.querySelector(closeSelector);
-
-        const openModal = () => {
-            if (modal) modal.classList.add('active');
-        }
-
-        const closeModal = () => {
-            if (modal) modal.classList.remove('active');
-        }
-
-        if (trigger) {
-            trigger.addEventListener('click', openModal);
-        }
-
-        if (closeButton) {
-            closeButton.addEventListener('click', closeModal);
-        }
-
-        // Modal dışına tıklayarak kapatma
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-
-        // ESC tuşu ile kapatma
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
-                closeModal();
-            }
-        });
-    }
-
-    // Sunucu Ekle/Katıl Modal Kurulumu
-    function setupServerModal() {
-        // Genel modal açma/kapama mantığını kullan
-        setupModal('.server-add-icon', '#server-modal', '.close-server-modal-btn');
-
-        // Sunucu paneline özel diğer işlevsellikler buraya eklenebilir.
-        // Örneğin, oluştur ve katıl sekmeleri arasındaki geçiş.
-        const modal = document.getElementById('server-modal');
-        if (!modal) return;
-
-        const createOption = modal.querySelector('#server-option-create');
-        const joinOption = modal.querySelector('#server-option-join');
-        const createForm = modal.querySelector('#server-create-form');
-        const joinForm = modal.querySelector('#server-join-form');
-        const optionsContainer = modal.querySelector('.server-options-container');
-        const backButtons = modal.querySelectorAll('.back-to-options-btn');
-
-        if (createOption) {
-            createOption.addEventListener('click', () => {
-                if (optionsContainer) optionsContainer.style.display = 'none';
-                if (createForm) createForm.style.display = 'block';
-            });
-        }
-
-        if (joinOption) {
-            joinOption.addEventListener('click', () => {
-                if (optionsContainer) optionsContainer.style.display = 'none';
-                if (joinForm) joinForm.style.display = 'block';
-            });
-        }
-
-        backButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (createForm) createForm.style.display = 'none';
-                if (joinForm) joinForm.style.display = 'none';
-                if (optionsContainer) optionsContainer.style.display = 'block';
-            });
-        });
-    }
-
-    // YENİ, MERKEZİ ARKADAŞ EKLEME FORM MANTIĞI - ARTIK DIŞ MODÜLDE. BU BLOK SİLİNECEK.
+    // YENİ, MERKEZİ ARKADAŞ EKLEME FORM MANTIĞI - ARTIK DIŞ MODÜLDE.
     // function setupAddFriendForm() { ... }
 
 
@@ -372,8 +288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Arkadaş Ekle modalını kur (YENİ YÖNTEM)
         initAddFriendModal();
 
-        // Sunucu Ekle modalını kur (YENİ)
-        setupServerModal();
+        // Sunucu Ekle modalını kur (YENİ YÖNTEM)
+        initServerModal();
 
         // Bekleyen arkadaşlık istekleri için realtime aboneliğini kur
         setupPendingFriendRequestSubscription();
