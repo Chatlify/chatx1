@@ -1,12 +1,24 @@
 /* Sunucu Ekle/Katıl Modal Paneline özgü stiller bu dosyada toplanacaktır. */
 /* Gelecekteki adımlı form (stepper) stilleri buraya eklenecek. */
 
+/* Modal genişliğini artır */
+#server-modal .modal-container {
+    min-width: 500px;
+    width: 90%;
+    max-width: 550px;
+}
+
+/* Server modal içeriğini düzenle */
+#server-create-form {
+    padding: 20px;
+}
+
 /* Adım İlerleme Göstergesi (Stepper) Stilleri */
 .stepper-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 80%;
+    width: 100%;
     margin: 0 auto 30px auto;
     position: relative;
 }
@@ -16,50 +28,52 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    width: 100px;
     position: relative;
     z-index: 2;
+    flex: 1;
+    max-width: 120px;
 }
 
 .step-circle {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background-color: var(--background-tertiary);
-    border: 2px solid var(--background-modifier-accent);
+    background-color: var(--background-tertiary, #2a2d31);
+    border: 2px solid var(--background-modifier-accent, #4f545c);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    color: var(--header-secondary);
+    color: var(--header-secondary, #b9bbbe);
     transition: all 0.4s ease;
 }
 
 .step-label {
     font-size: 12px;
-    color: var(--header-secondary);
+    color: var(--header-secondary, #b9bbbe);
     margin-top: 8px;
     font-weight: 500;
     transition: all 0.4s ease;
+    white-space: nowrap;
 }
 
 /* Aktif Adım Stili */
 .step-item.active .step-circle {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--primary-color, #7289da);
+    border-color: var(--primary-color, #7289da);
     color: white;
     transform: scale(1.1);
 }
 
 .step-item.active .step-label {
-    color: var(--header-primary);
+    color: var(--header-primary, #fff);
     font-weight: 700;
 }
 
 /* Tamamlanmış Adım Stili */
 .step-item.completed .step-circle {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
+    background-color: var(--success-color, #43b581);
+    border-color: var(--success-color, #43b581);
     color: white;
     font-size: 18px;
     /* Checkmark için */
@@ -68,31 +82,18 @@
 .step-line {
     flex-grow: 1;
     height: 2px;
-    background-color: var(--background-modifier-accent);
+    background-color: var(--background-modifier-accent, #4f545c);
     position: relative;
     top: -14px;
     /* Dairelerin ortasına hizala */
-    margin: 0 -10px;
+    margin: 0 5px;
 }
 
 /* Form Adımları ve Navigasyon */
-
-/* Ana form konteynerini flex container yap */
-#server-create-form {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    /* Kapsayıcının modal yüksekliğini doldurmasını sağla */
-}
-
-/* Form adımlarının olduğu alanın esneyerek boşluğu doldurmasını sağla */
-.form-step-wrapper {
-    flex-grow: 1;
-}
-
 .form-step {
     display: none;
     /* Varsayılan olarak tüm adımları gizle */
+    min-height: 300px;
 }
 
 .form-step.active {
@@ -119,13 +120,13 @@
     align-items: center;
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 1px solid var(--background-modifier-accent);
+    border-top: 1px solid var(--background-modifier-accent, #4f545c);
 }
 
 .form-navigation .back-to-options-btn {
     background-color: transparent;
-    border: 1px solid var(--background-modifier-accent);
-    color: var(--header-secondary);
+    border: 1px solid var(--background-modifier-accent, #4f545c);
+    color: var(--header-secondary, #b9bbbe);
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
@@ -136,12 +137,203 @@
 }
 
 .form-navigation .back-to-options-btn:hover {
-    background-color: var(--background-modifier-hover);
-    color: var(--header-primary);
+    background-color: var(--background-modifier-hover, #3e4146);
+    color: var(--header-primary, #fff);
 }
 
 .form-navigation .server-create-btn {
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 10px 20px;
+    background-color: #5865f2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.form-navigation .server-create-btn:hover {
+    background-color: #4752c4;
+}
+
+/* Server Icon Upload Stilleri */
+.server-icon-upload {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0;
+}
+
+.server-icon-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: var(--background-tertiary, #2a2d31);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    border: 2px solid var(--background-modifier-accent, #4f545c);
+}
+
+.server-icon-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.server-icon-upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.server-icon-preview:hover .server-icon-upload-overlay {
+    opacity: 1;
+}
+
+/* Server Name Input Stili */
+.server-name-input-container {
+    margin: 20px 0;
+}
+
+.server-name-input-container label {
+    display: block;
+    font-size: 12px;
+    color: var(--header-secondary, #b9bbbe);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.server-name-input-container input {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--background-tertiary, #2a2d31);
+    border: 1px solid var(--background-modifier-accent, #4f545c);
+    border-radius: 4px;
+    color: var(--text-normal, #dcddde);
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+}
+
+.server-name-input-container input:focus {
+    border-color: var(--primary-color, #7289da);
+    outline: none;
+}
+
+/* Server form baslik stilleri */
+.server-form-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--header-primary, #fff);
+    margin-bottom: 10px;
+}
+
+.server-form-subtitle {
+    font-size: 14px;
+    color: var(--header-secondary, #b9bbbe);
+    margin-bottom: 20px;
+}
+
+/* Kategori Seçimi Stilleri */
+.category-selection {
+    margin: 20px 0;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.category-option {
+    background-color: var(--background-tertiary, #2a2d31);
+    border: 2px solid var(--background-modifier-accent, #4f545c);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-option:hover {
+    border-color: var(--primary-color, #7289da);
+    transform: translateY(-2px);
+}
+
+.category-option.selected {
+    border-color: var(--primary-color, #7289da);
+    background-color: rgba(114, 137, 218, 0.1);
+}
+
+.category-icon {
+    font-size: 24px;
+    color: var(--header-primary, #fff);
+    margin-bottom: 8px;
+    width: 48px;
+    height: 48px;
+    background-color: var(--primary-color, #7289da);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--header-secondary, #b9bbbe);
+}
+
+/* Özet ve Onay Stilleri */
+.summary-container {
+    background-color: var(--background-tertiary, #2a2d31);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--background-modifier-accent, #4f545c);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    font-weight: 600;
+    color: var(--header-secondary, #b9bbbe);
+}
+
+.summary-value {
+    color: var(--header-primary, #fff);
+    font-weight: 500;
+}
+
+.summary-icon {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.summary-icon img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--background-modifier-accent, #4f545c);
 }

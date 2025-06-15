@@ -67,6 +67,24 @@ function setupServerPanelTabsAndSteps() {
     const finalCreateBtn = modal.querySelector('#create-server-final-btn');
     const backBtn = modal.querySelector('.form-navigation .back-to-options-btn'); // Artık "Geri" ve "Vazgeç" işlevi görüyor
 
+    // Form Veri Elementleri
+    const serverNameInput = modal.querySelector('#server-name-input');
+    const serverIconInput = modal.querySelector('#server-icon-upload-input');
+    const serverIconPreview = modal.querySelector('#server-icon-preview-img');
+    const categoryOptions = modal.querySelectorAll('.category-option');
+
+    // Özet Ekranı Elementleri
+    const summaryServerName = modal.querySelector('#summary-server-name');
+    const summaryCategory = modal.querySelector('#summary-category');
+    const summaryIconPreview = modal.querySelector('#summary-icon-preview');
+
+    // Form Verilerini Saklama Nesnesi
+    const formData = {
+        serverName: '',
+        serverIconURL: 'images/DefaultServerIcon.png',
+        selectedCategory: ''
+    };
+
     let currentStep = 1;
 
     // --- Ana Seçenekler Arası Geçiş ---
@@ -81,18 +99,68 @@ function setupServerPanelTabsAndSteps() {
         joinForm.style.display = 'block';
     });
 
+    // --- Sunucu İkonu Yükleme İşlevselliği ---
+    const serverIconPreviewContainer = modal.querySelector('.server-icon-preview');
+    if (serverIconPreviewContainer && serverIconInput) {
+        serverIconPreviewContainer.addEventListener('click', () => {
+            serverIconInput.click();
+        });
+
+        serverIconInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    serverIconPreview.src = event.target.result;
+                    formData.serverIconURL = event.target.result; // Form verisini güncelle
+
+                    // Özet sayfasındaki ikonu da güncelle
+                    if (summaryIconPreview) {
+                        summaryIconPreview.src = event.target.result;
+                    }
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    }
+
+    // --- Kategori Seçim İşlevselliği ---
+    categoryOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            // Önceki seçimi temizle
+            categoryOptions.forEach(opt => opt.classList.remove('selected'));
+            // Yeni seçimi işaretle
+            option.classList.add('selected');
+            // Seçilen kategoriyi kaydet
+            formData.selectedCategory = option.querySelector('.category-name').textContent;
+        });
+    });
 
     // --- Çok Adımlı Form Mantığı ---
     const goToStep = (stepNumber) => {
-        // Validation
+        // Doğrulama işlemi
         if (stepNumber > currentStep) {
             if (currentStep === 1) {
-                const serverNameInput = modal.querySelector('#server-name-input');
+                // Adım 1 doğrulama: Sunucu adı girilmiş mi?
                 if (!serverNameInput.value.trim()) {
                     alert('Lütfen bir sunucu adı girin.');
                     serverNameInput.focus();
                     return;
                 }
+
+                // Form verilerini güncelle
+                formData.serverName = serverNameInput.value.trim();
+            }
+            else if (currentStep === 2) {
+                // Adım 2 doğrulama: Kategori seçilmiş mi?
+                if (!formData.selectedCategory) {
+                    alert('Lütfen bir kategori seçin.');
+                    return;
+                }
+            }
+
+            // Adım 3'e geçiliyorsa özet ekranını güncelle
+            if (stepNumber === 3) {
+                updateSummaryScreen();
             }
         }
 
@@ -129,6 +197,20 @@ function setupServerPanelTabsAndSteps() {
         finalCreateBtn.style.display = currentStep === 3 ? 'flex' : 'none';
     };
 
+    // Özet ekranını güncelleme fonksiyonu
+    const updateSummaryScreen = () => {
+        if (summaryServerName) {
+            summaryServerName.textContent = formData.serverName || '-';
+        }
+        if (summaryCategory) {
+            summaryCategory.textContent = formData.selectedCategory || '-';
+        }
+        if (summaryIconPreview) {
+            summaryIconPreview.src = formData.serverIconURL;
+        }
+    };
+
+    // Buton olay dinleyicileri
     nextBtn.addEventListener('click', () => {
         if (currentStep < 3) {
             goToStep(currentStep + 1);
@@ -145,15 +227,39 @@ function setupServerPanelTabsAndSteps() {
             optionsContainer.style.display = 'block';
         }
     });
+
+    finalCreateBtn.addEventListener('click', async () => {
+        try {
+            // Sunucuyu oluşturma işlemi burada olacak
+            // Şimdilik bir başarı mesajı gösterelim
+            alert(`"${formData.serverName}" sunucusu başarıyla oluşturuldu!`);
+
+            // Modal'ı kapat ve formu sıfırla
+            modal.classList.remove('active');
+            resetMultiStepForm(modal);
+        } catch (error) {
+            console.error('Sunucu oluşturulurken hata:', error);
+            alert('Sunucu oluşturulurken bir hata oluştu.');
+        }
+    });
 }
 
 /**
  * Modalı kapatırken veya vazgeçerken formu başlangıç durumuna sıfırlar.
  */
 function resetMultiStepForm(modal) {
+    // Form elementlerini seç
     const createFormContainer = modal.querySelector('#server-create-form');
     const joinForm = modal.querySelector('#server-join-form');
     const optionsContainer = modal.querySelector('.server-options-container');
+    const serverNameInput = modal.querySelector('#server-name-input');
+    const serverIconPreview = modal.querySelector('#server-icon-preview-img');
+    const categoryOptions = modal.querySelectorAll('.category-option');
+
+    // Form verilerini temizle
+    if (serverNameInput) serverNameInput.value = '';
+    if (serverIconPreview) serverIconPreview.src = 'images/DefaultServerIcon.png';
+    categoryOptions.forEach(opt => opt.classList.remove('selected'));
 
     // Formları ve seçenekleri başlangıç durumuna getir
     if (optionsContainer) optionsContainer.style.display = 'block';
@@ -162,17 +268,22 @@ function resetMultiStepForm(modal) {
 
     // Adım 1'i ve stepper'ı sıfırla
     modal.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-    modal.querySelector('.form-step[data-step-content="1"]').classList.add('active');
+    const firstStep = modal.querySelector('.form-step[data-step-content="1"]');
+    if (firstStep) firstStep.classList.add('active');
 
     modal.querySelectorAll('.step-item').forEach((item, index) => {
-        item.classList.remove('completed');
-        item.classList.toggle('active', index === 0);
-        item.querySelector('.step-circle').textContent = index + 1;
+        item.classList.remove('completed', 'active');
+        if (index === 0) item.classList.add('active');
+        const circle = item.querySelector('.step-circle');
+        if (circle) circle.textContent = index + 1;
     });
 
     // Butonları sıfırla
     const nextBtn = modal.querySelector('#next-step-btn');
     const finalCreateBtn = modal.querySelector('#create-server-final-btn');
+    const backBtn = modal.querySelector('.form-navigation .back-to-options-btn');
+
+    if (backBtn) backBtn.querySelector('span').textContent = "Vazgeç";
     if (nextBtn) nextBtn.style.display = 'flex';
     if (finalCreateBtn) finalCreateBtn.style.display = 'none';
 } 
