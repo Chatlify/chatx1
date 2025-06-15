@@ -150,8 +150,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const closeButton = modal.querySelector(closeSelector);
 
-        const openModal = () => modal.classList.add('active');
-        const closeModal = () => modal.classList.remove('active');
+        const openModal = () => {
+            if (modal) modal.classList.add('active');
+        }
+        const closeModal = () => {
+            if (modal) modal.classList.remove('active');
+        }
 
         trigger.addEventListener('click', openModal);
 
@@ -172,100 +176,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 closeModal();
             }
         });
-    }
-
-    // Arkadaş Ekle Modal Kurulumu (YENİ - YAN PANEL SİSTEMİ)
-    function setupAddFriendSidebar() {
-        const addFriendButton = document.getElementById('add-friend-button');
-        const addFriendSidebar = document.getElementById('add-friend-sidebar');
-        const closeSidebarButton = document.getElementById('close-add-friend-sidebar');
-        const mainContent = document.querySelector('.main-content'); // Panelin dışındaki ana içerik
-
-        if (!addFriendButton || !addFriendSidebar || !closeSidebarButton) {
-            console.warn("Yeni Arkadaş Ekle yan paneli için gerekli elementler bulunamadı.");
-            return;
-        }
-
-        const openSidebar = () => {
-            addFriendSidebar.classList.add('active');
-            // İsteğe bağlı: Arka planı karartmak veya etkileşimi engellemek için
-            // document.body.classList.add('sidebar-open'); 
-        };
-
-        const closeSidebar = () => {
-            addFriendSidebar.classList.remove('active');
-            // document.body.classList.remove('sidebar-open');
-        };
-
-        addFriendButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Olayın dışarıya yayılmasını engelle
-            openSidebar();
-        });
-
-        closeSidebarButton.addEventListener('click', closeSidebar);
-
-        // Dışarıya tıklandığında kapat
-        document.addEventListener('click', (event) => {
-            if (addFriendSidebar.classList.contains('active') && !addFriendSidebar.contains(event.target)) {
-                // Tıklanan yer panelin içinde değilse ve panel açıksa
-                if (!event.target.closest('#add-friend-button')) { // Butonun kendisine tekrar tıklanırsa kapanmasın
-                    closeSidebar();
-                }
-            }
-        });
-
-        // Panel içindeki tıklamaların dışarıya tıklama olarak algılanmasını engelle
-        addFriendSidebar.addEventListener('click', (event) => {
-            event.stopPropagation();
-        });
-
-        // ESC tuşu ile kapatma
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && addFriendSidebar.classList.contains('active')) {
-                closeSidebar();
-            }
-        });
-
-        // Form gönderimini burada yönetebiliriz (eski kodla aynı mantık)
-        const addFriendForm = document.getElementById('add-friend-form');
-        const usernameInput = document.getElementById('add-friend-username-input');
-        const messageArea = addFriendSidebar.querySelector('.modal-message-area');
-
-        if (addFriendForm && usernameInput && messageArea) {
-            addFriendForm.addEventListener('submit', function (event) {
-                event.preventDefault();
-                const username = usernameInput.value.trim();
-
-                // Mesajları temizle
-                messageArea.innerHTML = '';
-                messageArea.style.display = 'none';
-
-                if (username) {
-                    console.log(`Arkadaşlık isteği gönderiliyor: ${username}`);
-                    // Burada backend'e gönderme mantığı olacak
-
-                    // Başarı mesajı (geçici)
-                    messageArea.textContent = `"${username}" kişisine arkadaşlık isteği gönderildi!`;
-                    messageArea.className = 'modal-message-area success';
-                    messageArea.style.display = 'block';
-
-                    usernameInput.value = ''; // Input'u temizle
-
-                    // 2 saniye sonra paneli kapat
-                    setTimeout(() => {
-                        closeSidebar();
-                    }, 2000);
-
-                } else {
-                    // Hata mesajı
-                    messageArea.textContent = 'Lütfen geçerli bir kullanıcı adı girin.';
-                    messageArea.className = 'modal-message-area error';
-                    messageArea.style.display = 'block';
-                }
-            });
-        } else {
-            console.warn("Arkadaş ekle formu veya input'u bulunamadı.");
-        }
     }
 
     // Sunucu Ekle/Katıl Modal Kurulumu
@@ -289,6 +199,56 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target === modal) modal.classList.remove('active');
         });
     }
+
+    // YENİ, MERKEZİ ARKADAŞ EKLEME FORM MANTIĞI
+    function setupAddFriendForm() {
+        const addFriendForm = document.getElementById('add-friend-form');
+        if (addFriendForm) {
+            addFriendForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const usernameInput = document.getElementById('add-friend-username-input');
+                const messageArea = document.querySelector('#add-friend-modal .modal-message-area');
+                const modal = document.getElementById('add-friend-modal');
+
+                if (!usernameInput || !messageArea || !modal) {
+                    console.error("Arkadaş ekleme formu elemanları bulunamadı.");
+                    return;
+                }
+
+                const usernameWithTag = usernameInput.value.trim();
+                messageArea.style.display = 'none';
+                messageArea.textContent = '';
+
+                const tagRegex = /^.+#\d{4}$/;
+                if (usernameWithTag && tagRegex.test(usernameWithTag)) {
+                    try {
+                        console.log(`Arkadaşlık isteği gönderiliyor: ${usernameWithTag}`);
+
+                        messageArea.textContent = `"${usernameWithTag}" kişisine arkadaşlık isteği gönderildi!`;
+                        messageArea.className = 'modal-message-area success';
+                        messageArea.style.display = 'block';
+                        usernameInput.value = '';
+
+                        setTimeout(() => {
+                            modal.classList.remove('active');
+                        }, 2000);
+
+                    } catch (error) {
+                        messageArea.textContent = `Bir hata oluştu: ${error.message}`;
+                        messageArea.className = 'modal-message-area error';
+                        messageArea.style.display = 'block';
+                    }
+                } else {
+                    messageArea.textContent = 'Lütfen geçerli bir kullanıcı adı ve etiket girin (örn: Kullanici#1234).';
+                    messageArea.className = 'modal-message-area error';
+                    messageArea.style.display = 'block';
+                }
+            });
+        } else {
+            console.warn("Arkadaş ekleme formu (add-friend-form) bulunamadı.");
+        }
+    }
+
 
     try {
         // Element tanımlamaları
@@ -431,8 +391,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Presence takip sistemini başlat
         initializePresence();
 
-        // Arkadaş Ekle modalını kur (YENİ - YAN PANEL SİSTEMİ)
-        setupAddFriendSidebar();
+        // Arkadaş Ekle modalını kur
+        setupModal('#add-friend-button', '#add-friend-modal', '.close-modal-btn');
+
+        // Arkadaş Ekle formunu kur
+        setupAddFriendForm();
 
         // Sunucu Ekle modalını kur (YENİ)
         setupServerModal();
@@ -2345,7 +2308,7 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
         {
             name: 'Seyahat',
             icon: 'fa-car',
-            emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍️', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩️', '💺', '🛰️', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥️', '🛳️', '⛴️', '🚢', '⚓', '🪝', '⛽', '🚧', '🚦', '🚥', '🚏', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛲', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️']
+            emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍️', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩️', '💺', '🛰️', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥️', '🛳️', '⛴️', '🚢', '⚓', '🪝', '⛽', '🚧', '🚦', '🚥', '🚏', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛲️', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️']
         },
         {
             name: 'Semboller',
