@@ -76,6 +76,20 @@
 }
 
 /* Form Adımları ve Navigasyon */
+
+/* Ana form konteynerini flex container yap */
+#server-create-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Kapsayıcının modal yüksekliğini doldurmasını sağla */
+}
+
+/* Form adımlarının olduğu alanın esneyerek boşluğu doldurmasını sağla */
+.form-step-wrapper {
+    flex-grow: 1;
+}
+
 .form-step {
     display: none;
     /* Varsayılan olarak tüm adımları gizle */
