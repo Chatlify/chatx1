@@ -219,30 +219,73 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Mesaj göndermesi için gerekli dinleyicileri ekle
         setupMessageSending(chatTextarea);
 
-        // Emoji picker dinleyicisini kur
+        // Emoji picker dinleyicisini kur - chatEmojiBtn kullanımı değiştirildi
         if (chatEmojiBtn && chatTextarea) {
+            console.log('Emoji butonu hazırlanıyor...');
+            // Emoji butonuna tıklama dinleyicisi ekle
             chatEmojiBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleEmojiPanel();
+                console.log('Emoji butonu tıklandı');
+                toggleEmojiPanel(); // Yeni emoji paneli sistemini aç/kapat
             });
+        } else {
+            console.warn('Emoji butonu için gerekli elementler eksik:',
+                { chatEmojiBtn: !!chatEmojiBtn, chatTextarea: !!chatTextarea });
         }
 
         // GIF picker dinleyicisini kur
         if (chatGifBtn) {
+            console.log('GIF butonu bulundu, hazırlanıyor:', chatGifBtn);
             setupGifPicker(chatGifBtn, chatTextarea);
+        } else {
+            console.warn('chat-attachment-btn sınıflı buton bulunamadı');
+
+            // Sayfa tamamen yüklendiğinde butonu tekrar ara (geç yüklenmesi ihtimaline karşı)
+            setTimeout(() => {
+                const attachmentButton = document.querySelector('button.chat-attachment-btn');
+                if (attachmentButton) {
+                    console.log('GIF butonu (gecikmeli) bulundu:', attachmentButton);
+                    setupGifPicker(attachmentButton, chatTextarea);
+                } else {
+                    console.warn('GIF butonu (gecikmeli arama sonrası da) bulunamadı.');
+                }
+            }, 1000);
         }
 
-        // Tüm arkadaşları, DM'leri ve bekleyen istekleri yükle
-        await loadInitialData(onlineList, offlineList, dmList, onlineSection, offlineSection, pendingList, pendingCountBadge);
+        // Varsayılan sekmeyi göster
+        const defaultTabContents = {
+            'Tüm Arkadaşlar': '.friends-panel-container',
+            'Çevrimiçi': '.online-section',
+            'Bekleyen': '.pending-requests-section'
+        };
+        showSection('Tüm Arkadaşlar', defaultTabContents);
 
-        // Varlığı (presence) başlat
+        // Arkadaş listesini yükle
+        await loadAllFriends({
+            onlineList,
+            offlineList,
+            dmList,
+            onlineSection,
+            offlineSection
+        });
+
+        // Bekleyen istekleri yükle
+        await loadPendingRequests(pendingList, pendingCountBadge);
+
+        // Sunucu panelini kur
+        setupServerPanel();
+
+        // Kontekst menüleri için dinleyicileri ekle
+        addContextMenuListeners();
+
+        // Presence takip sistemini başlat
         initializePresence();
 
-        // Arkadaş Ekle modalını kur
+        // Arkadaş Ekle modalını kur (YENİ YÖNTEM)
         initAddFriendModal();
 
-        // Sunucu Ekle modalını kur
+        // Sunucu Ekle modalını kur (YENİ YÖNTEM)
         initServerModal();
 
         // Bekleyen arkadaşlık istekleri için realtime aboneliğini kur
@@ -251,6 +294,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Sesli arama sistemini başlat
         if (checkVoiceCallSupport()) {
             initVoiceCallSystem();
+        } else {
+            console.warn('Sesli arama özelliği bu tarayıcıda desteklenmiyor.');
         }
 
         console.log('Dashboard JS başlatma tamamlandı.');
