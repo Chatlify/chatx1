@@ -1,0 +1,164 @@
+/* YENİ ARKADAŞ EKLEME MODAL STİLLERİ (ANIMASYONLU) */
+
+/* Arka plan karartması için genel overlay stili */
+#add-friend-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    /* 'none' yerine flex kullanıyoruz */
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    /* Diğerlerinden üstte olmalı */
+
+    /* GİRİŞ/ÇIKIŞ ANIMASYONLARI */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    /* Çıkışta gecikmeli visibility */
+}
+
+#add-friend-modal.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease;
+}
+
+/* Modal kutusunun kendisi */
+#add-friend-modal .modal-container {
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--background-secondary);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--background-modifier-accent);
+
+    /* GİRİŞ/ÇIKIŞ ANIMASYONLARI */
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+}
+
+/* Modal aktif olduğunda kutunun animasyonu */
+#add-friend-modal.active .modal-container {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+
+#add-friend-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--background-modifier-accent);
+}
+
+#add-friend-modal .modal-header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#add-friend-modal .modal-icon {
+    font-size: 20px;
+    color: var(--header-secondary);
+}
+
+#add-friend-modal .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--header-primary);
+}
+
+#add-friend-modal .close-modal-btn {
+    background: none;
+    border: none;
+    color: var(--interactive-normal);
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+#add-friend-modal .close-modal-btn:hover {
+    color: var(--interactive-hover);
+}
+
+#add-friend-modal .modal-content {
+    padding: 24px;
+}
+
+#add-friend-modal .modal-info {
+    font-size: 15px;
+    color: var(--header-secondary);
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#add-friend-modal .add-friend-input-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+#add-friend-modal .input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 15px;
+    color: var(--interactive-normal);
+}
+
+#add-friend-modal #add-friend-username-input {
+    width: 100%;
+    padding: 14px 15px 14px 45px;
+    background-color: var(--background-tertiary);
+    border: 1px solid transparent;
+    /* Başlangıçta border olmasın */
+    border-radius: 5px;
+    color: var(--text-normal);
+    font-size: 16px;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+#add-friend-modal #add-friend-username-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: var(--background-secondary);
+}
+
+#add-friend-modal .modal-submit-button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 5px;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+#add-friend-modal .modal-submit-button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+#add-friend-modal .modal-note {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--header-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

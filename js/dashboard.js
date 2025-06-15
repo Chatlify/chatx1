@@ -1,5 +1,6 @@
 import { supabase } from './auth_config.js'; // Supabase istemcisini import et
 import { initVoiceCallSystem, checkVoiceCallSupport } from './voice-call.js'; // Sesli arama modülünü import et
+import { initAddFriendModal } from './components/addFriendModal.js'; // Arkadaş Ekle modalını import et
 
 // Snowflake ID Üretici Başlatma
 const snowflake = new window["Snowflake-ID"]();
@@ -138,7 +139,9 @@ function populateNewProfileModal(profile, modal) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Dashboard JS başlatılıyor...');
 
-    // "Arkadaş Ekle" ve "Sunucu Ekle" gibi modal pencereleri yönetmek için genel bir fonksiyon
+    // "Sunucu Ekle" gibi modal pencereleri yönetmek için genel bir fonksiyon
+    // NOT: Bu fonksiyon artık SADECE Sunucu Ekle/Katıl Modalı tarafından kullanılıyor.
+    // Arkadaş Ekle Modalı kendi bileşen dosyası içinde kendi setupModal kopyasını kullanıyor.
     function setupModal(triggerSelector, modalSelector, closeSelector) {
         const trigger = document.querySelector(triggerSelector);
         const modal = document.querySelector(modalSelector);
@@ -221,54 +224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // YENİ, MERKEZİ ARKADAŞ EKLEME FORM MANTIĞI
-    function setupAddFriendForm() {
-        const addFriendForm = document.getElementById('add-friend-form');
-        if (addFriendForm) {
-            addFriendForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const usernameInput = document.getElementById('add-friend-username-input');
-                const messageArea = document.querySelector('#add-friend-modal .modal-message-area');
-                const modal = document.getElementById('add-friend-modal');
-
-                if (!usernameInput || !messageArea || !modal) {
-                    console.error("Arkadaş ekleme formu elemanları bulunamadı.");
-                    return;
-                }
-
-                const usernameWithTag = usernameInput.value.trim();
-                messageArea.style.display = 'none';
-                messageArea.textContent = '';
-
-                const tagRegex = /^.+#\d{4}$/;
-                if (usernameWithTag && tagRegex.test(usernameWithTag)) {
-                    try {
-                        console.log(`Arkadaşlık isteği gönderiliyor: ${usernameWithTag}`);
-
-                        messageArea.textContent = `"${usernameWithTag}" kişisine arkadaşlık isteği gönderildi!`;
-                        messageArea.className = 'modal-message-area success';
-                        messageArea.style.display = 'block';
-                        usernameInput.value = '';
-
-                        setTimeout(() => {
-                            modal.classList.remove('active');
-                        }, 2000);
-
-                    } catch (error) {
-                        messageArea.textContent = `Bir hata oluştu: ${error.message}`;
-                        messageArea.className = 'modal-message-area error';
-                        messageArea.style.display = 'block';
-                    }
-                } else {
-                    messageArea.textContent = 'Lütfen geçerli bir kullanıcı adı ve etiket girin (örn: Kullanici#1234).';
-                    messageArea.className = 'modal-message-area error';
-                    messageArea.style.display = 'block';
-                }
-            });
-        } else {
-            console.warn("Arkadaş ekleme formu (add-friend-form) bulunamadı.");
-        }
-    }
+    // YENİ, MERKEZİ ARKADAŞ EKLEME FORM MANTIĞI - ARTIK DIŞ MODÜLDE. BU BLOK SİLİNECEK.
+    // function setupAddFriendForm() { ... }
 
 
     try {
@@ -412,11 +369,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Presence takip sistemini başlat
         initializePresence();
 
-        // Arkadaş Ekle modalını kur
-        setupModal('#add-friend-button', '#add-friend-modal', '.close-modal-btn');
-
-        // Arkadaş Ekle formunu kur
-        setupAddFriendForm();
+        // Arkadaş Ekle modalını kur (YENİ YÖNTEM)
+        initAddFriendModal();
 
         // Sunucu Ekle modalını kur (YENİ)
         setupServerModal();
