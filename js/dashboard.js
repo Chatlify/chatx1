@@ -151,27 +151,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const closeButton = modal.querySelector(closeSelector);
 
         const openModal = () => {
-            if (!modal) return;
-            // Önce display'i block yapıp görünürlüğünü sağla
-            modal.style.display = 'flex';
-            // Sonraki frame'de active sınıfını ekleyerek CSS transition'ını tetikle
-            requestAnimationFrame(() => {
-                setTimeout(() => modal.classList.add('active'), 10);
-            });
+            if (modal) modal.classList.add('active');
         }
 
         const closeModal = () => {
-            if (!modal) return;
-            // Önce active sınıfını kaldırarak çıkış animasyonunu başlat
-            modal.classList.remove('active');
-            // Animasyon bittikten sonra display'i none yap
-            // Transition süresiyle eşleşmeli (CSS'te 0.3s)
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
+            if (modal) modal.classList.remove('active');
         }
 
-        trigger.addEventListener('click', openModal);
+        if (trigger) {
+            trigger.addEventListener('click', openModal);
+        }
 
         if (closeButton) {
             closeButton.addEventListener('click', closeModal);
