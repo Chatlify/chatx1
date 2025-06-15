@@ -188,3 +188,132 @@
 .remove-friend-btn-modal:hover {
     background-color: #c4373c;
 }
+
+/* YENİ ARKADAŞ EKLEME YAN PANELİ STİLLERİ */
+.add-friend-sidebar {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    /* Başlangıçta ekranın dışında */
+    width: 400px;
+    height: 100%;
+    background-color: var(--background-secondary);
+    border-left: 1px solid var(--background-modifier-accent);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+    z-index: 1100;
+    /* Diğer tüm içeriklerin üzerinde */
+    display: flex;
+    flex-direction: column;
+    transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Yumuşak geçiş efekti */
+}
+
+.add-friend-sidebar.active {
+    right: 0;
+    /* Aktif olduğunda ekranın içine kaydır */
+}
+
+.add-friend-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--background-modifier-accent);
+    flex-shrink: 0;
+}
+
+.add-friend-sidebar-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--header-primary);
+}
+
+.close-sidebar-btn {
+    background: none;
+    border: none;
+    color: var(--interactive-normal);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-sidebar-btn:hover {
+    color: var(--interactive-hover);
+}
+
+.add-friend-sidebar-content {
+    padding: 25px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.add-friend-sidebar-content p {
+    font-size: 14px;
+    color: var(--header-secondary);
+    margin-top: 0;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* Form elemanları için mevcut stilleri miras alabilir veya yeniden tanımlayabiliriz */
+.add-friend-sidebar .input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.add-friend-sidebar .add-friend-input-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.add-friend-sidebar .input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 15px;
+    color: var(--interactive-normal);
+}
+
+.add-friend-sidebar #add-friend-username-input {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    /* İkon için solda boşluk */
+    background-color: var(--background-tertiary);
+    border: 1px solid var(--background-modifier-accent);
+    border-radius: 5px;
+    color: var(--text-normal);
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.add-friend-sidebar #add-friend-username-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.add-friend-sidebar .modal-submit-button {
+    /* Mevcut .modal-submit-button stilini kullanabiliriz veya özelleştirebiliriz */
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.add-friend-sidebar .modal-message-area {
+    margin-top: 15px;
+}
+
+.add-friend-sidebar .add-friend-info {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: rgba(88, 101, 242, 0.1);
+    border-radius: 5px;
+    font-size: 13px;
+    color: var(--header-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
