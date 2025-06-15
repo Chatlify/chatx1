@@ -151,10 +151,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         const closeButton = modal.querySelector(closeSelector);
 
         const openModal = () => {
-            if (modal) modal.classList.add('active');
+            if (!modal) return;
+            // Önce display'i block yapıp görünürlüğünü sağla
+            modal.style.display = 'flex';
+            // Sonraki frame'de active sınıfını ekleyerek CSS transition'ını tetikle
+            requestAnimationFrame(() => {
+                setTimeout(() => modal.classList.add('active'), 10);
+            });
         }
+
         const closeModal = () => {
-            if (modal) modal.classList.remove('active');
+            if (!modal) return;
+            // Önce active sınıfını kaldırarak çıkış animasyonunu başlat
+            modal.classList.remove('active');
+            // Animasyon bittikten sonra display'i none yap
+            // Transition süresiyle eşleşmeli (CSS'te 0.3s)
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         trigger.addEventListener('click', openModal);
@@ -180,23 +194,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Sunucu Ekle/Katıl Modal Kurulumu
     function setupServerModal() {
-        document.body.addEventListener('click', function (event) {
-            if (event.target.closest('.server-add-icon')) {
-                const modal = document.querySelector('#server-modal');
-                if (modal) {
-                    modal.classList.add('active');
-                }
-            }
-        });
+        // Genel modal açma/kapama mantığını kullan
+        setupModal('.server-add-icon', '#server-modal', '.close-server-modal-btn');
 
-        const modal = document.querySelector('#server-modal');
+        // Sunucu paneline özel diğer işlevsellikler buraya eklenebilir.
+        // Örneğin, oluştur ve katıl sekmeleri arasındaki geçiş.
+        const modal = document.getElementById('server-modal');
         if (!modal) return;
-        const closeButton = modal.querySelector('.close-server-modal-btn');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => modal.classList.remove('active'));
+
+        const createOption = modal.querySelector('#server-option-create');
+        const joinOption = modal.querySelector('#server-option-join');
+        const createForm = modal.querySelector('#server-create-form');
+        const joinForm = modal.querySelector('#server-join-form');
+        const optionsContainer = modal.querySelector('.server-options-container');
+        const backButtons = modal.querySelectorAll('.back-to-options-btn');
+
+        if (createOption) {
+            createOption.addEventListener('click', () => {
+                if (optionsContainer) optionsContainer.style.display = 'none';
+                if (createForm) createForm.style.display = 'block';
+            });
         }
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('active');
+
+        if (joinOption) {
+            joinOption.addEventListener('click', () => {
+                if (optionsContainer) optionsContainer.style.display = 'none';
+                if (joinForm) joinForm.style.display = 'block';
+            });
+        }
+
+        backButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (createForm) createForm.style.display = 'none';
+                if (joinForm) joinForm.style.display = 'none';
+                if (optionsContainer) optionsContainer.style.display = 'block';
+            });
         });
     }
 
