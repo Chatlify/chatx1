@@ -182,7 +182,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (event.target.closest('#add-friend-button')) {
                 const modal = document.querySelector('#add-friend-modal');
                 if (modal) {
-                    modal.classList.add('active');
+                    modal.style.display = 'flex';
+                    setTimeout(() => {
+                        modal.classList.add('active');
+                    }, 10);
                 }
             }
         });
@@ -196,11 +199,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const closeButton = modal.querySelector('.close-modal-btn');
         if (closeButton) {
-            closeButton.addEventListener('click', () => modal.classList.remove('active'));
+            closeButton.addEventListener('click', () => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            });
         }
+
         modal.addEventListener('click', (event) => {
             if (event.target === modal) {
                 modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
             }
         });
 
