@@ -387,6 +387,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Sunucu Ekle modalını kur (YENİ)
         setupServerModal();
 
+        // Arkadaş Ekle modalını kur
+        setupAddFriendModal();
+
         // Bekleyen arkadaşlık istekleri için realtime aboneliğini kur
         setupPendingFriendRequestSubscription();
 
