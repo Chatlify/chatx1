@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatlify - Premium Shop</title>
-    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <title>Chatlify - Mağaza</title>
+    <link rel="icon" href="images/chatlifylogoweb.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
@@ -103,7 +103,8 @@
             <section id="plans" class="premium-plans">
                 <div class="section-header">
                     <h2 class="section-title">Premium Planları</h2>
-                    <p class="section-description">İhtiyaçlarınıza en uygun planı seçin ve premium deneyimin tadını çıkarın</p>
+                    <p class="section-description">İhtiyaçlarınıza en uygun planı seçin ve premium deneyimin tadını
+                        çıkarın</p>
 
                     <div class="billing-toggle">
                         <div class="toggle-container">
@@ -313,7 +314,8 @@
                             <i class="fas fa-palette"></i>
                         </div>
                         <h3 class="feature-title">Özel Temalar</h3>
-                        <p class="feature-description">Kişiselleştirilmiş temalar ve renklerle deneyiminizi özelleştirin.</p>
+                        <p class="feature-description">Kişiselleştirilmiş temalar ve renklerle deneyiminizi
+                            özelleştirin.</p>
                     </div>
 
                     <div class="feature-card">
@@ -321,7 +323,8 @@
                             <i class="fas fa-smile"></i>
                         </div>
                         <h3 class="feature-title">Premium Emojiler</h3>
-                        <p class="feature-description">Özel emoji paketleri ve animasyonlu ifadelerle kendinizi ifade edin.</p>
+                        <p class="feature-description">Özel emoji paketleri ve animasyonlu ifadelerle kendinizi ifade
+                            edin.</p>
                     </div>
 
                     <div class="feature-card">
@@ -415,7 +418,7 @@
         const monthlyPeriods = document.querySelectorAll('.period.monthly');
         const annualPeriods = document.querySelectorAll('.period.annual');
 
-        billingToggle.addEventListener('change', function() {
+        billingToggle.addEventListener('change', function () {
             if (this.checked) {
                 // Show annual pricing
                 monthlyAmounts.forEach(el => el.style.display = 'none');
@@ -436,7 +439,7 @@
         const paymentModal = document.getElementById('paymentModal');
 
         planButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const planType = this.getAttribute('data-plan');
                 openPaymentModal(planType);
             });
@@ -478,28 +481,28 @@
         window.closePaymentModal = closePaymentModal;
 
         // Close modal when clicking outside
-        paymentModal.addEventListener('click', function(e) {
+        paymentModal.addEventListener('click', function (e) {
             if (e.target === paymentModal) {
                 closePaymentModal();
             }
         });
 
         // Form submission
-        document.querySelector('.payment-form').addEventListener('submit', function(e) {
+        document.querySelector('.payment-form').addEventListener('submit', function (e) {
             e.preventDefault();
             alert('Ödeme işlemi başarıyla tamamlandı!');
             closePaymentModal();
         });
 
         // Card number formatting
-        document.querySelector('input[placeholder="1234 5678 9012 3456"]').addEventListener('input', function(e) {
+        document.querySelector('input[placeholder="1234 5678 9012 3456"]').addEventListener('input', function (e) {
             let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
             let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
             e.target.value = formattedValue;
         });
 
         // Expiry date formatting
-        document.querySelector('input[placeholder="MM/YY"]').addEventListener('input', function(e) {
+        document.querySelector('input[placeholder="MM/YY"]').addEventListener('input', function (e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length >= 2) {
                 value = value.substring(0, 2) + '/' + value.substring(2, 4);
