@@ -3992,3 +3992,110 @@ async function removeFriend(friendId) {
         alert('Arkadaşlıktan çıkarma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
     }
 }
+
+// Arkadaşlık isteği gönderme fonksiyonu
+async function sendFriendRequest(username) {
+    if (!currentUserId) {
+        console.error('Arkadaşlık isteği göndermek için kullanıcı oturumu gereklidir.');
+        return;
+    }
+
+    // Modalı seç
+    const modal = document.getElementById('add-friend-modal');
+    const messageArea = modal.querySelector('.modal-message-area');
+    const usernameInput = document.getElementById('add-friend-username-input');
+
+    // Message alanını temizle
+    messageArea.style.display = 'none';
+    messageArea.textContent = '';
+    messageArea.className = 'modal-message-area';
+
+    try {
+        console.log(`Arkadaşlık isteği gönderiliyor: ${username}`);
+
+        // Önce kullanıcıyı bul
+        const { data: users, error: userError } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .eq('username', username);
+
+        if (userError) throw userError;
+
+        if (!users || users.length === 0) {
+            messageArea.textContent = `Kullanıcı bulunamadı: ${username}`;
+            messageArea.className = 'modal-message-area error';
+            messageArea.style.display = 'block';
+            return;
+        }
+
+        const targetUser = users[0];
+
+        // Kendisine istek göndermeyi önle
+        if (targetUser.id === currentUserId) {
+            messageArea.textContent = 'Kendinize arkadaşlık isteği gönderemezsiniz.';
+            messageArea.className = 'modal-message-area error';
+            messageArea.style.display = 'block';
+            return;
+        }
+
+        // Mevcut bir arkadaşlık veya istek var mı kontrol et
+        const { data: existingRelations, error: relationError } = await supabase
+            .from('friendships')
+            .select('id, status')
+            .or(`(user_id_1.eq.${currentUserId},and,user_id_2.eq.${targetUser.id}),(user_id_1.eq.${targetUser.id},and,user_id_2.eq.${currentUserId})`);
+
+        if (relationError) throw relationError;
+
+        if (existingRelations && existingRelations.length > 0) {
+            const relation = existingRelations[0];
+            if (relation.status === 'accepted') {
+                messageArea.textContent = `${username} zaten arkadaş listenizde bulunuyor.`;
+                messageArea.className = 'modal-message-area info';
+                messageArea.style.display = 'block';
+                return;
+            } else if (relation.status === 'pending') {
+                messageArea.textContent = `${username} için zaten bekleyen bir arkadaşlık isteği var.`;
+                messageArea.className = 'modal-message-area info';
+                messageArea.style.display = 'block';
+                return;
+            }
+        }
+
+        // Arkadaşlık isteği gönder
+        const { data, error } = await supabase
+            .from('friendships')
+            .insert([
+                {
+                    user_id_1: currentUserId,
+                    user_id_2: targetUser.id,
+                    status: 'pending'
+                }
+            ]);
+
+        if (error) throw error;
+
+        // Başarılı mesajı göster
+        messageArea.textContent = `"${username}" kişisine arkadaşlık isteği gönderildi!`;
+        messageArea.className = 'modal-message-area success';
+        messageArea.style.display = 'block';
+
+        // Giriş alanını temizle
+        if (usernameInput) {
+            usernameInput.value = '';
+        }
+
+        // 2 saniye sonra modalı kapat
+        setTimeout(() => {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }, 2000);
+
+    } catch (error) {
+        console.error('Arkadaşlık isteği gönderilirken hata oluştu:', error);
+        messageArea.textContent = `Bir hata oluştu: ${error.message}`;
+        messageArea.className = 'modal-message-area error';
+        messageArea.style.display = 'block';
+    }
+}
