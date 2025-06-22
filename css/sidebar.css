@@ -1,0 +1,328 @@
+/*------------------------------------------------------------------
+[Yeni Kenar Çubuğu Stilleri]
+
+Project:        Chatlify - Dashboard Sidebar
+Version:        1.0
+-------------------------------------------------------------------*/
+
+/* ===== Ana Değişkenler ===== */
+:root {
+    --sidebar-bg: #2b2e3b;
+    --sidebar-header-bg: #232530;
+    --sidebar-user-panel-bg: #232530;
+    --search-input-bg: #363947;
+    --nav-btn-bg: transparent;
+    --nav-btn-hover-bg: #363947;
+    --nav-btn-active-bg: #4a4e5e;
+    --dm-item-hover-bg: #363947;
+    --dm-item-active-bg: #4a4e5e;
+    --text-primary: #f0f1f5;
+    --text-secondary: #a0a3b1;
+    --text-muted: #828594;
+    --text-accent: #ffffff;
+    --accent-color: #6a5af9;
+    --notification-badge-bg: #f23f43;
+    --status-online: #43b581;
+    --status-idle: #faa61a;
+    --status-dnd: #f04747;
+    --status-offline: #747f8d;
+}
+
+/* ===== Yeni Kenar Çubuğu Ana Yapısı ===== */
+.new-sidebar {
+    width: 240px;
+    height: 100%;
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ===== Kenar Çubuğu Header Alanı ===== */
+.sidebar-header {
+    padding: 12px 16px;
+    background-color: var(--sidebar-header-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.sidebar-search {
+    width: 100%;
+    height: 36px;
+    background-color: var(--search-input-bg);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 0 12px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.sidebar-search::placeholder {
+    color: var(--text-muted);
+}
+
+.sidebar-search:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(106, 90, 249, 0.3);
+}
+
+/* ===== Navigasyon Butonları ===== */
+.sidebar-nav {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-btn {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    border-radius: 8px;
+    background-color: var(--nav-btn-bg);
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: left;
+}
+
+.nav-btn:hover {
+    background-color: var(--nav-btn-hover-bg);
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    background-color: var(--nav-btn-active-bg);
+    color: var(--text-accent);
+}
+
+.nav-btn i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* ===== DM Listesi ===== */
+.dm-list-header {
+    padding: 16px 16px 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.add-dm-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.add-dm-btn:hover {
+    color: var(--text-primary);
+}
+
+.dm-list.scrollable {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0 8px;
+}
+
+/* Scrollbar Stilleri */
+.scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+    background-color: var(--sidebar-user-panel-bg);
+    border-radius: 6px;
+}
+
+.dm-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dm-item:hover {
+    background-color: var(--dm-item-hover-bg);
+}
+
+.dm-item.active {
+    background-color: var(--dm-item-active-bg);
+}
+
+.dm-avatar-wrapper {
+    position: relative;
+    margin-right: 12px;
+}
+
+.dm-avatar-wrapper img {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--sidebar-bg);
+}
+
+.status-dot.online {
+    background-color: var(--status-online);
+}
+
+.status-dot.idle {
+    background-color: var(--status-idle);
+}
+
+.status-dot.dnd {
+    background-color: var(--status-dnd);
+}
+
+.status-dot.offline {
+    background-color: var(--status-offline);
+}
+
+.dm-name {
+    flex-grow: 1;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-item:hover .dm-name,
+.dm-item.active .dm-name {
+    color: var(--text-primary);
+}
+
+.dm-notification {
+    background-color: var(--notification-badge-bg);
+    color: var(--text-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 8px;
+}
+
+.dm-item-action {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    margin-left: 8px;
+}
+
+.dm-item:hover .dm-item-action {
+    opacity: 1;
+}
+
+.dm-item-action:hover {
+    color: var(--text-primary);
+}
+
+
+/* ===== Kullanıcı Paneli ===== */
+.user-panel {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--sidebar-user-panel-bg);
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-panel .user-avatar-wrapper {
+    position: relative;
+    margin-right: 10px;
+}
+
+.user-panel .user-avatar-wrapper img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.user-panel .status-dot {
+    border-color: var(--sidebar-user-panel-bg);
+}
+
+.user-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.user-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-id {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.user-control-btn {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.user-control-btn:hover {
+    background-color: var(--dm-item-hover-bg);
+    color: var(--text-primary);
+}
