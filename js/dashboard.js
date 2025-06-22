@@ -179,8 +179,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Yeni Modern Sidebar işlevselliği
     function initModernSidebar() {
-        // Sidebar içindeki tüm öğelere tıklama işlevselliği ekle
-        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        // Ana navigasyon öğelerine tıklama işlevselliği ekle
+        const sidebarItems = document.querySelectorAll('.sidebar-nav .sidebar-item');
 
         if (sidebarItems.length > 0) {
             sidebarItems.forEach(item => {
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Eğer zaten aktifse işlem yapma
                     if (item.classList.contains('active')) return;
 
-                    // Tüm öğelerden active sınıfını kaldır
+                    // Tüm navigasyon öğelerinden active sınıfını kaldır
                     sidebarItems.forEach(i => i.classList.remove('active'));
 
                     // Tıklanan öğeye active sınıfını ekle
@@ -206,9 +206,53 @@ document.addEventListener('DOMContentLoaded', async () => {
                             console.log('Arkadaşlar seçildi');
                             // Arkadaşlar sayfası işlemleri
                             break;
-                        case 'sunucular':
-                            console.log('Sunucular seçildi');
-                            // Sunucular sayfası işlemleri
+                        case 'bildirimler':
+                            console.log('Bildirimler seçildi');
+                            // Bildirimleri göster
+                            toggleNotifications(false);
+                            break;
+                    }
+                });
+            });
+        }
+
+        // Sunucu öğelerine tıklama işlevselliği ekle
+        const serverItems = document.querySelectorAll('.sidebar-servers .server-item');
+
+        if (serverItems.length > 0) {
+            serverItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // Eğer zaten aktifse işlem yapma
+                    if (item.classList.contains('active')) return;
+
+                    // Tüm sunucu öğelerinden active sınıfını kaldır
+                    serverItems.forEach(i => i.classList.remove('active'));
+
+                    // Tıklanan öğeye active sınıfını ekle
+                    item.classList.add('active');
+
+                    // Sunucu adını al
+                    const serverName = item.querySelector('.server-name').textContent.trim();
+                    console.log(`${serverName} sunucusu seçildi`);
+                    // Sunucu ile ilgili işlemler yapılabilir
+                });
+            });
+        }
+
+        // Alt kısımdaki butonlara tıklama işlevselliği ekle
+        const bottomItems = document.querySelectorAll('.sidebar-bottom .sidebar-item');
+
+        if (bottomItems.length > 0) {
+            bottomItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const itemText = item.querySelector('.sidebar-item-text').textContent.trim().toLowerCase();
+
+                    switch (itemText) {
+                        case 'sunucu ekle':
+                            console.log('Sunucu Ekle seçildi');
+                            // Sunucu ekleme modalını aç
+                            const serverModal = document.querySelector('#server-modal');
+                            if (serverModal) serverModal.classList.add('active');
                             break;
                         case 'mağaza':
                             console.log('Mağaza seçildi');
@@ -217,14 +261,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             break;
                         case 'ayarlar':
                             console.log('Ayarlar seçildi');
-                            // Ayarlar sayfasına yönlendir veya modal aç
+                            // Ayarlar sayfasına yönlendir
                             window.location.href = 'settings.html';
-                            break;
-                        case 'sunucu ekle':
-                            console.log('Sunucu Ekle seçildi');
-                            // Sunucu ekleme modalını aç
-                            const serverModal = document.querySelector('#server-modal');
-                            if (serverModal) serverModal.classList.add('active');
                             break;
                     }
                 });
