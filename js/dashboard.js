@@ -174,61 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Arkadaş Ekle Modal Kurulumu (YENİDEN YAPILANDIRILDI - En Sağlam Yöntem: ID ile)
-    function setupAddFriendModal() {
-        // Olay dinleyicisini sayfanın kendisine (body) bağlıyoruz.
-        document.body.addEventListener('click', function (event) {
-            // Tıklanan elementin ID'sinin 'add-friend-button' olup olmadığını kontrol et
-            if (event.target.closest('#add-friend-button')) {
-                const modal = document.querySelector('#add-friend-modal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                    setTimeout(() => {
-                        modal.classList.add('active');
-                    }, 10);
-                }
-            }
-        });
-
-        // Kapatma mekanizması
-        const modal = document.querySelector('#add-friend-modal');
-        if (!modal) {
-            console.warn("Arkadaş Ekle modalı DOM'da bulunamadı.");
-            return;
-        }
-
-        const closeButton = modal.querySelector('.close-modal-btn');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                modal.classList.remove('active');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-            });
-        }
-
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                modal.classList.remove('active');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-            }
-        });
-
-        // Form gönderme işlevselliği
-        const addFriendForm = document.getElementById('add-friend-form');
-        if (addFriendForm) {
-            addFriendForm.addEventListener('submit', (event) => {
-                event.preventDefault();
-                const usernameInput = document.getElementById('add-friend-username-input');
-                const username = usernameInput.value.trim();
-                if (username) {
-                    sendFriendRequest(username);
-                }
-            });
-        }
-    }
+    // Arkadaş Ekle Modal Fonksiyonu kaldırıldı
 
     // Sunucu Ekle/Katıl Modal Kurulumu
     function setupServerModal() {
@@ -393,14 +339,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Presence takip sistemini başlat
         initializePresence();
 
-        // Arkadaş Ekle modalını kur (YENİDEN YAPILANDIRILDI)
-        setupAddFriendModal();
+        // Arkadaş Ekle modalı kaldırıldı
 
         // Sunucu Ekle modalını kur (YENİ)
         setupServerModal();
 
-        // Arkadaş Ekle modalını kur
-        setupAddFriendModal();
+        // Arkadaş Ekle modalı kaldırıldı
 
         // Bekleyen arkadaşlık istekleri için realtime aboneliğini kur
         setupPendingFriendRequestSubscription();
@@ -3114,27 +3058,7 @@ function setupGifPicker(gifButton, textarea) {
 /**
  * Arkadaş Ekle modülünü kurar
  */
-function setupAddFriendModal() {
-    // Genel modal kurulum fonksiyonunu çağır
-    setupModal('.add-friend-btn', '#add-friend-modal', '.close-modal-btn');
-
-    // Forma özel işlevselliği ekle
-    const addFriendForm = document.getElementById('add-friend-form');
-    const usernameInput = document.getElementById('add-friend-username-input');
-
-    if (addFriendForm && usernameInput) {
-        addFriendForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const username = usernameInput.value.trim();
-            if (username) {
-                // Mevcut, çalışan gönderme fonksiyonunu kullan
-                sendFriendRequest(username);
-            }
-        });
-    } else {
-        console.warn("Arkadaş ekle formu veya input'u bulunamadı.");
-    }
-}
+// function setupAddFriendModal() - Kaldırıldı
 
 // Sunucu Ekle/Katıl Modal Kurulumu (YENİ)
 function setupServerModal() {
