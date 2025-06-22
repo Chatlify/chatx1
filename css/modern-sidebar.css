@@ -390,14 +390,14 @@
 
 /* Mağaza Butonu Özel Stil */
 .sidebar-item.shop .sidebar-item-icon {
-    background-color: rgba(255, 184, 0, 0.15);
-    color: #ffb800;
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
 }
 
 /* Ayarlar Butonu Özel Stil */
 .sidebar-item.settings .sidebar-item-icon {
-    background-color: rgba(255, 82, 82, 0.15);
-    color: #ff5252;
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
 }
 
 .sidebar-item.settings:hover .sidebar-item-icon i {

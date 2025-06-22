@@ -248,4 +248,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('Chatlify Server Panel script loaded and updated.');
+
+    const createServerCard = document.getElementById('create-server-card');
+    const joinServerCard = document.getElementById('join-server-card');
+    const closeModalBtn = document.querySelector('.close-modal-btn');
+
+    if (createServerCard) {
+        createServerCard.addEventListener('click', () => {
+            console.log('Sunucu oluşturma seçeneği tıklandı.');
+            // Burada sunucu oluşturma formunu gösteren kod olacak
+            alert('Sunucu oluşturma özelliği yakında eklenecektir!');
+        });
+    }
+
+    if (joinServerCard) {
+        joinServerCard.addEventListener('click', () => {
+            console.log('Sunucuya katılma seçeneği tıklandı.');
+            // Burada sunucuya katılma formunu gösteren kod olacak
+            alert('Sunucuya katılma özelliği yakında eklenecektir!');
+        });
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            // Pencereyi kapat veya bir önceki sayfaya dön
+            // Basit bir çözüm olarak, eğer bu sayfa bir pop-up değilse,
+            // kullanıcıyı dashboard'a geri yönlendirebiliriz.
+            window.location.href = 'dashboard.html';
+        });
+    }
 });

@@ -248,20 +248,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     switch (itemText) {
                         case 'sunucu ekle':
-                            console.log('Sunucu Ekle seçildi');
-                            // Sunucu ekleme modalını aç
-                            const serverModal = document.querySelector('#server-modal');
-                            if (serverModal) serverModal.classList.add('active');
+                            console.log('Sunucu ekle tıklandı');
+                            window.location.href = 'add-server.html';
                             break;
                         case 'mağaza':
-                            console.log('Mağaza seçildi');
-                            // Mağaza sayfasına yönlendir
+                            console.log('Mağaza tıklandı');
                             window.location.href = 'shop.html';
                             break;
                         case 'ayarlar':
-                            console.log('Ayarlar seçildi');
-                            // Ayarlar sayfasına yönlendir
+                            console.log('Ayarlar tıklandı');
                             window.location.href = 'settings.html';
+                            break;
+                        default:
+                            console.log(`${itemText} tıklandı`);
                             break;
                     }
                 });
