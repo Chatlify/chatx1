@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data: existingFriendship, error: checkError } = await supabase
                 .from('friendships')
                 .select('status')
-                .or(`(user_id_1.eq.${currentUserId},user_id_2.eq.${targetUserId}),(user_id_1.eq.${targetUserId},user_id_2.eq.${currentUserId})`)
+                .or(`and(user_id_1.eq.${currentUserId},user_id_2.eq.${targetUserId}),and(user_id_1.eq.${targetUserId},user_id_2.eq.${currentUserId})`)
                 .single();
 
             if (checkError && checkError.code !== 'PGRST116') { // 'No rows found' hatasını yoksay
