@@ -2,7 +2,7 @@
 [Master Stylesheet]
 
 Project:        Chatlify - Arkadaş Ekle Modülü
-Version:        1.4
+Version:        2.0
 Last change:    [Tarih]
 Author:         [İsim]
 Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
@@ -12,14 +12,13 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 :root {
     --accent-gradient: linear-gradient(135deg, #3d68e7, #6a11cb);
     --accent-hover-gradient: linear-gradient(135deg, #4a7bff, #7a21db);
-    --modal-bg: #2a2d35;
-    --modal-header-bg: #222529;
-    --modal-border: #1a1c1e;
-    --input-bg: #36393f;
+    --modal-bg: #2b2e4a;
+    --modal-header-bg: #373c69;
+    --input-bg: #3a3f61;
     --text-primary: #ffffff;
-    --text-secondary: #dcddde;
+    --text-secondary: #e2e3f1;
     --text-muted: #b9bbbe;
-    --text-placeholder: #72767d;
+    --text-placeholder: #8e93ad;
     --discord-blue: #7289da;
     --discord-purple: #5865f2;
     --discord-purple-hover: #4752c4;
@@ -28,8 +27,6 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     --modal-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
     --btn-shadow: 0 4px 8px rgba(61, 104, 231, 0.3);
 }
-
-/* Stillerin başka hiçbir şeyi etkilememesi için tüm kuralları modal'ın ID'si altına alıyoruz */
 
 /* Arkadaş Ekle Butonu Stilleri (Dashboard Header) */
 .add-friend-btn {
@@ -138,20 +135,14 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 22px 24px;
+    padding: 20px 24px;
     background-color: var(--modal-header-bg);
-    border-bottom: 1px solid rgba(114, 137, 218, 0.1);
     position: relative;
+    border-bottom: none;
 }
 
 #add-friend-modal .modal-header:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, rgba(114, 137, 218, 0), rgba(114, 137, 218, 0.3), rgba(114, 137, 218, 0));
+    display: none;
 }
 
 #add-friend-modal .modal-header-content {
@@ -206,15 +197,13 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transform: rotate(90deg);
 }
 
-/* Modal Content */
-#add-friend-modal .modal-content {
-    padding: 35px 28px;
+/* Modal Body (İçerik) */
+#add-friend-modal .modal-body {
+    padding: 30px 28px;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 24px;
     position: relative;
-    background: transparent;
-    /* İç panel arkaplanını kaldırdım */
 }
 
 #add-friend-modal .modal-info {
@@ -444,7 +433,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
         max-width: 100%;
     }
 
-    #add-friend-modal .modal-content {
+    #add-friend-modal .modal-body {
         padding: 24px 20px;
     }
 
