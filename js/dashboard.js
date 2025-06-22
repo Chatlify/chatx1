@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Chat Panel
         chatPanel: document.querySelector('.chat-panel'),
+        chatActionBtn: document.querySelector('.chat-action-btn'),
+        chatProfileBtn: document.querySelector('.chat-action-btn.profile-btn'), 
         chatHeaderUser: document.querySelector('.chat-panel .chat-header-user'),
         chatMessages: document.querySelector('.chat-panel .chat-messages'),
         chatInput: document.querySelector('.chat-panel .chat-textbox textarea'),
@@ -68,6 +70,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             badgesContainer: document.querySelector('.profile-modal-right .badges-container'),
             bio: document.querySelector('.profile-modal-right .bio'),
             memberSince: document.querySelector('.profile-modal-right .member-since'),
+        },
+        // Arkadaş Ekle Modalı
+        addFriendModal: {
+            container: document.getElementById('add-friend-modal-container'),
+            button: document.getElementById('add-friend-button'),
+            // Bu elemanlar modal HTML'i yüklendikten sonra doldurulacak
+            overlay: null,
+            form: null,
+            input: null,
+            statusMessage: null,
+            closeBtn: null,
         }
     };
 
@@ -154,6 +167,57 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
             return channel;
+        },
+        async sendFriendRequestByUsername(username) {
+            if (!state.currentUser || !state.currentUser.profile) throw new Error("Mevcut kullanıcı veya profili bulunamadı.");
+            if (username.toLowerCase() === state.currentUser.profile.username.toLowerCase()) {
+                return { success: false, message: 'Kendinizi arkadaş olarak ekleyemezsiniz.' };
+            }
+
+            const { data: targetUser, error: findError } = await supabase
+                .from('profiles')
+                .select('id, username')
+                .ilike('username', username)
+                .single();
+
+            if (findError || !targetUser) {
+                console.error('Error finding user:', findError);
+                return { success: false, message: `'${username}' adında bir kullanıcı bulunamadı.` };
+            }
+
+            const targetUserId = targetUser.id;
+            const currentUserId = state.currentUser.id;
+
+            const { data: existingFriendship, error: checkError } = await supabase
+                .from('friendships')
+                .select('status')
+                .or(`(user_id_1.eq.${currentUserId},user_id_2.eq.${targetUserId}),(user_id_1.eq.${targetUserId},user_id_2.eq.${currentUserId})`)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') { // 'No rows found' hatasını yoksay
+                console.error('Error checking friendship:', checkError);
+                return { success: false, message: 'Arkadaşlık durumu kontrol edilirken bir hata oluştu.' };
+            }
+
+            if (existingFriendship) {
+                if (existingFriendship.status === 'accepted') {
+                    return { success: false, message: 'Bu kullanıcı ile zaten arkadaşsınız.' };
+                }
+                if (existingFriendship.status === 'pending') {
+                    return { success: false, message: 'Bu kullanıcıya zaten bir istek gönderilmiş.' };
+                }
+            }
+
+            const { error: insertError } = await supabase
+                .from('friendships')
+                .insert({ user_id_1: currentUserId, user_id_2: targetUserId, status: 'pending' });
+
+            if (insertError) {
+                console.error('Error sending friend request:', insertError);
+                return { success: false, message: 'Arkadaşlık isteği gönderilirken bir hata oluştu.' };
+            }
+
+            return { success: true, message: `'${targetUser.username}' kullanıcısına istek gönderildi!` };
         }
     };
 
@@ -420,6 +484,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
+
+        if (ui.userFooter) ui.userFooter.addEventListener('click', () => openProfileModal(state.currentUser.id));
+
+        // Sohbet panelindeki profil butonuna tıklama olayı
+        if (ui.chatProfileBtn) {
+            ui.chatProfileBtn.addEventListener('click', () => {
+                if (state.currentUser) {
+                    openProfileModal(state.currentUser.id);
+                }
+            });
+        }
+
     };
 
     const handleFriendAction = async (e) => {
@@ -481,6 +557,88 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    const initAddFriendModal = () => {
+        if (!ui.addFriendModal.container || !ui.addFriendModal.button) {
+            console.log('Arkadaş ekleme butonu veya konteyneri bulunamadı, bu özellik atlanıyor.');
+            return;
+        }
+
+        fetch('add-friend.html')
+            .then(response => response.ok ? response.text() : Promise.reject(response.statusText))
+            .then(html => {
+                ui.addFriendModal.container.innerHTML = html;
+                
+                ui.addFriendModal.overlay = document.getElementById('add-friend-modal');
+                ui.addFriendModal.form = document.getElementById('add-friend-form');
+                ui.addFriendModal.input = document.getElementById('add-friend-username-input');
+                ui.addFriendModal.statusMessage = document.getElementById('friend-request-status');
+                ui.addFriendModal.closeBtn = document.querySelector('#add-friend-modal .close-modal-btn');
+                
+                ui.addFriendModal.button.addEventListener('click', openAddFriendModal);
+                ui.addFriendModal.closeBtn.addEventListener('click', closeAddFriendModal);
+                ui.addFriendModal.overlay.addEventListener('click', (e) => {
+                    if (e.target === ui.addFriendModal.overlay) closeAddFriendModal();
+                });
+                ui.addFriendModal.form.addEventListener('submit', handleSendFriendRequest);
+            })
+            .catch(error => console.error('Arkadaş ekleme modal HTML yüklenirken hata:', error));
+    };
+
+    const openAddFriendModal = () => {
+        if (!ui.addFriendModal.overlay) return;
+        ui.addFriendModal.overlay.style.display = 'flex';
+        setTimeout(() => {
+            ui.addFriendModal.overlay.classList.add('active');
+            ui.addFriendModal.input.focus();
+        }, 10);
+    };
+
+    const closeAddFriendModal = () => {
+        if (!ui.addFriendModal.overlay) return;
+        ui.addFriendModal.overlay.classList.remove('active');
+        setTimeout(() => {
+            ui.addFriendModal.overlay.style.display = 'none';
+            ui.addFriendModal.form.reset();
+            const status = ui.addFriendModal.statusMessage;
+            status.textContent = '';
+            status.className = 'status-message';
+        }, 300);
+    };
+
+    const openProfileModal = async (userId) => {
+        const profile = await supabaseService.getUserProfile(userId);
+        if (profile) {
+            renderer.renderProfilePanel(profile);
+            ui.friendProfilePanel.style.display = 'block';
+            ui.friendProfileModalOverlay.style.display = 'block';
+        }
+    };
+
+    const handleSendFriendRequest = async (e) => {
+        e.preventDefault();
+        const username = ui.addFriendModal.input.value.trim();
+        const statusEl = ui.addFriendModal.statusMessage;
+
+        if (!username) return;
+
+        statusEl.textContent = 'İstek gönderiliyor...';
+        statusEl.className = 'status-message info';
+
+        try {
+            const result = await supabaseService.sendFriendRequestByUsername(username);
+            statusEl.textContent = result.message;
+            statusEl.className = `status-message ${result.success ? 'success' : 'error'}`;
+            
+            if (result.success) {
+                ui.addFriendModal.input.value = '';
+            }
+        } catch (error) {
+            statusEl.textContent = 'Beklenmedik bir hata oluştu.';
+            statusEl.className = 'status-message error';
+            console.error('Error handling friend request:', error);
+        }
+    };
+
 
     const init = async () => {
         state.currentUser = await supabaseService.getUserSession();
@@ -502,6 +660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         initEventListeners();
+        initAddFriendModal(); // Arkadaş ekle modalını başlat
         await fetchAndRenderFriends();
 
         state.presenceChannel = supabaseService.subscribeToPresence(() => {
