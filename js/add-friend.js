@@ -55,7 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Kısa bir gecikme sonrası active sınıfını ekle (CSS geçişi için)
             setTimeout(() => {
                 modalOverlay.classList.add('active');
-                usernameInput.focus(); // Input alanına odaklan
+                // Panel açıldığında input alanına odaklan ve herhangi bir metni seç
+                usernameInput.focus();
+                usernameInput.select();
             }, 10);
         };
 
@@ -78,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.textContent = '';
         };
 
-        // Klavye erişilebilirliği için Enter tuşu ile buton tıklatma özelliği
+        // Klavye erişilebilirliği
         closeModalButton.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -86,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Gösterme ve gizleme olayları
         addFriendButton.addEventListener('click', openModal);
         closeModalButton.addEventListener('click', closeModal);
 
@@ -103,14 +106,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Input alanında # karakteri olmadığında otomatik olarak placeholder'ı göster
+        usernameInput.addEventListener('input', () => {
+            const value = usernameInput.value.trim();
+
+            if (!value.includes('#') && value.length > 0) {
+                usernameInput.classList.add('warning');
+            } else {
+                usernameInput.classList.remove('warning');
+            }
+        });
+
         addFriendForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const fullUsername = usernameInput.value.trim();
 
             if (!fullUsername || !fullUsername.includes('#')) {
                 showStatus('Lütfen geçerli bir kullanıcı adı ve etiket girin (örn: kullanici#1234).', 'error');
+                usernameInput.classList.add('error');
+
+                // Input alanını kısa bir süre titret
+                usernameInput.classList.add('shake');
+                setTimeout(() => {
+                    usernameInput.classList.remove('shake');
+                }, 500);
+
                 return;
             }
+
+            usernameInput.classList.remove('error');
 
             if (typeof sendFriendRequest === 'function') {
                 try {
@@ -127,7 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     submitButton.innerHTML = originalText;
                     submitButton.disabled = false;
 
+                    // Başarılı mesajı göster
                     showStatus(`'${fullUsername}' kişisine arkadaşlık isteği gönderildi!`, 'success');
+
+                    // Başarılı olduğunda input alanını temizle
+                    usernameInput.value = '';
 
                     setTimeout(() => {
                         closeModal();
@@ -154,6 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 statusMessage.textContent = message;
                 statusMessage.className = `status-message ${type}`; // 'success' veya 'error'
+
+                // Bir okuma asistanı için ARIA özniteliklerini ayarla
+                statusMessage.setAttribute('role', 'status');
+                statusMessage.setAttribute('aria-live', 'polite');
             }, 10);
         }
     }
