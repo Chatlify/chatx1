@@ -179,88 +179,87 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Yeni Modern Sidebar işlevselliği
     function initModernSidebar() {
-        // Toggle butonu işlevselliği
-        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const openBtn = document.getElementById('sidebar-open-btn');
+        const closeBtn = document.getElementById('sidebar-close-btn');
         const sidebar = document.querySelector('.server-sidebar');
+        const overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
 
-        if (sidebarToggle && sidebar) {
-            // Başlangıçta sidebar kapalı olsun
+        const openSidebar = () => {
+            if (!document.querySelector('.sidebar-overlay')) {
+                document.body.appendChild(overlay);
+            }
+            sidebar.classList.add('expanded');
+            overlay.classList.add('active');
+        };
+
+        const closeSidebar = () => {
             sidebar.classList.remove('expanded');
+            overlay.classList.remove('active');
+        };
 
-            // Toggle butonuna tıklandığında sidebar'ı aç/kapat
-            sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('expanded');
+        if (openBtn && sidebar) {
+            openBtn.addEventListener('click', openSidebar);
+        }
 
-                // Toggle butonu ikonunu değiştir
-                const icon = sidebarToggle.querySelector('i');
-                if (sidebar.classList.contains('expanded')) {
-                    icon.className = 'fas fa-chevron-left';
-                } else {
-                    icon.className = 'fas fa-chevron-right';
+        if (closeBtn && sidebar) {
+            closeBtn.addEventListener('click', closeSidebar);
+        }
+
+        overlay.addEventListener('click', closeSidebar);
+    }
+
+    // Sunucu öğelerine tıklama işlevselliği ekle
+    const serverItems = document.querySelectorAll('.sidebar-servers .server-item');
+
+    if (serverItems.length > 0) {
+        serverItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // Eğer zaten aktifse işlem yapma
+                if (item.classList.contains('active')) return;
+
+                // Tüm sunucu öğelerinden active sınıfını kaldır
+                serverItems.forEach(i => i.classList.remove('active'));
+
+                // Tıklanan öğeye active sınıfını ekle
+                item.classList.add('active');
+
+                // Sunucu adını al
+                const serverName = item.querySelector('.server-name').textContent.trim();
+                console.log(`${serverName} sunucusu seçildi`);
+                // Sunucu ile ilgili işlemler yapılabilir
+            });
+        });
+    }
+
+    // Alt kısımdaki butonlara tıklama işlevselliği ekle
+    const bottomItems = document.querySelectorAll('.sidebar-bottom .sidebar-item');
+
+    if (bottomItems.length > 0) {
+        bottomItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const itemText = item.querySelector('.sidebar-item-text').textContent.trim().toLowerCase();
+
+                switch (itemText) {
+                    case 'sunucu ekle':
+                        console.log('Sunucu Ekle seçildi');
+                        // Sunucu ekleme modalını aç
+                        const serverModal = document.querySelector('#server-modal');
+                        if (serverModal) serverModal.classList.add('active');
+                        break;
+                    case 'mağaza':
+                        console.log('Mağaza seçildi');
+                        // Mağaza sayfasına yönlendir
+                        window.location.href = 'shop.html';
+                        break;
+                    case 'ayarlar':
+                        console.log('Ayarlar seçildi');
+                        // Ayarlar sayfasına yönlendir
+                        window.location.href = 'settings.html';
+                        break;
                 }
             });
-
-            // Sayfa yüklendiğinde toggle butonunun ikonunu ayarla
-            const icon = sidebarToggle.querySelector('i');
-            if (sidebar.classList.contains('expanded')) {
-                icon.className = 'fas fa-chevron-left';
-            } else {
-                icon.className = 'fas fa-chevron-right';
-            }
-        }
-
-        // Sunucu öğelerine tıklama işlevselliği ekle
-        const serverItems = document.querySelectorAll('.sidebar-servers .server-item');
-
-        if (serverItems.length > 0) {
-            serverItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    // Eğer zaten aktifse işlem yapma
-                    if (item.classList.contains('active')) return;
-
-                    // Tüm sunucu öğelerinden active sınıfını kaldır
-                    serverItems.forEach(i => i.classList.remove('active'));
-
-                    // Tıklanan öğeye active sınıfını ekle
-                    item.classList.add('active');
-
-                    // Sunucu adını al
-                    const serverName = item.querySelector('.server-name').textContent.trim();
-                    console.log(`${serverName} sunucusu seçildi`);
-                    // Sunucu ile ilgili işlemler yapılabilir
-                });
-            });
-        }
-
-        // Alt kısımdaki butonlara tıklama işlevselliği ekle
-        const bottomItems = document.querySelectorAll('.sidebar-bottom .sidebar-item');
-
-        if (bottomItems.length > 0) {
-            bottomItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const itemText = item.querySelector('.sidebar-item-text').textContent.trim().toLowerCase();
-
-                    switch (itemText) {
-                        case 'sunucu ekle':
-                            console.log('Sunucu Ekle seçildi');
-                            // Sunucu ekleme modalını aç
-                            const serverModal = document.querySelector('#server-modal');
-                            if (serverModal) serverModal.classList.add('active');
-                            break;
-                        case 'mağaza':
-                            console.log('Mağaza seçildi');
-                            // Mağaza sayfasına yönlendir
-                            window.location.href = 'shop.html';
-                            break;
-                        case 'ayarlar':
-                            console.log('Ayarlar seçildi');
-                            // Ayarlar sayfasına yönlendir
-                            window.location.href = 'settings.html';
-                            break;
-                    }
-                });
-            });
-        }
+        });
     }
 
     // Bu fonksiyon artık kullanılmıyor, kaldırıldı
@@ -2360,7 +2359,7 @@ function setupEmojiPicker(emojiButton, textareaElement, emojiPickerElement) {
         {
             name: 'Seyahat',
             icon: 'fa-car',
-            emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍️', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩️', '💺', '🛰️', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥️', '🛳️', '⛴️', '🚢', '⚓', '🪝', '⛽', '🚧', '🚦', '🚥', '🚏', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛲', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️']
+            emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍️', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩️', '💺', '🛰️', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥️', '🛳️', '⛴️', '🚢', '⚓', '🪝', '⛽', '🚧', '🚦', '🚥', '🚏', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛲️', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️']
         },
         {
             name: 'Semboller',
