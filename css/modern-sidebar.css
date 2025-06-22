@@ -12,7 +12,7 @@
     /* Boyutlar */
     --sidebar-width: 72px;
     --sidebar-expanded-width: 240px;
-    --sidebar-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Ana Sidebar Konteyner */
@@ -29,7 +29,7 @@
     flex-direction: column;
 }
 
-.server-sidebar:hover {
+.server-sidebar.expanded {
     width: var(--sidebar-expanded-width);
 }
 
@@ -45,6 +45,39 @@
 
 .server-sidebar-inner::-webkit-scrollbar {
     display: none;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    right: -12px;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #8a61ff, #6b42e0);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transform: translateY(-50%);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.sidebar-toggle i {
+    color: white;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.server-sidebar.expanded .sidebar-toggle i {
+    transform: rotate(180deg);
 }
 
 /* Logo Bölümü */
@@ -97,7 +130,7 @@
     white-space: nowrap;
 }
 
-.server-sidebar:hover .logo-text {
+.server-sidebar.expanded .logo-text {
     opacity: 1;
     transform: translateX(0);
 }
@@ -133,7 +166,7 @@
     white-space: nowrap;
 }
 
-.server-sidebar:hover .sidebar-section-title {
+.server-sidebar.expanded .sidebar-section-title {
     opacity: 1;
     transform: translateX(0);
 }
@@ -226,7 +259,7 @@
 }
 
 .sidebar-item:hover .sidebar-item-text,
-.server-sidebar:hover .sidebar-item-text {
+.server-sidebar:not(.expanded) .sidebar-item-text {
     opacity: 1;
     transform: translateX(0);
 }
@@ -236,7 +269,7 @@
     display: flex;
     align-items: center;
     padding: 6px 10px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     border-radius: 12px;
     cursor: pointer;
     transition: background 0.2s ease, transform 0.2s ease;
@@ -304,7 +337,7 @@
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.server-sidebar:hover .server-name {
+.server-sidebar:not(.expanded) .server-name {
     opacity: 1;
     transform: translateX(0);
 }
@@ -406,8 +439,8 @@
     border-right-color: rgba(0, 0, 0, 0.8);
 }
 
-.server-sidebar:not(:hover) .sidebar-item:hover .sidebar-tooltip,
-.server-sidebar:not(:hover) .server-item:hover .sidebar-tooltip {
+.server-sidebar:not(.expanded) .server-item:hover .sidebar-tooltip,
+.server-sidebar:not(.expanded) .sidebar-item:hover .sidebar-tooltip {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
 }
@@ -418,7 +451,7 @@
         width: 54px;
     }
 
-    .server-sidebar:hover {
+    .server-sidebar.expanded {
         width: 200px;
     }
 }

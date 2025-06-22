@@ -179,40 +179,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Yeni Modern Sidebar işlevselliği
     function initModernSidebar() {
-        // Ana navigasyon öğelerine tıklama işlevselliği ekle
-        const sidebarItems = document.querySelectorAll('.sidebar-nav .sidebar-item');
+        // Toggle butonu işlevselliği
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.server-sidebar');
 
-        if (sidebarItems.length > 0) {
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    // Eğer zaten aktifse işlem yapma
-                    if (item.classList.contains('active')) return;
-
-                    // Tüm navigasyon öğelerinden active sınıfını kaldır
-                    sidebarItems.forEach(i => i.classList.remove('active'));
-
-                    // Tıklanan öğeye active sınıfını ekle
-                    item.classList.add('active');
-
-                    // Öğeler arası gezinme mantığı
-                    const itemText = item.querySelector('.sidebar-item-text').textContent.trim().toLowerCase();
-
-                    switch (itemText) {
-                        case 'ana sayfa':
-                            console.log('Ana Sayfa seçildi');
-                            // Ana sayfa için yapılacak işlemler
-                            break;
-                        case 'arkadaşlar':
-                            console.log('Arkadaşlar seçildi');
-                            // Arkadaşlar sayfası işlemleri
-                            break;
-                        case 'bildirimler':
-                            console.log('Bildirimler seçildi');
-                            // Bildirimleri göster
-                            toggleNotifications(false);
-                            break;
-                    }
-                });
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('expanded');
             });
         }
 
@@ -268,24 +241,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             });
         }
-
-        // Bildirim göstergelerini etkinleştir
-        toggleNotifications(true);
     }
 
-    // Bildirimleri gösterme/gizleme fonksiyonu
-    function toggleNotifications(show = true, notificationCount = 3) {
-        const notificationBadge = document.querySelector('.sidebar-notification');
-
-        if (notificationBadge) {
-            if (show && notificationCount > 0) {
-                notificationBadge.textContent = notificationCount;
-                notificationBadge.classList.add('show');
-            } else {
-                notificationBadge.classList.remove('show');
-            }
-        }
-    }
+    // Bu fonksiyon artık kullanılmıyor, kaldırıldı
 
     // Sunucu Ekle Modal Kurulumu
     function setupServerModal() {
