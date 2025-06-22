@@ -2,7 +2,7 @@
 [Master Stylesheet]
 
 Project:        Chatlify - Arkadaş Ekle Modülü
-Version:        1.3
+Version:        1.4
 Last change:    [Tarih]
 Author:         [İsim]
 Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
@@ -12,9 +12,8 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 :root {
     --accent-gradient: linear-gradient(135deg, #3d68e7, #6a11cb);
     --accent-hover-gradient: linear-gradient(135deg, #4a7bff, #7a21db);
-    --modal-bg: #1e2124;
-    --modal-content-bg: #2c2f33;
-    --modal-header-bg: #1a1d20;
+    --modal-bg: #2a2d35;
+    --modal-header-bg: #222529;
     --modal-border: #1a1c1e;
     --input-bg: #36393f;
     --text-primary: #ffffff;
@@ -103,7 +102,6 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     align-items: center;
     justify-content: center;
     z-index: 1001;
-    /* Diğer elementlerin üzerinde olmalı */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -116,11 +114,9 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     visibility: visible;
 }
 
-
 /* Modal Container (Ana Panel) */
 #add-friend-modal .modal-container {
     background-color: var(--modal-bg);
-    /* Discord'un koyu temasına benzer */
     color: var(--text-primary);
     border-radius: 14px;
     box-shadow: var(--modal-shadow);
@@ -129,14 +125,13 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transform: scale(0.95) translateY(20px);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     overflow: hidden;
-    border: 1px solid rgba(60, 63, 69, 0.5);
+    border: 1px solid rgba(114, 137, 218, 0.15);
     position: relative;
 }
 
 #add-friend-modal.modal-overlay.active .modal-container {
     transform: scale(1) translateY(0);
 }
-
 
 /* Modal Header */
 #add-friend-modal .modal-header {
@@ -145,7 +140,6 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     align-items: center;
     padding: 22px 24px;
     background-color: var(--modal-header-bg);
-    /* Biraz daha koyu bir başlık alanı */
     border-bottom: 1px solid rgba(114, 137, 218, 0.1);
     position: relative;
 }
@@ -212,15 +206,15 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transform: rotate(90deg);
 }
 
-
 /* Modal Content */
 #add-friend-modal .modal-content {
-    padding: 30px 28px;
+    padding: 35px 28px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 28px;
     position: relative;
-    background: var(--modal-content-bg);
+    background: transparent;
+    /* İç panel arkaplanını kaldırdım */
 }
 
 #add-friend-modal .modal-info {
@@ -240,16 +234,17 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     font-style: italic;
 }
 
-
 /* Input Alanı */
 #add-friend-modal .input-wrapper {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    width: 100%;
 }
 
 #add-friend-modal .add-friend-input-container {
     position: relative;
+    width: 100%;
 }
 
 #add-friend-modal .add-friend-input-container .fa-user {
@@ -272,7 +267,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     width: 100%;
     height: 52px;
     background-color: var(--input-bg);
-    border: 1px solid rgba(114, 137, 218, 0.1);
+    border: 1px solid rgba(114, 137, 218, 0.15);
     border-radius: 10px;
     padding: 0 18px 0 45px;
     color: var(--text-primary);
@@ -351,6 +346,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4);
     font-family: inherit;
+    width: 100%;
 }
 
 #add-friend-modal .send-request-btn:before {
@@ -394,7 +390,6 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transform: translateX(4px) translateY(-2px);
 }
 
-
 /* Durum Mesajları (Başarılı, Hata vb.) */
 #add-friend-modal .status-message {
     text-align: center;
@@ -403,12 +398,11 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     font-weight: 500;
     font-size: 0.95rem;
     min-height: 1em;
-    /* İçerik olmadığında bile yer kaplaması için */
     display: none;
-    /* Varsayılan olarak gizli */
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.3s ease, transform 0.3s ease;
+    width: 100%;
 }
 
 #add-friend-modal .status-message.success {
