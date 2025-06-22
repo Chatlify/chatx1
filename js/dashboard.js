@@ -138,6 +138,9 @@ function populateNewProfileModal(profile, modal) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Dashboard JS başlatılıyor...');
 
+    // Modern Sidebar fonksiyonlarını başlatma
+    initModernSidebar();
+
     // "Arkadaş Ekle" ve "Sunucu Ekle" gibi modal pencereleri yönetmek için genel bir fonksiyon
     function setupModal(triggerSelector, modalSelector, closeSelector) {
         const trigger = document.querySelector(triggerSelector);
@@ -174,12 +177,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Arkadaş Ekle Modal Fonksiyonu kaldırıldı
+    // Yeni Modern Sidebar işlevselliği
+    function initModernSidebar() {
+        // Sidebar içindeki tüm öğelere tıklama işlevselliği ekle
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
 
-    // Sunucu Ekle/Katıl Modal Kurulumu
+        if (sidebarItems.length > 0) {
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // Eğer zaten aktifse işlem yapma
+                    if (item.classList.contains('active')) return;
+
+                    // Tüm öğelerden active sınıfını kaldır
+                    sidebarItems.forEach(i => i.classList.remove('active'));
+
+                    // Tıklanan öğeye active sınıfını ekle
+                    item.classList.add('active');
+
+                    // Öğeler arası gezinme mantığı
+                    const itemText = item.querySelector('.sidebar-item-text').textContent.trim().toLowerCase();
+
+                    switch (itemText) {
+                        case 'ana sayfa':
+                            console.log('Ana Sayfa seçildi');
+                            // Ana sayfa için yapılacak işlemler
+                            break;
+                        case 'arkadaşlar':
+                            console.log('Arkadaşlar seçildi');
+                            // Arkadaşlar sayfası işlemleri
+                            break;
+                        case 'sunucular':
+                            console.log('Sunucular seçildi');
+                            // Sunucular sayfası işlemleri
+                            break;
+                        case 'mağaza':
+                            console.log('Mağaza seçildi');
+                            // Mağaza sayfasına yönlendir
+                            window.location.href = 'shop.html';
+                            break;
+                        case 'ayarlar':
+                            console.log('Ayarlar seçildi');
+                            // Ayarlar sayfasına yönlendir veya modal aç
+                            window.location.href = 'settings.html';
+                            break;
+                        case 'sunucu ekle':
+                            console.log('Sunucu Ekle seçildi');
+                            // Sunucu ekleme modalını aç
+                            const serverModal = document.querySelector('#server-modal');
+                            if (serverModal) serverModal.classList.add('active');
+                            break;
+                    }
+                });
+            });
+        }
+
+        // Bildirim göstergelerini etkinleştir
+        toggleNotifications(true);
+    }
+
+    // Bildirimleri gösterme/gizleme fonksiyonu
+    function toggleNotifications(show = true, notificationCount = 3) {
+        const notificationBadge = document.querySelector('.sidebar-notification');
+
+        if (notificationBadge) {
+            if (show && notificationCount > 0) {
+                notificationBadge.textContent = notificationCount;
+                notificationBadge.classList.add('show');
+            } else {
+                notificationBadge.classList.remove('show');
+            }
+        }
+    }
+
+    // Sunucu Ekle Modal Kurulumu
     function setupServerModal() {
         document.body.addEventListener('click', function (event) {
-            if (event.target.closest('.server-add-icon')) {
+            if (event.target.closest('.sidebar-item.add-server')) {
                 const modal = document.querySelector('#server-modal');
                 if (modal) {
                     modal.classList.add('active');
@@ -339,12 +412,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Presence takip sistemini başlat
         initializePresence();
 
-        // Arkadaş Ekle modalı kaldırıldı
+        // Arkadaş Ekle butonu kurulumu
+        const addFriendButton = document.getElementById('add-friend-button');
+        if (addFriendButton) {
+            addFriendButton.addEventListener('click', function () {
+                const addFriendModal = document.getElementById('add-friend-modal');
+                if (addFriendModal) {
+                    addFriendModal.classList.add('show-modal');
+                    const modalContainer = addFriendModal.querySelector('.modal-container');
+                    if (modalContainer) modalContainer.classList.add('show-modal');
+
+                    // Modal içindeki kullanıcı adı giriş alanına odaklan
+                    const usernameInput = document.getElementById('add-friend-username-input');
+                    if (usernameInput) {
+                        setTimeout(() => {
+                            usernameInput.focus();
+                        }, 300);
+                    }
+                }
+            });
+        }
 
         // Sunucu Ekle modalını kur (YENİ)
         setupServerModal();
-
-        // Arkadaş Ekle modalı kaldırıldı
 
         // Bekleyen arkadaşlık istekleri için realtime aboneliğini kur
         setupPendingFriendRequestSubscription();
