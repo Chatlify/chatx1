@@ -30,14 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const modalContainer = modalOverlay.querySelector('.modal-container');
         const closeModalButton = modalOverlay.querySelector('.close-modal-btn');
         const addFriendForm = modalOverlay.querySelector('#add-friend-form');
         const usernameInput = modalOverlay.querySelector('#add-friend-username-input');
         const statusMessage = modalOverlay.querySelector('#friend-request-status');
 
         // Elementlerin bulunup bulunmadığını daha sağlam bir şekilde kontrol et
-        if (!closeModalButton || !addFriendForm || !usernameInput || !statusMessage) {
+        if (!modalContainer || !closeModalButton || !addFriendForm || !usernameInput || !statusMessage) {
             console.error('Modal içindeki alt elementlerden biri veya birkaçı bulunamadı.', {
+                modalContainer,
                 closeModalButton,
                 addFriendForm,
                 usernameInput,
@@ -47,20 +49,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const openModal = () => {
-            modalOverlay.classList.add('active');
-            usernameInput.focus();
+            document.body.style.overflow = 'hidden'; // Arka planın kaydırılmasını engelle
+            modalOverlay.style.display = 'flex';
+
+            // Kısa bir gecikme sonrası active sınıfını ekle (CSS geçişi için)
+            setTimeout(() => {
+                modalOverlay.classList.add('active');
+                usernameInput.focus(); // Input alanına odaklan
+            }, 10);
         };
 
         const closeModal = () => {
             modalOverlay.classList.remove('active');
-            // Formu ve durum mesajını sıfırla
-            addFriendForm.reset();
-            statusMessage.textContent = '';
-            statusMessage.className = 'status-message';
+
+            // Animasyon süresi kadar bekleyip modalı gizle
+            setTimeout(() => {
+                modalOverlay.style.display = 'none';
+                document.body.style.overflow = ''; // Kaydırmayı geri aç
+
+                // Formu ve durum mesajını sıfırla
+                addFriendForm.reset();
+                clearStatusMessage();
+            }, 300);
         };
+
+        const clearStatusMessage = () => {
+            statusMessage.className = 'status-message';
+            statusMessage.textContent = '';
+        };
+
+        // Klavye erişilebilirliği için Enter tuşu ile buton tıklatma özelliği
+        closeModalButton.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                closeModal();
+            }
+        });
 
         addFriendButton.addEventListener('click', openModal);
         closeModalButton.addEventListener('click', closeModal);
+
+        // Klavye kontrolü - ESC tuşu ile modalı kapatma
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
         modalOverlay.addEventListener('click', (event) => {
             // Sadece overlay'in kendisine tıklandığında kapat
             if (event.target === modalOverlay) {
@@ -79,7 +114,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (typeof sendFriendRequest === 'function') {
                 try {
+                    // Gönder butonunu devre dışı bırak ve yükleniyor göster
+                    const submitButton = addFriendForm.querySelector('.send-request-btn');
+                    const originalText = submitButton.innerHTML;
+
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
+
                     await sendFriendRequest(fullUsername);
+
+                    // Butonu eski haline getir
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+
                     showStatus(`'${fullUsername}' kişisine arkadaşlık isteği gönderildi!`, 'success');
 
                     setTimeout(() => {
@@ -87,6 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 2000);
 
                 } catch (error) {
+                    const submitButton = addFriendForm.querySelector('.send-request-btn');
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+
                     showStatus(error.message || 'İstek gönderilirken bir hata oluştu.', 'error');
                 }
             } else {
@@ -96,8 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function showStatus(message, type) {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`; // 'success' veya 'error'
+            // Önce mevcut durum mesajını temizle
+            clearStatusMessage();
+
+            // Küçük bir gecikmeyle yeni mesajı göster (animasyon için)
+            setTimeout(() => {
+                statusMessage.textContent = message;
+                statusMessage.className = `status-message ${type}`; // 'success' veya 'error'
+            }, 10);
         }
     }
 }); 

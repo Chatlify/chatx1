@@ -2,11 +2,32 @@
 [Master Stylesheet]
 
 Project:        Chatlify - Arkadaş Ekle Modülü
-Version:        1.1
+Version:        1.2
 Last change:    [Tarih]
 Author:         [İsim]
 Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 -------------------------------------------------------------------*/
+
+/* ===== Ana Değişkenler ===== */
+:root {
+    --accent-gradient: linear-gradient(135deg, #3d68e7, #6a11cb);
+    --accent-hover-gradient: linear-gradient(135deg, #4a7bff, #7a21db);
+    --modal-bg: #2c2f33;
+    --modal-header-bg: #23272a;
+    --modal-border: #1a1c1e;
+    --input-bg: #202225;
+    --text-primary: #ffffff;
+    --text-secondary: #dcddde;
+    --text-muted: #b9bbbe;
+    --text-placeholder: #72767d;
+    --discord-blue: #7289da;
+    --discord-purple: #5865f2;
+    --discord-purple-hover: #4752c4;
+    --success-color: #4fac60;
+    --error-color: #f04747;
+    --modal-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    --btn-shadow: 0 4px 8px rgba(61, 104, 231, 0.3);
+}
 
 /* Stillerin başka hiçbir şeyi etkilememesi için tüm kuralları modal'ın ID'si altına alıyoruz */
 
@@ -18,21 +39,38 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     gap: 8px;
     height: 38px;
     padding: 0 16px;
-    background: linear-gradient(135deg, #3d68e7, #6a11cb);
-    color: white;
+    background: var(--accent-gradient);
+    color: var(--text-primary);
     border: none;
     border-radius: 8px;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s ease;
-    box-shadow: 0 4px 8px rgba(61, 104, 231, 0.3);
+    box-shadow: var(--btn-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.add-friend-btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent-hover-gradient);
+    opacity: 0;
+    transition: opacity 0.25s ease;
 }
 
 .add-friend-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(61, 104, 231, 0.4);
-    background: linear-gradient(135deg, #4a7bff, #7a21db);
+}
+
+.add-friend-btn:hover:before {
+    opacity: 1;
 }
 
 .add-friend-btn:active {
@@ -42,8 +80,14 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 
 .add-friend-btn .fa-user-plus {
     font-size: 1rem;
+    position: relative;
+    z-index: 2;
 }
 
+.add-friend-btn span {
+    position: relative;
+    z-index: 2;
+}
 
 /* Modal Overlay (Arka Plan Karartması) */
 #add-friend-modal.modal-overlay {
@@ -53,6 +97,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     width: 100%;
     height: 100%;
     background-color: rgba(10, 10, 15, 0.7);
+    backdrop-filter: blur(3px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -61,6 +106,8 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 #add-friend-modal.modal-overlay.active {
@@ -71,20 +118,22 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 
 /* Modal Container (Ana Panel) */
 #add-friend-modal .modal-container {
-    background-color: #2c2f33;
+    background-color: var(--modal-bg);
     /* Discord'un koyu temasına benzer */
-    color: #ffffff;
+    color: var(--text-primary);
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    width: 90%;
-    max-width: 480px;
-    transform: scale(0.95);
+    box-shadow: var(--modal-shadow);
+    width: 100%;
+    max-width: 430px;
+    transform: scale(0.95) translateY(20px);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     overflow: hidden;
+    border: 1px solid var(--modal-border);
+    position: relative;
 }
 
 #add-friend-modal.modal-overlay.active .modal-container {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
 }
 
 
@@ -94,9 +143,20 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    background-color: #23272a;
+    background-color: var(--modal-header-bg);
     /* Biraz daha koyu bir başlık alanı */
-    border-bottom: 1px solid #1a1c1e;
+    border-bottom: 1px solid var(--modal-border);
+    position: relative;
+}
+
+#add-friend-modal .modal-header:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(114, 137, 218, 0.3), transparent);
 }
 
 #add-friend-modal .modal-header-content {
@@ -106,45 +166,64 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 }
 
 #add-friend-modal .modal-icon {
-    font-size: 1.4rem;
-    color: #7289da;
-    /* Discord mavisi */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: var(--text-primary);
+    font-size: 1.2rem;
 }
 
 #add-friend-modal .modal-header h3 {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 #add-friend-modal .close-modal-btn {
     background: none;
     border: none;
-    color: #b9bbbe;
+    color: var(--text-muted);
     font-size: 1.2rem;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #add-friend-modal .close-modal-btn:hover {
-    color: #ffffff;
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
 }
 
 
 /* Modal Content */
 #add-friend-modal .modal-content {
-    padding: 24px;
+    padding: 28px 24px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 24px;
 }
 
 #add-friend-modal .modal-info {
     margin: 0;
-    color: #dcddde;
+    color: var(--text-secondary);
     font-size: 0.95rem;
     line-height: 1.5;
     text-align: center;
+    padding: 0 10px;
 }
 
 
@@ -152,7 +231,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 #add-friend-modal .input-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 #add-friend-modal .add-friend-input-container {
@@ -164,33 +243,39 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     top: 50%;
     left: 15px;
     transform: translateY(-50%);
-    color: #72767d;
+    color: var(--text-placeholder);
+    transition: color 0.2s ease;
+    pointer-events: none;
+}
+
+#add-friend-modal #add-friend-username-input:focus+.fa-user,
+#add-friend-modal #add-friend-username-input:not(:placeholder-shown)+.fa-user {
+    color: var(--discord-blue);
 }
 
 #add-friend-modal #add-friend-username-input {
     width: 100%;
-    height: 44px;
-    background-color: #202225;
-    /* Input için en koyu renk */
-    border: 1px solid #1a1c1e;
-    border-radius: 6px;
-    padding: 0 15px 0 40px;
-    /* İkon için solda boşluk */
-    color: #dcddde;
+    height: 46px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--modal-border);
+    border-radius: 8px;
+    padding: 0 16px 0 42px;
+    color: var(--text-secondary);
     font-size: 1rem;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
     box-sizing: border-box;
-    /* Padding ve border'ın genişliği etkilememesi için */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-family: inherit;
 }
 
 #add-friend-modal #add-friend-username-input::placeholder {
-    color: #72767d;
+    color: var(--text-placeholder);
 }
 
 #add-friend-modal #add-friend-username-input:focus {
     outline: none;
-    border-color: #7289da;
-    /* Odaklanınca Discord mavisi */
+    border-color: var(--discord-blue);
+    box-shadow: 0 0 0 2px rgba(114, 137, 218, 0.25), inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -200,48 +285,107 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     align-items: center;
     justify-content: center;
     gap: 10px;
-    height: 44px;
-    background-color: #5865f2;
-    /* Discord'un ana butonu rengi */
-    color: white;
+    height: 46px;
+    background-color: var(--discord-purple);
+    color: var(--text-primary);
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(88, 101, 242, 0.3);
+    font-family: inherit;
 }
 
 #add-friend-modal .send-request-btn:hover {
-    background-color: #4752c4;
-    /* Hover rengi */
+    background-color: var(--discord-purple-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(88, 101, 242, 0.4);
+}
+
+#add-friend-modal .send-request-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(88, 101, 242, 0.4);
+}
+
+#add-friend-modal .send-request-btn span,
+#add-friend-modal .send-request-btn .fa-paper-plane {
+    position: relative;
+    z-index: 2;
 }
 
 #add-friend-modal .send-request-btn .fa-paper-plane {
     font-size: 0.9rem;
+    transition: transform 0.2s ease;
+}
+
+#add-friend-modal .send-request-btn:hover .fa-paper-plane {
+    transform: translateX(3px);
 }
 
 
 /* Durum Mesajları (Başarılı, Hata vb.) */
 #add-friend-modal .status-message {
     text-align: center;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 8px;
     font-weight: 500;
     min-height: 1em;
     /* İçerik olmadığında bile yer kaplaması için */
     display: none;
     /* Varsayılan olarak gizli */
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 #add-friend-modal .status-message.success {
     background-color: rgba(79, 172, 94, 0.15);
-    color: #4fac60;
+    color: var(--success-color);
     display: block;
+    opacity: 1;
+    transform: translateY(0);
+    border: 1px solid rgba(79, 172, 94, 0.2);
 }
 
 #add-friend-modal .status-message.error {
     background-color: rgba(240, 71, 71, 0.15);
-    color: #f04747;
+    color: var(--error-color);
     display: block;
+    opacity: 1;
+    transform: translateY(0);
+    border: 1px solid rgba(240, 71, 71, 0.2);
+}
+
+/* Responsive Ayarlamalar */
+@media (max-width: 576px) {
+    #add-friend-modal .modal-container {
+        max-width: 100%;
+    }
+
+    #add-friend-modal .modal-content {
+        padding: 20px 16px;
+    }
+
+    #add-friend-modal .modal-header {
+        padding: 16px 20px;
+    }
+
+    #add-friend-modal .modal-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    #add-friend-modal .modal-header h3 {
+        font-size: 1.1rem;
+    }
+
+    #add-friend-modal #add-friend-username-input,
+    #add-friend-modal .send-request-btn {
+        height: 42px;
+    }
 }
