@@ -1,0 +1,823 @@
+/*
+    Dashboard Panelleri için Stiller
+    - .friends-panel-container (Arkadaş Listesi ve Header)
+    - .chat-panel (Sohbet Penceresi)
+*/
+
+/* 1. Arkadaşlar Paneli (Friends Panel) */
+
+.friends-panel-container {
+    display: flex;
+    /* Varsayılan olarak görünür */
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.friends-panel-container.hidden {
+    display: none;
+    /* JS ile sohbet açıldığında gizlenecek */
+}
+
+/* Panel Header (Tüm Arkadaşlar, Çevrimiçi sekmeleri vs.) */
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--divider-color);
+    background-color: rgba(26, 32, 54, 0.6);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.header-left .main-title {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.main-title i {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+.tabs-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.tabs-container {
+    display: flex;
+    gap: 8px;
+}
+
+.tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab:hover {
+    background-color: var(--item-hover);
+}
+
+.tab.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.header-right .add-friend-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.add-friend-btn i {
+    margin-right: 6px;
+}
+
+/* Arkadaş Listesi Alanı */
+.friends-list-container {
+    padding: 0 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.friends-section-title {
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.friends-section-title i {
+    margin-right: 8px;
+    font-size: 10px;
+}
+
+.friends-section-title .online-count,
+.friends-section-title .offline-count,
+.friends-section-title .pending-count {
+    margin-left: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.friend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.friend-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.friend-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.friend-avatar {
+    position: relative;
+}
+
+.friend-avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.friend-avatar .status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--secondary-color);
+}
+
+.friend-details .friend-name {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.friend-details .friend-status-text {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.friend-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.friend-actions .btn {
+    background-color: var(--primary-color);
+    border: none;
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.friend-actions .btn:hover {
+    background-color: var(--brand-color);
+    color: #fff;
+}
+
+/* 2. Sohbet Paneli (Chat Panel) - YENİ MODERN TASARIM */
+
+.chat-panel {
+    display: none;
+    /* Varsayılan olarak gizli */
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: var(--main-bg);
+    position: absolute;
+    /* .main-content'e göre konumlanacak */
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.chat-panel:not(.hidden) {
+    display: flex;
+    /* JS ile .hidden class'ı kaldırıldığında görünür hale gelir */
+}
+
+/* Şık Sohbet Başlığı */
+.chat-header {
+    height: 70px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(33, 40, 66, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--divider-color);
+    flex-shrink: 0;
+}
+
+.chat-header-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.chat-avatar {
+    position: relative;
+}
+
+.chat-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+.chat-avatar .status-dot {
+    border-width: 3px;
+    width: 16px;
+    height: 16px;
+    border-color: #212842
+}
+
+.chat-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-username {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.chat-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.chat-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-header-actions .chat-action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: transparent;
+    transition: background-color 0.2s, color 0.2s;
+    border: 1px solid transparent;
+}
+
+/* Header Buton Renkleri ve Hover Efektleri */
+.chat-header-actions .chat-action-btn[title="Sesli Arama"] {
+    color: var(--success-color);
+}
+
+.chat-header-actions .chat-action-btn[title="Görüntülü Arama"] {
+    color: var(--primary-color);
+}
+
+.chat-header-actions .chat-action-btn[title="Profil"] {
+    color: #a0a8d3;
+}
+
+.chat-header-actions .chat-action-btn[title="Sohbeti Kapat"] {
+    color: var(--danger-color);
+}
+
+.chat-header-actions .chat-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Şık Mesaj Alanı */
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.message-date-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 16px 0;
+    color: var(--text-secondary);
+}
+
+.message-date-divider::before,
+.message-date-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.message-date-divider span {
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.message-group {
+    display: flex;
+    margin-bottom: 4px;
+    align-items: flex-end;
+}
+
+.message-group-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.message-group-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.message-group-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 75%;
+}
+
+.message-group-header {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+.message-author {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-right: 8px;
+    font-size: 15px;
+}
+
+.message-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.message-content {
+    background-color: #2a314e;
+    padding: 10px 14px;
+    border-radius: 18px;
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+.message-content p {
+    margin: 0;
+}
+
+/* Gruplanmış mesajlar için köşe ayarı */
+.message-group-content .message-content {
+    border-bottom-left-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.message-group-content .message-content:last-child {
+    border-bottom-left-radius: 18px;
+}
+
+/* Kendi Mesajların */
+.message-group.own-message {
+    align-self: flex-end;
+}
+
+.message-group.own-message .message-group-content {
+    align-items: flex-end;
+}
+
+.message-group.own-message .message-content {
+    background: var(--gradient-primary);
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 4px;
+}
+
+.message-group.own-message .message-group-content .message-content:last-child {
+    border-bottom-right-radius: 18px;
+}
+
+.message-group.own-message .message-group-avatar {
+    display: none;
+}
+
+.message-group.own-message .message-group-header {
+    align-self: flex-end;
+}
+
+
+/* Şık Metin Giriş Alanı */
+.chat-input-area {
+    padding: 12px 20px;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--divider-color);
+}
+
+.chat-attachments {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-attachments .chat-attachment-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--item-hover);
+    border: none;
+    color: var(--text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chat-attachments .chat-attachment-btn:hover {
+    background-color: #3d68e7;
+    color: white;
+}
+
+.chat-textbox {
+    flex: 1;
+    background-color: #2a314e;
+    border-radius: 20px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+}
+
+.chat-textbox textarea {
+    width: 100%;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 15px;
+    resize: none;
+    max-height: 100px;
+    padding: 10px 5px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.chat-textbox textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+.chat-actions .chat-action-btn,
+.chat-actions .chat-send-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: color 0.2s;
+}
+
+.chat-actions .chat-action-btn:hover,
+.chat-actions .chat-send-btn:hover {
+    color: white;
+}
+
+.chat-actions .chat-send-btn {
+    color: var(--primary-color);
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.chat-actions .chat-send-btn:hover {
+    color: white;
+    background-color: var(--primary-color);
+}
+
+.chat-header .header-icons button {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 20px;
+    margin-left: 15px;
+    transition: color 0.2s;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.chat-header .header-icons button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-header .header-icons .call-btn {
+    color: #2ecc71;
+}
+
+.chat-header .header-icons .profile-btn {
+    color: #3498db;
+}
+
+.chat-header .header-icons .close-btn {
+    color: #e74c3c;
+}
+
+/* =================================
+   Profil Modalı (Yatay Tasarım)
+   ================================= */
+.profile-modal-overlay {
+    display: flex;
+    /* İçeriği ortalamak için flex kalmalı */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    /* Arka planı biraz daha koyu yaptım */
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    /* Başlangıçta görünmez */
+    pointer-events: none;
+    /* Tıklanamaz */
+    transition: opacity 0.25s ease-in-out;
+}
+
+.profile-modal-overlay.is-visible {
+    opacity: 1;
+    /* Görünür yap */
+    pointer-events: auto;
+    /* Tıklanabilir yap */
+}
+
+.profile-modal-content.horizontal {
+    display: flex;
+    flex-direction: row;
+    background-color: var(--dm-bg, #1a2036);
+    /* RENK SORUNU ÇÖZÜLDÜ */
+    width: 640px;
+    max-width: 95%;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transform: scale(0.95);
+    /* Başlangıçta küçük */
+    transition: transform 0.25s ease-in-out;
+}
+
+.profile-modal-overlay.is-visible .profile-modal-content.horizontal {
+    transform: scale(1);
+    /* Büyüyerek ekrana gelsin */
+}
+
+.profile-modal-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    border: none;
+    color: #b9bbbe;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.profile-modal-close-btn:hover {
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+
+/* Sol Panel */
+.profile-modal-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--server-bg, #161b2e);
+    /* RENK SORUNU ÇÖZÜLDÜ */
+    padding: 24px;
+    width: 240px;
+    flex-shrink: 0;
+    position: relative;
+    text-align: center;
+    border-right: 1px solid #212225;
+}
+
+.profile-modal-left .profile-modal-avatar {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 16px;
+}
+
+.profile-modal-left .profile-modal-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid #36393f;
+}
+
+.status-dot-modal {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 5px solid #2f3136;
+    background-clip: content-box;
+    /* Önemli: Kenarlık içeri itilir */
+}
+
+.status-dot-modal.online {
+    background-color: #43b581;
+}
+
+.status-dot-modal.offline {
+    background-color: #747f8d;
+}
+
+.status-dot-modal.idle {
+    background-color: #faa61a;
+}
+
+.status-dot-modal.dnd {
+    background-color: #f04747;
+}
+
+
+.profile-modal-left .username {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+.profile-modal-left .status-text {
+    font-size: 14px;
+    color: #b9bbbe;
+    margin-top: 4px;
+}
+
+/* Sağ Panel */
+.profile-modal-right {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    flex-grow: 1;
+    justify-content: flex-start;
+}
+
+.profile-modal-right .info-section {
+    margin-bottom: 20px;
+}
+
+.profile-modal-right .info-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.profile-modal-right .info-section h4 {
+    color: #b9bbbe;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0 8px 0;
+}
+
+.profile-modal-right .info-section p {
+    color: #dcddde;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.badges-section .badges-container {
+    display: flex;
+    gap: 8px;
+    min-height: 24px;
+    align-items: center;
+}
+
+.badges-container i {
+    font-size: 22px;
+    color: #5865f2;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.badges-container i:hover {
+    opacity: 1;
+}
+
+.profile-modal-right .actions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #3c3f46;
+}
+
+.actions-section .btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    letter-spacing: 0.5px;
+}
+
+.actions-section .btn i {
+    font-size: 16px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.actions-section .btn:hover i {
+    transform: scale(1.1);
+}
+
+.actions-section .btn.btn-primary {
+    background-color: #5865F2;
+    color: #fff;
+}
+
+.actions-section .btn.btn-primary:hover {
+    background-color: #4e5ad8;
+    box-shadow: 0 4px 10px rgba(88, 101, 242, 0.3);
+    transform: translateY(-2px);
+}
+
+.actions-section .btn.btn-danger {
+    background-color: #422026;
+    color: #da525e;
+    border-color: #5e2e35;
+}
+
+.actions-section .btn.btn-danger:hover {
+    background-color: #d83c4a;
+    color: #fff;
+    border-color: #d83c4a;
+    box-shadow: 0 4px 10px rgba(216, 60, 74, 0.3);
+    transform: translateY(-2px);
+}
+
+.actions-section .btn.btn-secondary {
+    background-color: #4f545c;
+    color: #dcddde;
+}
+
+.actions-section .btn.btn-secondary:hover {
+    background-color: #5d636b;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* ==================
+   Chat Panel
+   ================== */

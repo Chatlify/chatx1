@@ -1,0 +1,616 @@
+/* 
+    Dashboard Kenar Çubukları (Sidebars) için Stiller
+    - .server-sidebar (Sunucu Listesi)
+    - .direct-messages (Özel Mesajlar)
+*/
+
+/* 1. Sunucu Kenar Çubuğu (Server Sidebar) */
+
+.server-sidebar {
+    width: 240px;
+    background-color: var(--server-bg, #161b2e);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+.server-sidebar.sidebar-collapsed {
+    width: 0px;
+}
+
+.server-sidebar-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.sidebar-logo:hover {
+    background-color: var(--item-hover);
+}
+
+.logo-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--gradient-primary);
+    flex-shrink: 0;
+}
+
+.logo-icon img {
+    width: 75%;
+    height: 75%;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+.sidebar-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 0 12px;
+    margin: 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-servers {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 8px;
+}
+
+.server-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.server-item:hover {
+    background-color: var(--item-hover);
+}
+
+.server-item.active {
+    background: var(--item-active);
+}
+
+.server-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.server-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.server-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+.sidebar-bottom {
+    border-top: 1px solid var(--divider-color);
+    padding-top: 8px;
+    margin-top: auto;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 4px 12px;
+    border-radius: var(--border-radius-sm, 4px);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    gap: 12px;
+}
+
+.sidebar-item:hover {
+    background-color: var(--item-hover, rgba(255, 255, 255, 0.08));
+    color: var(--text-color);
+}
+
+.sidebar-item-icon {
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #36393f;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.sidebar-item-icon i {
+    transition: all 0.3s ease;
+}
+
+.sidebar-item:hover .sidebar-item-icon {
+    background-color: #5865f2;
+    border-radius: 12px;
+}
+
+.sidebar-item-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Ayarlar Butonu Efekti */
+.sidebar-item.settings:hover .sidebar-item-icon i {
+    transform: rotate(180deg);
+}
+
+/* Mağaza Butonu Rengi */
+.sidebar-item.shop .sidebar-item-icon i {
+    color: #f39c12;
+    /* Turuncu */
+}
+
+.sidebar-item.shop:hover .sidebar-item-icon {
+    background-color: #f39c12;
+}
+
+.sidebar-item.shop:hover .sidebar-item-icon i {
+    color: #fff;
+}
+
+/* Sunucu İşlemleri Butonu Rengi ve Efekti */
+.sidebar-item.add-server .sidebar-item-icon i {
+    color: #2ecc71;
+    /* Yeşil */
+}
+
+.sidebar-item.add-server:hover .sidebar-item-icon {
+    background-color: #2ecc71;
+}
+
+.sidebar-item.add-server:hover .sidebar-item-icon i {
+    color: #fff;
+    transform: scale(1.2) rotate(90deg);
+}
+
+/* 2. Özel Mesajlar Kenar Çubuğu (Direct Messages) */
+
+.direct-messages {
+    width: var(--dm-sidebar-width);
+    height: 100%;
+    background-color: var(--dm-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 5;
+    border-right: 1px solid var(--divider-color);
+}
+
+.dm-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--divider-color);
+    flex-shrink: 0;
+}
+
+.sidebar-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 22px;
+    cursor: pointer;
+    margin-right: 15px;
+    padding: 5px;
+}
+
+.sidebar-toggle-btn:hover {
+    color: var(--text-color);
+}
+
+.dm-header-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.dm-search {
+    margin: 8px 10px;
+    position: relative;
+}
+
+.dm-search input {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: none;
+    color: var(--text-color);
+    font-size: 14px;
+    height: 28px;
+    padding: 0 12px 0 30px;
+}
+
+.dm-search i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.chat-type-selector {
+    display: flex;
+    margin: 8px 10px;
+}
+
+.chat-type-btn {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.chat-type-btn:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.chat-type-btn:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.chat-type-btn.active {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.dm-groups {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px;
+}
+
+.dm-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.dm-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.dm-group-toggle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.dm-group.collapsed .dm-group-toggle {
+    transform: rotate(-90deg);
+}
+
+.dm-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 1px;
+}
+
+.dm-item:hover {
+    background-color: var(--item-hover);
+}
+
+.dm-item.active {
+    background-color: var(--item-active);
+}
+
+.dm-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    position: relative;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.dm-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.dm-status {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #9e9e9e;
+    /* offline */
+    box-shadow: 0 0 0 2px var(--dm-bg);
+}
+
+.dm-status.online {
+    background-color: #36e6a0;
+}
+
+.dm-status.idle {
+    background-color: #ffc107;
+}
+
+.dm-status.dnd {
+    background-color: #ff5252;
+}
+
+.dm-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dm-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.dm-activity {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-notification {
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 8px;
+}
+
+.dm-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.dm-user {
+    display: flex;
+    align-items: center;
+}
+
+.dm-user-avatar {
+    position: relative;
+}
+
+.dm-user-avatar img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.dm-user-avatar .dm-status {
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.dm-user-name {
+    font-weight: 600;
+}
+
+.dm-user-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dm-user-control {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    color: var(--text-muted);
+    background-color: var(--item-hover);
+}
+
+.dm-user-control:hover {
+    color: var(--text-normal);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Çıkış Yap Butonu Özel Stilleri */
+.logout-button {
+    background-color: var(--danger-color-muted);
+    color: var(--danger-color);
+}
+
+.logout-button:hover {
+    background-color: var(--danger-color);
+    color: #fff;
+}
+
+/* 3. Sponsorlu Sunucular Kenar Çubuğu (Sponsor Sidebar) */
+
+.sponsor-sidebar {
+    width: var(--sponsor-sidebar-width);
+    height: 100%;
+    background-color: var(--sponsor-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    border-left: 1px solid var(--divider-color);
+    padding: 0 12px;
+}
+
+.sponsor-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--divider-color);
+    flex-shrink: 0;
+}
+
+.sponsor-header-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.sponsor-search {
+    margin: 8px 0;
+    position: relative;
+}
+
+.sponsor-search input {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: none;
+    color: var(--text-color);
+    font-size: 14px;
+    height: 28px;
+    padding: 0 12px 0 30px;
+}
+
+.sponsor-search i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.sponsor-servers {
+    flex: 1;
+    overflow-y: auto;
+    margin: 8px -12px 0 -12px;
+    padding: 0 12px;
+}
+
+.sponsor-server {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--divider-color);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.sponsor-server-icon {
+    margin-bottom: 8px;
+}
+
+.sponsor-server-icon img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+.sponsor-server-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.sponsor-server-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.sponsor-server-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.sponsor-server-meta div {
+    display: flex;
+    align-items: center;
+}
+
+.sponsor-server-meta i {
+    margin-right: 5px;
+}
+
+.sponsor-server-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 4px;
+}

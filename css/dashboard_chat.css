@@ -1,0 +1,91 @@
+/* Dashboard Chat Panel Styles */
+/* Bu dosya, gelecekteki sohbet paneli özelleştirmeleri için ayrılmıştır. */
+
+/* Genel Mesaj Grubu Stilleri (Gelen Mesajlar) */
+.message-group {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    max-width: 85%;
+    width: fit-content;
+}
+
+.message-group-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.message-group-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.message-group-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-group-header {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 5px;
+}
+
+.message-author {
+    font-weight: 600;
+    font-size: 0.95em;
+    margin-right: 10px;
+    color: #ffffff;
+}
+
+.message-time {
+    font-size: 0.75em;
+    color: #a0a8b4;
+}
+
+.message-content {
+    background-color: #2f3136; /* Discord's dark theme color */
+    padding: 10px 15px;
+    border-radius: 12px;
+    border-top-left-radius: 0;
+    color: #dcddde;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.message-content p {
+    margin: 0;
+}
+
+
+/* KULLANICININ KENDİ MESAJLARI (SAĞA HİZALI) */
+.message-group.own-message {
+    margin-left: auto; /* Sağa hizalamak için */
+    flex-direction: row-reverse; /* Avatarı sağa almak için */
+}
+
+.message-group.own-message .message-group-avatar {
+    margin-right: 0;
+    margin-left: 15px;
+}
+
+.message-group.own-message .message-group-content {
+    align-items: flex-end; /* İçeriği (zaman, isim) sağa hizala */
+}
+
+.message-group.own-message .message-content {
+    background-color: #3498db; /* Mavi bir arka plan */
+    color: #ffffff; /* Beyaz metin */
+    border-top-left-radius: 12px;
+    border-top-right-radius: 0; /* Sağ üst köşeyi sivri yap */
+}
+
+.message-group.own-message .message-author {
+    /* Kendi mesajında yazar adını gizlemek daha temiz bir görünüm sağlar */
+    display: none;
+}

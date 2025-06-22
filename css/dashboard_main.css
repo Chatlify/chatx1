@@ -1,0 +1,85 @@
+/* Dashboard Ana Stil Dosyası */
+
+:root {
+    /* Değişkenler */
+    --dm-sidebar-width: 240px;
+    --sponsor-sidebar-width: 300px;
+    --header-height: 48px;
+    --footer-height: 52px;
+    --animation-speed: 0.2s;
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    /* Renkler */
+    --server-bg: #161b2e;
+    --dm-bg: #1a2036;
+    --main-bg: #212842;
+    --sponsor-bg: #1a2036;
+    --primary-color: #3d68e7;
+    --primary-color-rgb: 61, 104, 231;
+    --primary-light: #5a7fef;
+    --secondary-color: #6a11cb;
+    --text-color: #ffffff;
+    --text-secondary: #c3c8e6;
+    --success-color: #36e6a0;
+    --danger-color: #ff5252;
+    --divider-color: rgba(255, 255, 255, 0.08);
+    --item-hover: rgba(255, 255, 255, 0.08);
+    --item-active: rgba(61, 104, 231, 0.3);
+
+    /* Gradyanlar */
+    --gradient-primary: linear-gradient(135deg, #3d68e7, #6a11cb);
+}
+
+/* Genel Sayfa ve Scrollbar Ayarları */
+* {
+    box-sizing: border-box;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+.dashboard-page {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    background-color: var(--main-bg);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
+}
+
+/* Ana Konteyner */
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ana İçerik Alanı */
+.main-content {
+    flex: 1;
+    /* Kalan tüm boşluğu doldur */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    /* Çocuk absolute elemanlar için konumlandırma bağlamı */
+}
+
+/* =================================
+   Yardımcı (Utility) Sınıflar
+   ================================= */
+
+/* Bir elementi güvenilir bir şekilde gizlemek için kullanılır */
+.hidden {
+    display: none !important;
+}
