@@ -147,6 +147,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Modern sidebar'ı başlat - Butonların çalışması için bu fonksiyonu çağırıyoruz
+    initModernSidebar();
+
+    // Sunucu Ekle Modal Kapatma Butonu İşlevselliği
+    const serverModal = document.getElementById('server-modal');
+    const closeServerModalBtn = document.querySelector('.close-server-modal-btn');
+
+    if (serverModal && closeServerModalBtn) {
+        closeServerModalBtn.addEventListener('click', () => {
+            serverModal.classList.remove('open');
+            setTimeout(() => {
+                serverModal.style.display = 'none';
+            }, 300);
+        });
+
+        // Modal dışına tıklayarak kapatma
+        serverModal.addEventListener('click', (event) => {
+            if (event.target === serverModal) {
+                serverModal.classList.remove('open');
+                setTimeout(() => {
+                    serverModal.style.display = 'none';
+                }, 300);
+            }
+        });
+
+        // Sunucu oluşturma ve katılma seçeneklerine tıklama işlevselliği
+        const serverOptionCreate = document.getElementById('server-option-create');
+        const serverOptionJoin = document.getElementById('server-option-join');
+        const serverCreateForm = document.getElementById('server-create-form');
+        const serverJoinForm = document.getElementById('server-join-form');
+        const serverOptionsContainer = document.querySelector('.server-options-container');
+
+        if (serverOptionCreate && serverCreateForm && serverOptionsContainer) {
+            serverOptionCreate.addEventListener('click', () => {
+                serverOptionsContainer.style.display = 'none';
+                serverCreateForm.style.display = 'block';
+            });
+        }
+
+        if (serverOptionJoin && serverJoinForm && serverOptionsContainer) {
+            serverOptionJoin.addEventListener('click', () => {
+                serverOptionsContainer.style.display = 'none';
+                serverJoinForm.style.display = 'block';
+            });
+        }
+
+        // Geri butonları için işlevsellik
+        const backToOptionsButtons = document.querySelectorAll('.back-to-options-btn');
+        backToOptionsButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                serverCreateForm.style.display = 'none';
+                serverJoinForm.style.display = 'none';
+                serverOptionsContainer.style.display = 'block';
+            });
+        });
+    }
+
     // "Arkadaş Ekle" ve "Sunucu Ekle" gibi modal pencereleri yönetmek için genel bir fonksiyon
     function setupModal(triggerSelector, modalSelector, closeSelector) {
         const trigger = document.querySelector(triggerSelector);
@@ -249,7 +306,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     switch (itemText) {
                         case 'sunucu ekle':
                             console.log('Sunucu ekle tıklandı');
-                            window.location.href = 'add-server.html';
+                            const serverModal = document.getElementById('server-modal');
+                            if (serverModal) {
+                                serverModal.style.display = 'flex';
+                                setTimeout(() => {
+                                    serverModal.classList.add('open');
+                                }, 10);
+                            }
                             break;
                         case 'mağaza':
                             console.log('Mağaza tıklandı');
