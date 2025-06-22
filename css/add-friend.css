@@ -2,11 +2,13 @@
 [Master Stylesheet]
 
 Project:        Chatlify - Arkadaş Ekle Modülü
-Version:        1.0
+Version:        1.1
 Last change:    [Tarih]
 Author:         [İsim]
 Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 -------------------------------------------------------------------*/
+
+/* Stillerin başka hiçbir şeyi etkilememesi için tüm kuralları modal'ın ID'si altına alıyoruz */
 
 /* Arkadaş Ekle Butonu Stilleri (Dashboard Header) */
 .add-friend-btn {
@@ -44,7 +46,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 
 
 /* Modal Overlay (Arka Plan Karartması) */
-.modal-overlay {
+#add-friend-modal.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -61,14 +63,14 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.modal-overlay.active {
+#add-friend-modal.modal-overlay.active {
     opacity: 1;
     visibility: visible;
 }
 
 
 /* Modal Container (Ana Panel) */
-.modal-container {
+#add-friend-modal .modal-container {
     background-color: #2c2f33;
     /* Discord'un koyu temasına benzer */
     color: #ffffff;
@@ -81,13 +83,13 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     overflow: hidden;
 }
 
-.modal-overlay.active .modal-container {
+#add-friend-modal.modal-overlay.active .modal-container {
     transform: scale(1);
 }
 
 
 /* Modal Header */
-.modal-header {
+#add-friend-modal .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -97,25 +99,25 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     border-bottom: 1px solid #1a1c1e;
 }
 
-.modal-header-content {
+#add-friend-modal .modal-header-content {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.modal-header .modal-icon {
+#add-friend-modal .modal-icon {
     font-size: 1.4rem;
     color: #7289da;
     /* Discord mavisi */
 }
 
-.modal-header h3 {
+#add-friend-modal .modal-header h3 {
     margin: 0;
     font-size: 1.15rem;
     font-weight: 700;
 }
 
-.close-modal-btn {
+#add-friend-modal .close-modal-btn {
     background: none;
     border: none;
     color: #b9bbbe;
@@ -124,20 +126,20 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transition: color 0.2s ease;
 }
 
-.close-modal-btn:hover {
+#add-friend-modal .close-modal-btn:hover {
     color: #ffffff;
 }
 
 
 /* Modal Content */
-.modal-content {
+#add-friend-modal .modal-content {
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 18px;
 }
 
-.modal-info {
+#add-friend-modal .modal-info {
     margin: 0;
     color: #dcddde;
     font-size: 0.95rem;
@@ -147,17 +149,17 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 
 
 /* Input Alanı */
-.input-wrapper {
+#add-friend-modal .input-wrapper {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.add-friend-input-container {
+#add-friend-modal .add-friend-input-container {
     position: relative;
 }
 
-.add-friend-input-container .fa-user {
+#add-friend-modal .add-friend-input-container .fa-user {
     position: absolute;
     top: 50%;
     left: 15px;
@@ -165,7 +167,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     color: #72767d;
 }
 
-#add-friend-username-input {
+#add-friend-modal #add-friend-username-input {
     width: 100%;
     height: 44px;
     background-color: #202225;
@@ -181,11 +183,11 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     /* Padding ve border'ın genişliği etkilememesi için */
 }
 
-#add-friend-username-input::placeholder {
+#add-friend-modal #add-friend-username-input::placeholder {
     color: #72767d;
 }
 
-#add-friend-username-input:focus {
+#add-friend-modal #add-friend-username-input:focus {
     outline: none;
     border-color: #7289da;
     /* Odaklanınca Discord mavisi */
@@ -193,7 +195,7 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
 
 
 /* Gönder Butonu */
-.send-request-btn {
+#add-friend-modal .send-request-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -210,33 +212,35 @@ Primary Use:    Arkadaş Ekle Butonu ve Paneli Stilleri
     transition: background-color 0.2s ease;
 }
 
-.send-request-btn:hover {
+#add-friend-modal .send-request-btn:hover {
     background-color: #4752c4;
     /* Hover rengi */
 }
 
-.send-request-btn .fa-paper-plane {
+#add-friend-modal .send-request-btn .fa-paper-plane {
     font-size: 0.9rem;
 }
 
 
 /* Durum Mesajları (Başarılı, Hata vb.) */
-.status-message {
+#add-friend-modal .status-message {
     text-align: center;
     padding: 10px;
     border-radius: 5px;
     font-weight: 500;
+    min-height: 1em;
+    /* İçerik olmadığında bile yer kaplaması için */
     display: none;
     /* Varsayılan olarak gizli */
 }
 
-.status-message.success {
+#add-friend-modal .status-message.success {
     background-color: rgba(79, 172, 94, 0.15);
     color: #4fac60;
     display: block;
 }
 
-.status-message.error {
+#add-friend-modal .status-message.error {
     background-color: rgba(240, 71, 71, 0.15);
     color: #f04747;
     display: block;

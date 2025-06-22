@@ -7,15 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Gerekli CSS dosyasını sayfaya ekle
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'css/add-friend.css';
-    document.head.appendChild(link);
-
     // Modal HTML'ini yükle
     fetch('add-friend.html')
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.text();
+        })
         .then(html => {
             modalContainer.innerHTML = html;
             // HTML yüklendikten sonra olay dinleyicilerini kur
@@ -24,14 +23,26 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Arkadaş ekleme modal HTML yüklenirken hata:', error));
 
     function setupModalEventListeners() {
+        // Elementleri, global document yerine modal konteynerı içinde arıyoruz.
         const modalOverlay = document.getElementById('add-friend-modal');
-        const closeModalButton = document.querySelector('.close-modal-btn');
-        const addFriendForm = document.getElementById('add-friend-form');
-        const usernameInput = document.getElementById('add-friend-username-input');
-        const statusMessage = document.getElementById('friend-request-status');
+        if (!modalOverlay) {
+            console.error('Modal overlay elementi (#add-friend-modal) bulunamadı.');
+            return;
+        }
 
-        if (!modalOverlay || !closeModalButton || !addFriendForm || !usernameInput || !statusMessage) {
-            console.error('Modal içindeki elementler bulunamadı.');
+        const closeModalButton = modalOverlay.querySelector('.close-modal-btn');
+        const addFriendForm = modalOverlay.querySelector('#add-friend-form');
+        const usernameInput = modalOverlay.querySelector('#add-friend-username-input');
+        const statusMessage = modalOverlay.querySelector('#friend-request-status');
+
+        // Elementlerin bulunup bulunmadığını daha sağlam bir şekilde kontrol et
+        if (!closeModalButton || !addFriendForm || !usernameInput || !statusMessage) {
+            console.error('Modal içindeki alt elementlerden biri veya birkaçı bulunamadı.', {
+                closeModalButton,
+                addFriendForm,
+                usernameInput,
+                statusMessage
+            });
             return;
         }
 
@@ -51,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addFriendButton.addEventListener('click', openModal);
         closeModalButton.addEventListener('click', closeModal);
         modalOverlay.addEventListener('click', (event) => {
+            // Sadece overlay'in kendisine tıklandığında kapat
             if (event.target === modalOverlay) {
                 closeModal();
             }
@@ -65,22 +77,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // `sendFriendRequest` global fonksiyonunu çağırıyoruz
-            // Bu fonksiyonun js/dashboard.js içinde tanımlı olduğunu ve global erişime açık olduğunu varsayıyoruz.
             if (typeof sendFriendRequest === 'function') {
                 try {
-                    // Not: Orijinal sendFriendRequest fonksiyonu sadece username alıyor olabilir.
-                    // Biz burada kullanıcı adını ve etiketi ayırmadan direkt gönderiyoruz.
-                    // Gerekirse dashboard.js'teki fonksiyonu güncellemek gerekebilir.
-                    // Şimdilik, fonksiyonun "username#tag" formatını işleyebildiğini varsayalım.
                     await sendFriendRequest(fullUsername);
-
                     showStatus(`'${fullUsername}' kişisine arkadaşlık isteği gönderildi!`, 'success');
 
-                    // Başarılı gönderim sonrası formu temizle ve modalı kapat
                     setTimeout(() => {
                         closeModal();
-                    }, 2000); // Kullanıcının mesajı okuması için 2 saniye bekle
+                    }, 2000);
 
                 } catch (error) {
                     showStatus(error.message || 'İstek gönderilirken bir hata oluştu.', 'error');
