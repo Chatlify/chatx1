@@ -10,7 +10,7 @@
     --sidebar-item-icon: rgba(255, 255, 255, 0.8);
 
     /* Boyutlar */
-    --sidebar-width: 72px;
+    --sidebar-width: 60px;
     --sidebar-expanded-width: 240px;
     --sidebar-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -51,9 +51,9 @@
 .sidebar-toggle {
     position: absolute;
     top: 50%;
-    right: -12px;
-    width: 24px;
-    height: 24px;
+    right: -14px;
+    width: 28px;
+    height: 28px;
     background: linear-gradient(135deg, #8a61ff, #6b42e0);
     border-radius: 50%;
     display: flex;
@@ -63,16 +63,18 @@
     transform: translateY(-50%);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     z-index: 20;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-toggle:hover {
     transform: translateY(-50%) scale(1.1);
+    background: linear-gradient(135deg, #9d7aff, #7e5af0);
 }
 
 .sidebar-toggle i {
     color: white;
-    font-size: 12px;
+    font-size: 14px;
     transition: transform 0.3s ease;
 }
 

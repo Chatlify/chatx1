@@ -184,9 +184,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sidebar = document.querySelector('.server-sidebar');
 
         if (sidebarToggle && sidebar) {
+            // Başlangıçta sidebar kapalı olsun
+            sidebar.classList.remove('expanded');
+
+            // Toggle butonuna tıklandığında sidebar'ı aç/kapat
             sidebarToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('expanded');
+
+                // Toggle butonu ikonunu değiştir
+                const icon = sidebarToggle.querySelector('i');
+                if (sidebar.classList.contains('expanded')) {
+                    icon.className = 'fas fa-chevron-left';
+                } else {
+                    icon.className = 'fas fa-chevron-right';
+                }
             });
+
+            // Sayfa yüklendiğinde toggle butonunun ikonunu ayarla
+            const icon = sidebarToggle.querySelector('i');
+            if (sidebar.classList.contains('expanded')) {
+                icon.className = 'fas fa-chevron-left';
+            } else {
+                icon.className = 'fas fa-chevron-right';
+            }
         }
 
         // Sunucu öğelerine tıklama işlevselliği ekle
