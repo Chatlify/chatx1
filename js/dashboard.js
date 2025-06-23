@@ -718,8 +718,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // --- DYNAMIC COMPONENT LOADER ---
+    /**
+     * Loads an HTML component into the DOM and initializes its specific JS.
+     * @param {string} componentName - The name of the component (e.g., 'add-friend').
+     */
     async function loadComponent(componentName) {
-        const componentPath = `../components/${componentName}/${componentName}`;
+        const componentPath = `components/${componentName}/${componentName}`; // Corrected path
         try {
             // 1. Fetch HTML
             const response = await fetch(`${componentPath}.html`);
@@ -734,24 +738,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.head.appendChild(cssLink);
 
             // 3. Load and execute JS
-            // Use a script tag to ensure it's handled correctly by the browser
             const script = document.createElement('script');
-            script.src = `${componentPath}.js`;
-            script.type = 'module'; // Assuming component scripts can be modules
-            document.body.appendChild(script);
+            script.src = `${componentPath}.js`; // Load as a regular script, not a module
 
-            // Give the script a moment to load and define its initializer
-            setTimeout(() => {
+            // Use onload to ensure the script is executed before we try to use it
+            script.onload = () => {
                 if (window.initializeAddFriendPanel) {
                     window.initializeAddFriendPanel(supabase, () => {
-                        // Optional: Clean up after panel is closed
                         console.log(`${componentName} panel closed and cleaned up.`);
-                        // The component's close function should handle its own removal
+                        // The component's close function should handle its own removal.
+                        // We also clean up the script and CSS to prevent clutter.
+                        const panel = document.getElementById('add-friend-panel');
+                        if (panel) panel.remove();
+                        script.remove();
+                        cssLink.remove();
                     });
                 } else {
                     console.error(`Initializer for ${componentName} not found.`);
                 }
-            }, 100);
+            };
+            script.onerror = () => {
+                console.error(`Failed to load script: ${componentPath}.js`);
+            };
+            document.body.appendChild(script);
 
         } catch (error) {
             console.error(`Error loading component ${componentName}:`, error);
