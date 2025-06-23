@@ -120,12 +120,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 console.log("Arkadaş verileri:", data);
 
+                if (!data || data.length === 0) {
+                    console.log("Arkadaş bulunamadı");
+                    return [];
+                }
+
                 // Arkadaş listesini dönüştür
                 const friends = data.map(f => {
                     // Eğer user_id_1 bizim ID'miz ise, user_id_2'nin profilini döndür
                     // Değilse, user_id_1'in profilini döndür
-                    return f.user_id_1 === userId ? f.profiles_2 : f.profiles_1;
-                });
+                    const friend = f.user_id_1 === userId ? f.profiles_2 : f.profiles_1;
+                    if (!friend) {
+                        console.error("Arkadaş profili bulunamadı:", f);
+                        return null;
+                    }
+                    return friend;
+                }).filter(Boolean); // null değerleri filtrele
 
                 console.log("İşlenmiş arkadaş listesi:", friends);
                 return friends;
@@ -183,12 +193,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 console.log("Arkadaşlık isteği verileri:", request);
 
+                // Şu anki zamanı al
+                const currentTime = new Date().toISOString();
+
                 // İsteği kabul et
                 const { error: updateError } = await supabase
                     .from('friendships')
                     .update({
                         status: 'accepted',
-                        updated_at: new Date().toISOString()
+                        updated_at: currentTime
                     })
                     .eq('id', requestId);
 
@@ -196,6 +209,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Error accepting friend request:', updateError);
                     return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
                 }
+
+                // Güncellenmiş isteği doğrula
+                const { data: verifyRequest, error: verifyError } = await supabase
+                    .from('friendships')
+                    .select('*')
+                    .eq('id', requestId)
+                    .single();
+
+                if (verifyError || !verifyRequest || verifyRequest.status !== 'accepted') {
+                    console.error('Friendship update verification failed:', verifyError || 'Status not updated');
+                    return { success: false, message: 'Arkadaşlık durumu güncellenemedi.' };
+                }
+
+                console.log("Arkadaşlık isteği başarıyla güncellendi:", verifyRequest);
 
                 // İstek gönderen kullanıcıya bildirim gönder
                 // Bu, istek gönderen kullanıcının arkadaş listesini güncellemesini sağlar
@@ -205,14 +232,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     user_id_1: request.user_id_1,
                     user_id_2: request.user_id_2,
                     status: 'accepted',
-                    updated_at: new Date().toISOString()
+                    updated_at: currentTime
                 });
 
                 // Başarılı sonuç döndür
                 return {
                     success: true,
                     message: 'Arkadaşlık isteği kabul edildi!',
-                    requestData: request
+                    requestData: verifyRequest
                 };
             } catch (error) {
                 console.error('Unexpected error accepting friend request:', error);
@@ -230,18 +257,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // İstek alan kullanıcı için kanal
                 const receiverChannel = `friendship_updates_${data.user_id_2}`;
 
-                // Her iki kanala da güncelleme gönder
-                await supabase.channel(senderChannel).send({
+                // Sender kanalına gönder
+                const senderResult = await supabase.channel(senderChannel).send({
                     type: 'broadcast',
                     event: 'friendship_update',
-                    payload: data,
+                    payload: data
                 });
 
-                await supabase.channel(receiverChannel).send({
+                console.log("Gönderen kullanıcı kanalına mesaj gönderildi:", senderResult);
+
+                // Receiver kanalına gönder
+                const receiverResult = await supabase.channel(receiverChannel).send({
                     type: 'broadcast',
                     event: 'friendship_update',
-                    payload: data,
+                    payload: data
                 });
+
+                console.log("Alan kullanıcı kanalına mesaj gönderildi:", receiverResult);
+
+                // Postgres değişikliklerini tetiklemek için veritabanına bir ping kaydı ekle
+                // Bu, her iki kullanıcının da değişikliği algılamasını sağlar
+                const { error: pingError } = await supabase
+                    .from('friendship_pings')
+                    .insert({
+                        friendship_id: data.friendship_id,
+                        user_id_1: data.user_id_1,
+                        user_id_2: data.user_id_2,
+                        action: data.type,
+                        created_at: data.updated_at
+                    });
+
+                if (pingError && pingError.code !== '42P01') { // Tablo yoksa hatayı yoksay
+                    console.error("Ping kaydı eklenirken hata:", pingError);
+                }
 
                 console.log("Arkadaşlık güncellemesi yayınlandı");
                 return true;
@@ -479,7 +527,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Bekleyen istekleri getir
                 const pendingRequests = await supabaseService.getPendingRequests(state.currentUser.id);
+
+                // Önceki isteklerle karşılaştır ve değişiklik yoksa güncelleme yapma
+                if (JSON.stringify(pendingRequests) === JSON.stringify(state.pendingRequests)) {
+                    console.log("Bekleyen isteklerde değişiklik yok, güncelleme yapılmıyor");
+                    return;
+                }
+
                 state.pendingRequests = pendingRequests || [];
+                console.log("Bekleyen istekler güncellendi:", pendingRequests);
 
                 // UI'ı güncelle
                 if (ui.pendingRequestsList) {
@@ -1270,8 +1326,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderer.renderFriendsList();
         });
 
-        // Arkadaşlık isteklerini gerçek zamanlı izle
-        supabase.channel('friendships-changes')
+        // Arkadaşlık değişikliklerini dinleyen kanalları tanımla
+        const friendshipsChannel = supabase.channel('friendships-changes')
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
@@ -1285,15 +1341,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Eğer bir istek kabul edildiyse, arkadaş listesini güncelle
                 if (payload.new && payload.new.status === 'accepted') {
+                    console.log("Arkadaşlık isteği kabul edildi (postgres değişikliği)");
                     const friends = await supabaseService.getFriends(state.currentUser.id);
                     state.friends = friends || [];
                     renderer.renderFriendsList();
                 }
             })
-            .subscribe();
-
-        // İstek gönderen taraf için de arkadaşlık değişikliklerini izle
-        supabase.channel('friendships-sender-changes')
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
@@ -1304,12 +1357,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Eğer bir istek kabul edildiyse, arkadaş listesini güncelle
                 if (payload.new && payload.new.status === 'accepted') {
+                    console.log("Gönderilen arkadaşlık isteği kabul edildi (postgres değişikliği)");
                     const friends = await supabaseService.getFriends(state.currentUser.id);
                     state.friends = friends || [];
                     renderer.renderFriendsList();
+
+                    // Karşı tarafın profil bilgilerini al ve bildirim göster
+                    const friendProfile = await supabaseService.getUserProfile(payload.new.user_id_2);
+                    if (friendProfile) {
+                        showFriendAcceptedNotification(friendProfile.id);
+                    }
                 }
             })
-            .subscribe();
+            .subscribe((status) => {
+                console.log(`Arkadaşlık değişiklikleri abonelik durumu: ${status}`);
+            });
 
         // Arkadaşlık güncellemelerini dinle
         const friendshipUpdatesChannel = supabase.channel(`friendship_updates_${state.currentUser.id}`);
@@ -1321,18 +1383,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (payload.payload && payload.payload.type === 'friendship_accepted') {
                     console.log("Arkadaşlık isteği kabul edildi bildirimi alındı");
 
-                    // Arkadaş listesini güncelle
-                    const friends = await supabaseService.getFriends(state.currentUser.id);
-                    state.friends = friends || [];
-                    renderer.renderFriendsList();
+                    try {
+                        // Arkadaş listesini güncelle
+                        const friends = await supabaseService.getFriends(state.currentUser.id);
+                        state.friends = friends || [];
+                        renderer.renderFriendsList();
 
-                    // Eğer istek gönderen kullanıcıysak, bildirim göster
-                    if (payload.payload.user_id_1 === state.currentUser.id) {
-                        // Karşı tarafın profil bilgilerini al
-                        const friendProfile = await supabaseService.getUserProfile(payload.payload.user_id_2);
-                        if (friendProfile) {
-                            showFriendAcceptedNotification(friendProfile.id);
+                        // Bekleyen istekleri yenile
+                        await renderer.renderPendingRequests();
+
+                        // Eğer istek gönderen kullanıcıysak, bildirim göster
+                        if (payload.payload.user_id_1 === state.currentUser.id) {
+                            // Karşı tarafın profil bilgilerini al
+                            const friendProfile = await supabaseService.getUserProfile(payload.payload.user_id_2);
+                            if (friendProfile) {
+                                showFriendAcceptedNotification(friendProfile.id);
+                            }
                         }
+                    } catch (error) {
+                        console.error("Arkadaşlık güncellemesi işlenirken hata:", error);
                     }
                 }
             })
