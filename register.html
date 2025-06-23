@@ -30,6 +30,21 @@
                     <p class="form-subtitle">Sohbete katılmak için yeni bir hesap oluşturun.</p>
                 </div>
                 <form id="registerForm" novalidate>
+                    <!-- Avatar Yükleme Bölümü -->
+                    <div class="avatar-upload-container">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <div class="avatar-preview-text">
+                                <i class="fas fa-camera avatar-upload-icon"></i>
+                                <span>Profil Fotoğrafı Seç</span>
+                            </div>
+                            <img src="" alt="Avatar Önizleme" class="avatar-preview-img">
+                        </div>
+                        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                        <div class="form-error" data-for="avatar"></div>
+                        <p class="avatar-info">İsteğe bağlı - Profil fotoğrafı seçmezseniz, sizin için rastgele bir
+                            avatar atanacaktır.</p>
+                    </div>
+
                     <div class="input-group">
                         <label for="username"><i class="fas fa-user"></i> Kullanıcı Adı</label>
                         <input type="text" id="username" name="username" required>
@@ -106,7 +121,7 @@
                 </div>
             </div>
             <div class="info-footer">
-                <p>&copy; 2023 Chatlify. All rights reserved.</p>
+                <p>&copy; 2025 Chatlify. All rights reserved.</p>
             </div>
         </div>
     </div>
