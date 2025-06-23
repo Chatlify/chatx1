@@ -1309,9 +1309,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         icon.style.transform = '';
                         serverManagementBtn.classList.remove('clicked');
 
-                        // Sonra işlevi gerçekleştirelim
-                        console.log('Sunucu İşlemleri butonuna tıklandı');
-                        alert('Sunucu İşlemleri yakında eklenecek!');
+                        // Sunucu işlemleri panelini aç
+                        console.log('Sunucu İşlemleri paneli açılıyor');
+                        loadComponent('join-server');
                     }, 300);
                 });
             }
@@ -1503,47 +1503,85 @@ document.addEventListener('DOMContentLoaded', async () => {
      * @param {string} componentName - The name of the component (e.g., 'add-friend').
      */
     async function loadComponent(componentName) {
-        const componentPath = `components/${componentName}/${componentName}`; // Corrected path
         try {
-            // 1. Fetch HTML
-            const response = await fetch(`${componentPath}.html`);
-            if (!response.ok) throw new Error(`Component HTML not found at ${componentPath}.html`);
-            const html = await response.text();
-            document.body.insertAdjacentHTML('beforeend', html);
+            // Komponentler için farklı yollar tanımla
+            const componentPaths = {
+                'add-friend': {
+                    html: 'components/add-friend/add-friend.html',
+                    css: 'components/add-friend/add-friend.css',
+                    js: 'components/add-friend/add-friend.js',
+                    initFunction: 'initializeAddFriendPanel'
+                },
+                'join-server': {
+                    html: 'components/join-server/join-server.html',
+                    css: 'components/join-server/join-server.css',
+                    js: 'components/join-server/join-server.js',
+                    initFunction: 'initializeJoinServerPanel'
+                }
+                // Diğer komponentler buraya eklenebilir
+            };
 
-            // 2. Load CSS
-            const cssLink = document.createElement('link');
-            cssLink.rel = 'stylesheet';
-            cssLink.href = `${componentPath}.css`;
-            document.head.appendChild(cssLink);
+            const component = componentPaths[componentName];
+            if (!component) {
+                throw new Error(`Bileşen bulunamadı: ${componentName}`);
+            }
 
-            // 3. Load and execute JS
-            const script = document.createElement('script');
-            script.src = `${componentPath}.js`; // Load as a regular script, not a module
+            // HTML şablonunu yükle
+            const htmlResponse = await fetch(component.html);
+            if (!htmlResponse.ok) throw new Error(`HTML yüklenemedi: ${component.html}`);
+            const htmlContent = await htmlResponse.text();
 
-            // Use onload to ensure the script is executed before we try to use it
-            script.onload = () => {
-                if (window.initializeAddFriendPanel) {
-                    window.initializeAddFriendPanel(supabase, () => {
-                        console.log(`${componentName} panel closed and cleaned up.`);
-                        // The component's close function should handle its own removal.
-                        // We also clean up the script and CSS to prevent clutter.
-                        const panel = document.getElementById('add-friend-panel');
-                        if (panel) panel.remove();
-                        script.remove();
-                        cssLink.remove();
+            // CSS dosyasını kontrol et ve yükle
+            const existingCss = document.head.querySelector(`link[href="${component.css}"]`);
+            if (!existingCss) {
+                const cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.href = component.css;
+                document.head.appendChild(cssLink);
+            }
+
+            // JS dosyasını kontrol et ve yükle
+            const existingJs = document.head.querySelector(`script[src="${component.js}"]`);
+            if (!existingJs) {
+                const jsScript = document.createElement('script');
+                jsScript.src = component.js;
+                document.head.appendChild(jsScript);
+
+                // Script yüklenene kadar bekle
+                await new Promise((resolve, reject) => {
+                    jsScript.onload = resolve;
+                    jsScript.onerror = reject;
+                });
+            }
+
+            // Container oluştur
+            let container = document.getElementById(`${componentName}-modal-container`);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = `${componentName}-modal-container`;
+                document.body.appendChild(container);
+            }
+
+            // HTML içeriğini container'a yerleştir
+            container.innerHTML = htmlContent;
+
+            // Bileşenin initialize fonksiyonunu çağır
+            // Küçük bir gecikme ekleyerek DOM'un güncellenmesini bekle
+            setTimeout(() => {
+                if (window[component.initFunction]) {
+                    window[component.initFunction](supabase, () => {
+                        console.log(`${componentName} bileşeni kapatıldı`);
+                        // Burada gerekliyse yenileme işlemi yapılabilir
+                        fetchAndRenderAll();
                     });
                 } else {
-                    console.error(`Initializer for ${componentName} not found.`);
+                    console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
                 }
-            };
-            script.onerror = () => {
-                console.error(`Failed to load script: ${componentPath}.js`);
-            };
-            document.body.appendChild(script);
+            }, 100);
 
         } catch (error) {
-            console.error(`Error loading component ${componentName}:`, error);
+            console.error(`${componentName} bileşeni yüklenirken hata oluştu:`, error);
+            alert(`Bileşen yüklenemedi: ${error.message}`);
         }
     }
 

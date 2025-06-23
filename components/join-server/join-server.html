@@ -1,0 +1,226 @@
+<div id="join-server-panel" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon"><i class="fas fa-server"></i></div>
+            <h3>Sunucu İşlemleri</h3>
+            <button class="close-modal-btn" title="Kapat"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <!-- Ana Seçenekler -->
+            <div id="server-options" class="server-options">
+                <div class="option-card join-server" data-action="join">
+                    <div class="option-icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <div class="option-content">
+                        <h4>Sunucuya Katıl</h4>
+                        <p>Varolan bir sunucuya davetiye kodu ile katılın</p>
+                    </div>
+                </div>
+                <div class="option-card create-server" data-action="create">
+                    <div class="option-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="option-content">
+                        <h4>Sunucu Oluştur</h4>
+                        <p>Kendi topluluğunuzu oluşturun</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sunucuya Katıl Paneli -->
+            <div id="join-server-form" class="server-form hidden">
+                <button class="back-button"><i class="fas fa-arrow-left"></i> Geri</button>
+                <h4 class="form-title">Sunucuya Katıl</h4>
+                <p class="form-info">Sunucu davet kodunu aşağıya girerek varolan bir sunucuya katılabilirsiniz.</p>
+                <form id="serverJoinForm" class="input-wrapper">
+                    <div class="server-input-container">
+                        <input type="text" id="serverInviteCode" placeholder="Davet kodunu yapıştırın..."
+                            autocomplete="off" required>
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div id="joinServerStatus" class="status-message"></div>
+                    <button type="submit" class="submit-btn">
+                        <span>Katıl</span>
+                        <i class="fas fa-sign-in-alt"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Sunucu Oluştur Paneli -->
+            <div id="create-server-form" class="server-form hidden">
+                <button class="back-button"><i class="fas fa-arrow-left"></i> Geri</button>
+
+                <!-- Adım Göstergesi -->
+                <div class="step-indicator">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">İsim</div>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Kategori</div>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Gizlilik</div>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Fotoğraf</div>
+                    </div>
+                </div>
+
+                <!-- Adım 1: Sunucu İsmi -->
+                <div id="step-1" class="server-step active">
+                    <h4 class="form-title">Sunucunuza İsim Verin</h4>
+                    <p class="form-info">Sunucunuzun ismi nedir? Daha sonra değiştirebilirsiniz.</p>
+                    <div class="server-input-container">
+                        <input type="text" id="serverName" placeholder="Sunucu ismi girin..." autocomplete="off"
+                            maxlength="50">
+                        <i class="fas fa-font"></i>
+                    </div>
+                    <div class="step-navigation">
+                        <button type="button" class="next-step-btn" data-next="2">
+                            <span>İleri</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adım 2: Sunucu Kategorisi -->
+                <div id="step-2" class="server-step">
+                    <h4 class="form-title">Sunucunuz Hangi Kategoriye Ait?</h4>
+                    <p class="form-info">Kategorinizi seçerek benzer ilgi alanları olan kişilerin sunucunuzu bulmasını
+                        kolaylaştırın.</p>
+                    <div class="category-grid">
+                        <div class="category-item" data-category="gaming">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Oyun</span>
+                        </div>
+                        <div class="category-item" data-category="music">
+                            <i class="fas fa-music"></i>
+                            <span>Müzik</span>
+                        </div>
+                        <div class="category-item" data-category="education">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Eğitim</span>
+                        </div>
+                        <div class="category-item" data-category="science">
+                            <i class="fas fa-flask"></i>
+                            <span>Bilim</span>
+                        </div>
+                        <div class="category-item" data-category="technology">
+                            <i class="fas fa-microchip"></i>
+                            <span>Teknoloji</span>
+                        </div>
+                        <div class="category-item" data-category="art">
+                            <i class="fas fa-palette"></i>
+                            <span>Sanat</span>
+                        </div>
+                        <div class="category-item" data-category="social">
+                            <i class="fas fa-users"></i>
+                            <span>Sosyal</span>
+                        </div>
+                        <div class="category-item" data-category="other">
+                            <i class="fas fa-ellipsis-h"></i>
+                            <span>Diğer</span>
+                        </div>
+                    </div>
+                    <div class="step-navigation">
+                        <button type="button" class="prev-step-btn" data-prev="1">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Geri</span>
+                        </button>
+                        <button type="button" class="next-step-btn" data-next="3">
+                            <span>İleri</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adım 3: Gizlilik Ayarları -->
+                <div id="step-3" class="server-step">
+                    <h4 class="form-title">Sunucunuzun Gizlilik Ayarları</h4>
+                    <p class="form-info">Sunucunuzun kimler tarafından görülebileceğini ve katılabileceğini belirleyin.
+                    </p>
+                    <div class="privacy-options">
+                        <div class="privacy-option" data-privacy="public">
+                            <div class="option-radio">
+                                <div class="radio-inner"></div>
+                            </div>
+                            <div class="option-details">
+                                <h5>Herkese Açık</h5>
+                                <p>Herkes sunucunuzu görebilir ve katılabilir</p>
+                            </div>
+                        </div>
+                        <div class="privacy-option" data-privacy="friends">
+                            <div class="option-radio">
+                                <div class="radio-inner"></div>
+                            </div>
+                            <div class="option-details">
+                                <h5>Sadece Arkadaşlar</h5>
+                                <p>Sadece arkadaşlarınız sunucunuzu görebilir ve katılabilir</p>
+                            </div>
+                        </div>
+                        <div class="privacy-option" data-privacy="invite">
+                            <div class="option-radio">
+                                <div class="radio-inner"></div>
+                            </div>
+                            <div class="option-details">
+                                <h5>Sadece Davet İle</h5>
+                                <p>Sunucunuza katılım yalnızca davet ile mümkün</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-navigation">
+                        <button type="button" class="prev-step-btn" data-prev="2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Geri</span>
+                        </button>
+                        <button type="button" class="next-step-btn" data-next="4">
+                            <span>İleri</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adım 4: Sunucu Fotoğrafı -->
+                <div id="step-4" class="server-step">
+                    <h4 class="form-title">Sunucunuzun Fotoğrafı</h4>
+                    <p class="form-info">Sunucunuzu temsil eden bir fotoğraf yükleyin.</p>
+                    <div class="server-avatar-upload">
+                        <div class="avatar-preview">
+                            <img src="/images/defaultavatar.svg" alt="Sunucu Avatarı" id="serverAvatarPreview">
+                        </div>
+                        <div class="avatar-upload-controls">
+                            <label for="serverAvatarUpload" class="upload-btn">
+                                <i class="fas fa-upload"></i>
+                                <span>Fotoğraf Yükle</span>
+                            </label>
+                            <input type="file" id="serverAvatarUpload" accept="image/*" class="hidden">
+                            <button type="button" class="remove-avatar-btn">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Kaldır</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="createServerStatus" class="status-message"></div>
+                    <div class="step-navigation">
+                        <button type="button" class="prev-step-btn" data-prev="3">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Geri</span>
+                        </button>
+                        <button type="button" class="create-server-btn">
+                            <span>Sunucu Oluştur</span>
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
