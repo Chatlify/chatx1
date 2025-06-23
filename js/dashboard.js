@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // İstekleri dönüştür
                 const requests = data.map(request => ({
-                    id: request.id,
+                    id: parseInt(request.id),
                     userId: request.user_id_1,
                     username: request.profiles.username,
                     avatarUrl: request.profiles.avatar_url,
@@ -184,15 +184,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log("Arkadaşlık isteği verileri:", request);
 
                 // İsteği kabul et
-                const { data: updatedRequest, error: updateError } = await supabase
+                const { error: updateError } = await supabase
                     .from('friendships')
                     .update({
                         status: 'accepted',
                         updated_at: new Date().toISOString()
                     })
-                    .eq('id', requestId)
-                    .select()
-                    .single();
+                    .eq('id', requestId);
 
                 if (updateError) {
                     console.error('Error accepting friend request:', updateError);
@@ -214,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return {
                     success: true,
                     message: 'Arkadaşlık isteği kabul edildi!',
-                    requestData: updatedRequest || request
+                    requestData: request
                 };
             } catch (error) {
                 console.error('Unexpected error accepting friend request:', error);
@@ -253,17 +251,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         },
         async rejectFriendRequest(requestId) {
-            const { error } = await supabase
-                .from('friendships')
-                .delete()
-                .eq('id', requestId);
+            try {
+                const { error } = await supabase
+                    .from('friendships')
+                    .delete()
+                    .eq('id', requestId);
 
-            if (error) {
-                console.error('Error rejecting friend request:', error);
-                return { success: false, message: 'Arkadaşlık isteği reddedilirken bir hata oluştu.' };
+                if (error) {
+                    console.error('Error rejecting friend request:', error);
+                    return { success: false, message: 'Arkadaşlık isteği reddedilirken bir hata oluştu.' };
+                }
+
+                return { success: true, message: 'Arkadaşlık isteği reddedildi.' };
+            } catch (error) {
+                console.error('Unexpected error rejecting friend request:', error);
+                return { success: false, message: 'Beklenmeyen bir hata oluştu.' };
             }
-
-            return { success: true, message: 'Arkadaşlık isteği reddedildi.' };
         },
         async findOrCreateConversation(userId1, userId2) {
             // Logic from old file to find or create a DM
@@ -913,7 +916,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const requestItem = e.target.closest('.friend-request-item');
         if (!requestItem) return;
 
-        const requestId = requestItem.dataset.requestId;
+        const requestId = parseInt(requestItem.dataset.requestId);
         const userId = requestItem.dataset.userId;
 
         try {
@@ -950,7 +953,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         requestItem.remove();
 
                         // Bekleyen istekler listesini güncelle
-                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== parseInt(requestId));
+                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== requestId);
 
                         // Bekleyen isteklerin sayısını güncelle
                         if (ui.pendingCount) {
