@@ -6,8 +6,8 @@ import { supabase } from './auth_config.js';
 // 2. Dashboard'a girin ve Cloud name değerini alın (örn: "your_cloud_name")
 // 3. Settings > Upload > Upload presets bölümüne gidin ve "unsigned" bir preset oluşturun
 // 4. Oluşturduğunuz preset'in adını aşağıya yazın (örn: "your_upload_preset")
-const CLOUDINARY_CLOUD_NAME = 'dxr8bxvbp'; // Buraya kendi cloud name değerinizi yazın
-const CLOUDINARY_UPLOAD_PRESET = 'your_upload_preset'; // Buraya kendi upload preset değerinizi yazın
+const CLOUDINARY_CLOUD_NAME = 'dxr8bxvbp'; // Cloudinary dashboard'dan alınan cloud name
+const CLOUDINARY_UPLOAD_PRESET = 'chatlify_users'; // Unsigned upload preset adı
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -170,6 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error('Cloudinary API bilgileri ayarlanmamış');
                     }
 
+                    console.log('Cloudinary\'ye avatar yükleniyor...');
+                    console.log('URL:', CLOUDINARY_URL);
+                    console.log('Upload Preset:', CLOUDINARY_UPLOAD_PRESET);
+
                     const formData = new FormData();
                     formData.append('file', avatarFile);
                     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -180,12 +184,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     if (!response.ok) {
-                        throw new Error('Avatar yüklenemedi. Lütfen daha sonra tekrar deneyin.');
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('Cloudinary API Hatası:', errorData);
+                        throw new Error(`Avatar yüklenemedi. Hata kodu: ${response.status}`);
                     }
 
                     const data = await response.json();
                     finalAvatarUrl = data.secure_url;
-                    console.log('Avatar yüklendi:', finalAvatarUrl);
+                    console.log('Avatar başarıyla yüklendi:', finalAvatarUrl);
                 } catch (uploadError) {
                     console.error('Avatar yükleme hatası:', uploadError);
                     // Hata mesajını göster ama kayıt işlemini durdurma
