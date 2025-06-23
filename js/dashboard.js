@@ -415,79 +415,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getOrCreateConversation(userId1, userId2) {
             try {
-                // Önce tablo yapısını anlamak için basit bir sorgu yapalım
-                const { data: sampleData, error: sampleError } = await supabase
-                    .from('conversations')
-                    .select('*')
+                // Doğrudan konuşma oluşturalım, conversation_participants tablosunu kullanmadan
+                // İlk olarak, bu iki kullanıcı arasında mevcut bir konuşma var mı kontrol edelim
+
+                // DM konuşmaları için özel bir sorgu
+                const { data: directMessages, error: dmError } = await supabase
+                    .from('messages')
+                    .select('conversation_id')
+                    .or(`sender_id.eq.${userId1},sender_id.eq.${userId2}`)
+                    .or(`receiverId.eq.${userId1},receiverId.eq.${userId2}`)
+                    .order('created_at', { ascending: false })
                     .limit(1);
 
-                if (sampleError) {
-                    console.error('Error fetching sample data:', sampleError);
-                    return null;
+                if (dmError) {
+                    console.error('Error checking for existing messages:', dmError);
                 }
 
-                // Tablo yapısını konsola yazdıralım
-                console.log('Conversations table structure:', sampleData);
-
-                // Sütun adlarını belirleyelim
-                let user1Field = 'user_id_1'; // Varsayılan olarak bu adları kullanalım
-                let user2Field = 'user_id_2';
-
-                // Örnek veri varsa, gerçek sütun adlarını belirle
-                if (sampleData && sampleData.length > 0) {
-                    const sampleRow = sampleData[0];
-                    const keys = Object.keys(sampleRow);
-
-                    // Muhtemel sütun adlarını kontrol et
-                    const possibleUser1Fields = ['user_id_1', 'user1_id', 'user1', 'participant1', 'participant_1'];
-                    const possibleUser2Fields = ['user_id_2', 'user2_id', 'user2', 'participant2', 'participant_2'];
-
-                    // İlk kullanıcı ID'si için sütun adını bul
-                    for (const field of possibleUser1Fields) {
-                        if (keys.includes(field)) {
-                            user1Field = field;
-                            break;
-                        }
-                    }
-
-                    // İkinci kullanıcı ID'si için sütun adını bul
-                    for (const field of possibleUser2Fields) {
-                        if (keys.includes(field)) {
-                            user2Field = field;
-                            break;
-                        }
-                    }
-
-                    console.log(`Detected column names: ${user1Field} and ${user2Field}`);
-                }
-
-                // Şimdi doğru sütun adlarıyla sorgu yapalım
-                const { data: existingConversations, error: queryError } = await supabase
-                    .from('conversations')
-                    .select('id')
-                    .or(`${user1Field}.eq.${userId1},${user2Field}.eq.${userId2}`)
-                    .or(`${user1Field}.eq.${userId2},${user2Field}.eq.${userId1}`);
-
-                if (queryError) {
-                    console.error('Error checking for existing conversation:', queryError);
-                    return null;
-                }
-
-                // Eğer konuşma varsa, ilk konuşmayı döndür
-                if (existingConversations && existingConversations.length > 0) {
-                    console.log('Existing conversation found:', existingConversations[0].id);
-                    return existingConversations[0].id;
+                // Eğer bu iki kullanıcı arasında mesaj varsa, o konuşmayı kullan
+                if (directMessages && directMessages.length > 0 && directMessages[0].conversation_id) {
+                    console.log('Existing conversation found through messages:', directMessages[0].conversation_id);
+                    return directMessages[0].conversation_id;
                 }
 
                 // Konuşma yoksa, yeni bir konuşma oluştur
-                const insertObj = {};
-                insertObj[user1Field] = userId1;
-                insertObj[user2Field] = userId2;
-                insertObj['created_at'] = new Date().toISOString();
-
                 const { data: newConversation, error: insertError } = await supabase
                     .from('conversations')
-                    .insert([insertObj])
+                    .insert([{
+                        is_group_chat: false,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }])
                     .select();
 
                 if (insertError) {
@@ -496,8 +453,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 if (newConversation && newConversation.length > 0) {
-                    console.log('New conversation created:', newConversation[0].id);
-                    return newConversation[0].id;
+                    const conversationId = newConversation[0].id;
+                    console.log('New conversation created:', conversationId);
+
+                    // Başlangıç mesajı gönder (bu, konuşmayı başlatır ve RLS politikalarını tetiklemeden çalışır)
+                    const { error: msgError } = await supabase
+                        .from('messages')
+                        .insert([{
+                            conversation_id: conversationId,
+                            sender_id: userId1,
+                            receiverId: userId2,
+                            content: "Merhaba! Sohbet başlatıldı.",
+                            contentType: 'text',
+                            created_at: new Date().toISOString()
+                        }]);
+
+                    if (msgError) {
+                        console.error('Error sending initial message:', msgError);
+                    }
+
+                    return conversationId;
                 }
 
                 return null;
