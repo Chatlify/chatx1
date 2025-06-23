@@ -1321,22 +1321,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Yeni eklenen footer butonları için listener'lar ekleyelim
-            const settingsIconBtn = document.querySelector('.dm-user-control.settings-icon');
-            if (settingsIconBtn) {
-                settingsIconBtn.addEventListener('click', () => {
-                    console.log('Ayarlar butonuna tıklandı');
-                    window.location.href = '/settings.html';
-                });
-            }
-
-            const musicIconBtn = document.querySelector('.dm-user-control.music-icon');
-            if (musicIconBtn) {
-                musicIconBtn.addEventListener('click', () => {
-                    console.log('Müzik butonuna tıklandı');
-                    alert('Müzik özelliği yakında eklenecek!');
-                });
-            }
-
             const logoutBtn = document.querySelector('.dm-user-control.logout-button');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async () => {
