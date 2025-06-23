@@ -292,45 +292,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Şu anki zamanı al
                 const currentTime = new Date().toISOString();
 
-                // İsteği kabul et
-                const { error: updateError } = await supabase
-                    .from('friendships')
-                    .update({
-                        status: 'accepted',
-                        updated_at: currentTime
-                    })
-                    .eq('id', requestId);
+                // İsteği kabul et - DOĞRUDAN RPC KULLAN
+                const { data: rpcResult, error: rpcError } = await supabase
+                    .rpc('accept_friendship_request', {
+                        request_id: requestId,
+                        update_time: currentTime
+                    });
 
-                if (updateError) {
-                    console.error('Error accepting friend request:', updateError);
-                    return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+                if (rpcError) {
+                    console.error('Error accepting friend request (RPC):', rpcError);
+
+                    // RPC başarısız olursa normal güncellemeyi dene
+                    const { error: updateError } = await supabase
+                        .from('friendships')
+                        .update({
+                            status: 'accepted',
+                            updated_at: currentTime
+                        })
+                        .eq('id', requestId);
+
+                    if (updateError) {
+                        console.error('Error accepting friend request (fallback):', updateError);
+                        return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+                    }
                 }
 
-                // Kısa bir bekleme süresi ekle (veritabanı güncellemesinin tamamlanması için)
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Güncellenmiş isteği doğrula
-                const { data: verifyRequest, error: verifyError } = await supabase
-                    .from('friendships')
-                    .select('*')
-                    .eq('id', requestId)
-                    .single();
-
-                if (verifyError) {
-                    console.error('Friendship update verification error:', verifyError);
-                    // Doğrulama hatası olsa bile devam et
-                }
-
-                // Doğrulama hatası olsa bile veya status değişmemiş olsa bile devam et
-                // Çünkü update işlemi başarılı olmuş olabilir ama doğrulama gecikmeli olabilir
-                console.log("Doğrulama sonucu:", verifyRequest);
-
-                // Güncellenmiş veya orijinal isteği kullan
-                const finalRequest = verifyRequest || request;
-                finalRequest.status = 'accepted'; // Optimistik güncelleme
+                console.log("RPC sonucu:", rpcResult);
 
                 // İstek gönderen kullanıcıya bildirim gönder
-                // Bu, istek gönderen kullanıcının arkadaş listesini güncellemesini sağlar
                 await this.broadcastFriendshipUpdate({
                     type: 'friendship_accepted',
                     friendship_id: requestId,
@@ -344,7 +333,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return {
                     success: true,
                     message: 'Arkadaşlık isteği kabul edildi!',
-                    requestData: finalRequest
+                    requestData: {
+                        ...request,
+                        status: 'accepted',
+                        updated_at: currentTime
+                    }
                 };
             } catch (error) {
                 console.error('Unexpected error accepting friend request:', error);
