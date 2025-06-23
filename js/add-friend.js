@@ -39,46 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal HTML'ini body'ye ekle
     document.body.insertAdjacentHTML('beforeend', addFriendModalHTML);
 
-    // Tüm olası seçicileri deneyelim
-    const possibleSelectors = [
-        '#addFriendBtn',
-        '.add-friend-button',
-        '#add-friend-button',
-        '.friend-add-button',
-        '#friend-add-button',
-        '.add-friend',
-        '#add-friend',
-        '.add-friend-btn',
-        '.friends-add-button',
-        '.friend-list-add',
-        '[data-action="add-friend"]'
-    ];
-
-    // Tüm seçicileri dene ve ilk bulunanı kullan
-    let addFriendBtn = null;
-    for (const selector of possibleSelectors) {
-        const element = document.querySelector(selector);
-        if (element) {
-            addFriendBtn = element;
-            console.log(`Arkadaş ekle butonu bulundu: ${selector}`, element);
-            break;
-        }
-    }
-
-    // Buton bulunamadıysa, sidebar içindeki tüm butonları kontrol et
-    if (!addFriendBtn) {
-        console.log("Sidebar içindeki butonları kontrol ediyorum...");
-        const sidebarButtons = document.querySelectorAll('.sidebar button, .sidebar-item, .sidebar a, .friends-list button, .friends-section button');
-
-        for (const button of sidebarButtons) {
-            const text = button.textContent.toLowerCase();
-            if (text.includes('arkadaş') || text.includes('friend') || text.includes('ekle') || text.includes('add')) {
-                addFriendBtn = button;
-                console.log("İçeriğe göre arkadaş ekle butonu bulundu:", button);
-                break;
-            }
-        }
-    }
+    // HTML'de bulunan butonun ID'si "add-friend-button" ve class'ı "add-friend-btn"
+    const addFriendBtn = document.getElementById('add-friend-button');
+    console.log("Arkadaş ekle butonu aranıyor:", addFriendBtn);
 
     // Modal elementlerini seç
     const addFriendModal = document.getElementById('addFriendModal');
@@ -125,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             openAddFriendModal();
         });
     } else {
-        console.error('Arkadaş ekle butonu bulunamadı! Sayfadaki butonlar:', document.querySelectorAll('button'));
+        console.error('Arkadaş ekle butonu bulunamadı! Manuel buton ekleniyor...');
 
         // Buton bulunamadığında manuel bir buton ekleyelim
         console.log('Manuel arkadaş ekle butonu ekleniyor...');
