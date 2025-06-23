@@ -441,38 +441,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 // 2. Mevcut sohbet yoksa, yeni bir tane oluştur.
-                console.log('[CONVERSATION] No existing conversation found, creating a new one.');
+                // Bu işlem için RLS sorunlarını güvenli bir şekilde aşan RPC fonksiyonunu kullan.
+                console.log('[CONVERSATION] No existing conversation found, creating a new one via RPC.');
 
-                // a. Yeni bir sohbet oluştur
-                const { data: conversationData, error: convError } = await supabase
-                    .from('conversations')
-                    .insert([{}])
-                    .select('id')
-                    .single();
+                // userId1 mevcut kullanıcı, userId2 ise diğer kullanıcıdır.
+                const { data: newConversationId, error: createError } = await supabase.rpc('create_conversation_and_add_participants', {
+                    other_user_id: userId2
+                });
 
-                if (convError) {
-                    console.error('[CONVERSATION] Error creating new conversation:', convError);
-                    throw convError;
-                }
-                const newConversationId = conversationData.id;
-                console.log(`[CONVERSATION] Created new conversation row: ${newConversationId}`);
-
-                // b. İki kullanıcıyı da bu yeni sohbete "katılımcı" olarak ekle
-                const { error: participantsError } = await supabase
-                    .from('conversation_participants')
-                    .insert([
-                        { conversation_id: newConversationId, user_id: userId1 },
-                        { conversation_id: newConversationId, user_id: userId2 }
-                    ]);
-
-                if (participantsError) {
-                    console.error('[CONVERSATION] Error adding participants:', participantsError);
-                    // Oluşturulan sohbeti temizle, çünkü katılımcı eklenemedi
-                    await supabase.from('conversations').delete().eq('id', newConversationId);
-                    throw participantsError;
+                if (createError) {
+                    console.error('[CONVERSATION] Error creating conversation via RPC:', createError);
+                    throw createError;
                 }
 
-                console.log(`[CONVERSATION] Successfully created new conversation and added participants: ${newConversationId}`);
+                if (!newConversationId) {
+                    throw new Error("RPC call did not return a new conversation ID.");
+                }
+
+                console.log(`[CONVERSATION] Successfully created new conversation via RPC: ${newConversationId}`);
                 return newConversationId;
 
             } catch (error) {
