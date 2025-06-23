@@ -296,26 +296,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
     };
 
-    // --- 4. UI RENDERER ---
-    const renderer = {
+    // --- 4. UI LOGIC / RENDERER ---
+    const uiLogic = {
         render() {
-            // Update active tab UI
-            ui.tabsContainer.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.tab === state.activeFriendsTab);
-            });
-
-            // Render content based on active tab
-            switch (state.activeFriendsTab) {
-                case 'all':
-                case 'online':
-                    this.renderFriendCards();
-                    break;
-                case 'pending':
-                    this.renderPendingRequestCards();
-                    break;
-                default:
-                    ui.friendsContentContainer.innerHTML = '';
-            }
+            // Ana render fonksiyonu, duruma göre diğerlerini çağırır
+            this.renderFriendCards();
+            this.renderDirectMessagesList();
         },
 
         renderFriendCards() {
@@ -379,11 +365,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         renderUserFooter(profile) {
-            const { userFooterName, userFooterAvatar } = ui;
-            if (!profile) return;
-
-            userFooterName.textContent = profile.username || 'Kullanıcı';
-            userFooterAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
+            if (profile && ui.userFooter) {
+                ui.userFooterName.textContent = profile.username;
+                ui.userFooterAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
+            }
         },
 
         renderDirectMessagesList() {
@@ -432,94 +417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
     };
 
-    // --- 5. EVENT HANDLERS ---
-    const handleTabClick = (e) => {
-        const tab = e.target.closest('.tab');
-        if (!tab || tab.classList.contains('active')) return;
-
-        state.activeFriendsTab = tab.dataset.tab;
-        renderer.render();
-    };
-
-    async function handleDmItemClick(e) {
-        const dmItem = e.target.closest('.dm-item');
-        if (!dmItem) return;
-
-        const targetUserId = dmItem.dataset.userId;
-        if (!targetUserId || targetUserId === state.currentUser.id) return;
-
-        const friend = state.friends.find(f => f.id === targetUserId);
-        if (!friend) return;
-
-        const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, targetUserId);
-
-        if (conversationId) {
-            renderer.showChatPanel(friend, conversationId);
-        } else {
-            alert('Sohbet başlatılırken bir hata oluştu.');
-        }
-    }
-
-    const handlePendingRequestAction = async (e) => {
-        const acceptBtn = e.target.closest('.accept-btn');
-        const rejectBtn = e.target.closest('.reject-btn');
-
-        if (!acceptBtn && !rejectBtn) {
-            return; // Not an action button
-        }
-
-        const requestCard = e.target.closest('.request-card');
-        if (!requestCard) {
-            console.error('Request card not found for action button.');
-            return;
-        }
-
-        const requestId = parseInt(requestCard.dataset.requestId, 10);
-        if (isNaN(requestId)) {
-            console.error('Invalid request ID:', requestCard.dataset.requestId);
-            return;
-        }
-
-        // Disable buttons on the specific card to prevent multiple clicks
-        requestCard.querySelectorAll('button').forEach(btn => btn.disabled = true);
-
-        let result;
-        if (acceptBtn) {
-            result = await supabaseService.acceptFriendRequest(requestId);
-        } else {
-            result = await supabaseService.rejectFriendRequest(requestId);
-        }
-
-        if (!result.success) {
-            alert("İşlem sırasında bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
-            // Re-enable buttons on failure
-            requestCard.querySelectorAll('button').forEach(btn => btn.disabled = false);
-        } else {
-            // On success, switch to the 'all' tab to see the new friend
-            // The real-time listener will handle the data refresh in the background,
-            // but we can pre-emptively switch the tab for better UX.
-            state.activeFriendsTab = 'all';
-            fetchAndRenderAll(); // Explicitly call to re-render everything with the new state.
-        }
-    };
-
-    // --- 6. INITIALIZATION & HELPERS ---
-    async function fetchAndRenderAll() {
-        if (!state.currentUser) return;
-
-        const [friends, pendingRequests] = await Promise.all([
-            supabaseService.getFriends(state.currentUser.id),
-            supabaseService.getPendingRequests(state.currentUser.id)
-        ]);
-
-        state.friends = friends;
-        state.pendingRequests = pendingRequests;
-
-        renderer.render(); // Call the main render function
-        renderer.renderDirectMessagesList(); // Render the DMs list in the left sidebar
-    }
-
-    // --- 4. EVENT HANDLERS & UI LOGIC ---
+    // --- 5. EVENT HANDLERS & UI LOGIC ---
 
     // Arkadaş Ekle Paneli'ni aç/kapa
     const handleAddFriendClick = () => {
@@ -573,7 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         // ... (diğer event listenerlar)
 
-        await fetchAndRenderAll();
+        await uiLogic.render();
         setupRealtimeSubscriptions();
     };
 
