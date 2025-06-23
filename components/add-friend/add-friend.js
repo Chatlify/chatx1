@@ -4,7 +4,7 @@
  * @param {SupabaseClient} supabase - The Supabase client instance.
  * @param {function} onComplete - A callback function to run after the panel is closed or an action is completed.
  */
-window.initializeAddFriendPanel = function(supabase, onComplete) {
+window.initializeAddFriendPanel = function (supabase, onComplete) {
     const panel = document.getElementById('add-friend-panel');
     if (!panel) {
         console.error('Add Friend Panel not found in the DOM.');
@@ -77,27 +77,33 @@ window.initializeAddFriendPanel = function(supabase, onComplete) {
                 throw new Error('Kendinize arkadaşlık isteği gönderemezsiniz.');
             }
 
-            // 4. Check for existing friendship or pending request in a single query
+            // 4. Check for existing friendship or pending request
             const senderId = currentUser.id;
             const receiverId = targetUser.id;
-            const { data: existing, error: existingError } = await supabase
+            const { data: existingFriendship, error: friendshipError } = await supabase
                 .from('friendships')
                 .select('status')
                 .or(`and(user_id_1.eq.${senderId},user_id_2.eq.${receiverId}),and(user_id_1.eq.${receiverId},user_id_2.eq.${senderId})`)
-                .limit(1)
-                .single();
+                .maybeSingle(); // maybeSingle returns one record or null, and errors on multiple.
 
-            // Ignore 'no rows found' error, as it's expected if no relationship exists
-            if (existingError && existingError.code !== 'PGRST116') {
-                throw existingError;
+            if (friendshipError) {
+                console.error('Error checking friendship:', friendshipError);
+                throw new Error('Arkadaşlık durumu kontrol edilirken bir hata oluştu.');
             }
 
-            if (existing) {
-                if (existing.status === 'accepted') {
-                    throw new Error(`${targetUsername} ile zaten arkadaşsınız.`);
-                } else if (existing.status === 'pending') {
-                    throw new Error(`Bu kullanıcıyla aranızda zaten bekleyen bir istek var.`);
+            if (existingFriendship) {
+                const { status } = existingFriendship;
+                if (status === 'accepted') {
+                    throw new Error(`'${targetUsername}' ile zaten arkadaşsınız.`);
                 }
+                if (status === 'pending') {
+                    throw new Error(`'${targetUsername}' kullanıcısına zaten bir istek gönderilmiş veya bu kullanıcıdan size bir istek gelmiş.`);
+                }
+                if (status === 'blocked') {
+                    throw new Error('Bu kullanıcıya istek gönderemezsiniz.');
+                }
+                // Fallback for any other status
+                throw new Error(`'${targetUsername}' ile aranızda zaten bir ilişki var (${status}).`);
             }
 
             // 5. If no existing relationship, insert a new friend request
