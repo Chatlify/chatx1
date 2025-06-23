@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 console.log('Sending message to conversation:', conversationId, 'from sender:', senderId);
 
-                // Mesajı veritabanına ekle
+                // Önce normal insert ile deneyelim
                 const { data, error } = await supabase
                     .from('messages')
                     .insert([{
@@ -516,12 +516,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                         )
                     `);
 
+                // Eğer normal insert başarısız olursa, RPC ile deneyelim
                 if (error) {
-                    console.error('Error sending message:', error);
-                    return { data: null, error };
+                    console.log('Normal insert failed, trying RPC:', error);
+
+                    // RPC kullanarak mesaj gönder
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('insert_message', {
+                        conv_id: conversationId,
+                        sender: senderId,
+                        msg_content: content.trim(),
+                        content_type: 'text',
+                        created_at: new Date().toISOString()
+                    });
+
+                    if (rpcError) {
+                        console.error('Error sending message with RPC:', rpcError);
+                        return { data: null, error: rpcError };
+                    }
+
+                    console.log('Message sent successfully via RPC:', rpcData);
+
+                    // Gönderen bilgilerini alalım
+                    const { data: senderData } = await supabase
+                        .from('profiles')
+                        .select('username, avatar_url')
+                        .eq('id', senderId)
+                        .single();
+
+                    // RPC'den dönen veriyi UI için uygun formata dönüştür
+                    const formattedMessages = [{
+                        id: rpcData.id,
+                        conversation_id: conversationId,
+                        sender_id: senderId,
+                        content: content.trim(),
+                        contentType: 'text',
+                        createdAt: new Date().toISOString(),
+                        sender: {
+                            username: senderData?.username || 'Kullanıcı',
+                            avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
+                        }
+                    }];
+
+                    return { data: formattedMessages, error: null };
                 }
 
-                console.log('Message sent successfully:', data);
+                console.log('Message sent successfully via normal insert:', data);
 
                 // Dönen veriyi UI için uygun formata dönüştür
                 const formattedMessages = data.map(msg => ({
@@ -566,7 +605,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (error) {
                     console.error(`Error fetching messages for conversation ${conversationId}:`, error);
-                    return [];
+
+                    // Doğrudan sorgu başarısız olursa, RPC ile deneyelim
+                    console.log('Direct query failed, trying RPC');
+                    return await this.getMessagesViaRPC(conversationId);
                 }
 
                 console.log('Retrieved messages from database:', data);
@@ -574,36 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Eğer hiç mesaj yoksa, RPC kullanarak deneyelim
                 if (!data || data.length === 0) {
                     console.log('No messages found with direct query, trying RPC');
-
-                    // RPC kullanarak mesajları alalım
-                    const { data: rpcData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
-                        conv_id: conversationId
-                    });
-
-                    if (rpcError) {
-                        console.error(`Error fetching messages with RPC for conversation ${conversationId}:`, rpcError);
-                        return [];
-                    }
-
-                    console.log('Retrieved messages via RPC:', rpcData);
-
-                    if (rpcData && rpcData.length > 0) {
-                        // RPC'den gelen verileri formatlayalım
-                        const formattedMessages = rpcData.map(msg => ({
-                            id: msg.id,
-                            conversation_id: msg.conversation_id,
-                            sender_id: msg.sender_id,
-                            content: msg.content,
-                            contentType: msg.contentType || 'text',
-                            createdAt: msg.createdAt,
-                            sender: {
-                                username: msg.sender_username || 'Kullanıcı',
-                                avatar_url: msg.sender_avatar_url || 'images/defaultavatar.png'
-                            }
-                        }));
-
-                        return formattedMessages;
-                    }
+                    return await this.getMessagesViaRPC(conversationId);
                 }
 
                 // Dönen veriyi UI için uygun formata dönüştür
@@ -623,6 +636,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return formattedMessages;
             } catch (error) {
                 console.error(`Error fetching messages for conversation ${conversationId}:`, error);
+                return [];
+            }
+        },
+
+        // RPC kullanarak mesajları getir
+        async getMessagesViaRPC(conversationId) {
+            try {
+                console.log('Fetching messages via RPC for conversation:', conversationId);
+
+                // RPC kullanarak mesajları alalım
+                const { data: rpcData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
+                    conv_id: conversationId
+                });
+
+                if (rpcError) {
+                    console.error(`Error fetching messages with RPC for conversation ${conversationId}:`, rpcError);
+                    return [];
+                }
+
+                console.log('Retrieved messages via RPC:', rpcData);
+
+                if (rpcData && rpcData.length > 0) {
+                    // RPC'den gelen verileri formatlayalım - sütun adlarına dikkat et!
+                    const formattedMessages = rpcData.map(msg => {
+                        console.log('Processing message from RPC:', msg);
+                        return {
+                            id: msg.id || msg.message_id, // Sütun adı değişebilir
+                            conversation_id: msg.conversation_id || msg.conv_id,
+                            sender_id: msg.sender_id || msg.sender,
+                            content: msg.content || msg.msg_content,
+                            contentType: msg.contentType || msg.content_type || 'text',
+                            createdAt: msg.createdAt || msg.created_at || new Date().toISOString(),
+                            sender: {
+                                username: msg.sender_username || msg.username || 'Kullanıcı',
+                                avatar_url: msg.sender_avatar_url || msg.avatar_url || 'images/defaultavatar.png'
+                            }
+                        };
+                    });
+
+                    return formattedMessages;
+                }
+
+                return [];
+            } catch (error) {
+                console.error(`Error in getMessagesViaRPC for conversation ${conversationId}:`, error);
                 return [];
             }
         },
@@ -654,81 +712,61 @@ document.addEventListener('DOMContentLoaded', async () => {
                         console.log('New message received:', payload);
 
                         // Sadece bu konuşmaya ait mesajları işleyelim
-                        if (payload.new && payload.new.conversation_id === conversationId) {
-                            const newMessage = payload.new;
+                        const newMessage = payload.new;
+                        const msgConversationId = newMessage?.conversation_id || newMessage?.conv_id;
 
-                            // Gönderen bilgilerini alalım
-                            const { data: senderData } = await supabase
-                                .from('profiles')
-                                .select('username, avatar_url')
-                                .eq('id', newMessage.sender_id)
-                                .single();
+                        // Konuşma ID'sini kontrol et
+                        if (!msgConversationId) {
+                            console.log('Message has no conversation ID, skipping');
+                            return;
+                        }
 
-                            // Mesajı UI için formatlayalım
-                            const formattedMessage = {
-                                id: newMessage.id,
-                                conversation_id: newMessage.conversation_id,
-                                sender_id: newMessage.sender_id,
-                                content: newMessage.content,
-                                contentType: newMessage.contentType || 'text',
-                                createdAt: newMessage.createdAt,
-                                sender: {
-                                    username: senderData?.username || 'Kullanıcı',
-                                    avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
-                                }
-                            };
+                        // Konuşma ID'si eşleşiyor mu?
+                        if (msgConversationId.toString() !== conversationId.toString()) {
+                            console.log(`Message conversation ID ${msgConversationId} doesn't match current conversation ${conversationId}, skipping`);
+                            return;
+                        }
 
-                            console.log('Formatted message for UI:', formattedMessage);
+                        console.log('Message is for current conversation, processing');
 
-                            // Mesaj zaten mevcut mesajlar arasında var mı kontrol edelim
-                            const messageExists = state.messages.some(m => m.id === formattedMessage.id);
+                        // Gönderen bilgilerini alalım
+                        const { data: senderData } = await supabase
+                            .from('profiles')
+                            .select('username, avatar_url')
+                            .eq('id', newMessage.sender_id || newMessage.sender)
+                            .single();
 
-                            if (!messageExists) {
-                                // Mevcut mesajlara ekleyelim
-                                state.messages = [...state.messages, formattedMessage];
-                                renderer.renderMessages(state.messages);
-                                console.log('Message added to UI, current messages:', state.messages);
+                        // Mesajı UI için formatlayalım
+                        const formattedMessage = {
+                            id: newMessage.id || newMessage.message_id,
+                            conversation_id: msgConversationId,
+                            sender_id: newMessage.sender_id || newMessage.sender,
+                            content: newMessage.content || newMessage.msg_content,
+                            contentType: newMessage.contentType || newMessage.content_type || 'text',
+                            createdAt: newMessage.createdAt || newMessage.created_at || new Date().toISOString(),
+                            sender: {
+                                username: senderData?.username || 'Kullanıcı',
+                                avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
                             }
-                        } else if (payload.new) {
-                            // Farklı bir konuşmaya ait mesaj, ancak yine de kontrol edelim
-                            console.log('Message for different conversation received, checking if relevant');
+                        };
 
-                            // Konuşma ID'sini kontrol et
-                            const msgConversationId = payload.new.conversation_id;
-                            if (msgConversationId === conversationId) {
-                                console.log('Message is actually for this conversation, processing');
+                        console.log('Formatted message for UI:', formattedMessage);
 
-                                // Gönderen bilgilerini alalım
-                                const { data: senderData } = await supabase
-                                    .from('profiles')
-                                    .select('username, avatar_url')
-                                    .eq('id', payload.new.sender_id)
-                                    .single();
+                        // Mesaj zaten mevcut mesajlar arasında var mı kontrol edelim
+                        const messageExists = state.messages.some(m => m.id === formattedMessage.id);
 
-                                // Mesajı UI için formatlayalım
-                                const formattedMessage = {
-                                    id: payload.new.id,
-                                    conversation_id: payload.new.conversation_id,
-                                    sender_id: payload.new.sender_id,
-                                    content: payload.new.content,
-                                    contentType: payload.new.contentType || 'text',
-                                    createdAt: payload.new.createdAt,
-                                    sender: {
-                                        username: senderData?.username || 'Kullanıcı',
-                                        avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
-                                    }
-                                };
+                        if (!messageExists) {
+                            // Mevcut mesajlara ekleyelim
+                            state.messages = [...state.messages, formattedMessage];
+                            renderer.renderMessages(state.messages);
+                            console.log('Message added to UI, current messages:', state.messages);
 
-                                // Mesaj zaten mevcut mesajlar arasında var mı kontrol edelim
-                                const messageExists = state.messages.some(m => m.id === formattedMessage.id);
-
-                                if (!messageExists) {
-                                    // Mevcut mesajlara ekleyelim
-                                    state.messages = [...state.messages, formattedMessage];
-                                    renderer.renderMessages(state.messages);
-                                    console.log('Message added to UI, current messages:', state.messages);
-                                }
+                            // Sohbet penceresini en alta kaydır
+                            if (ui.chatMessages) {
+                                ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
                             }
+                        } else {
+                            console.log('Message already exists in UI, skipping');
                         }
                     }
                 )
@@ -907,21 +945,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                         time = '00:00';
                     }
 
-                    // Gruplama için basitleştirilmiş mantık. Gerçek bir uygulamada daha karmaşık olabilir.
-                    return `
-                        <div class="message-group ${isOwnMessage ? 'own-message' : ''}">
-                            ${!isOwnMessage ? `<div class="message-group-avatar"><img src="${avatarUrl}" alt="${author}"></div>` : ''}
-                            <div class="message-group-content">
-                                <div class="message-group-header">
-                                    <span class="message-author">${author}</span>
-                                    <span class="message-time">${time}</span>
-                                </div>
-                                <div class="message-content">
-                                    <p>${msg.content}</p>
+                    // Kendi mesajlarımız için HTML yapısını düzeltiyoruz
+                    if (isOwnMessage) {
+                        return `
+                            <div class="message-group own-message">
+                                <div class="message-group-content">
+                                    <div class="message-group-header">
+                                        <span class="message-time">${time}</span>
+                                    </div>
+                                    <div class="message-content">
+                                        <p>${msg.content}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        return `
+                            <div class="message-group">
+                                <div class="message-group-avatar"><img src="${avatarUrl}" alt="${author}"></div>
+                                <div class="message-group-content">
+                                    <div class="message-group-header">
+                                        <span class="message-author">${author}</span>
+                                        <span class="message-time">${time}</span>
+                                    </div>
+                                    <div class="message-content">
+                                        <p>${msg.content}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
                 }).join('');
 
                 ui.chatMessages.innerHTML = messagesHTML;
