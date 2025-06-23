@@ -418,9 +418,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("İşlem sırasında bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
             // Re-enable buttons on failure
             requestCard.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        } else {
+            // On success, switch to the 'all' tab to see the new friend
+            // The real-time listener will handle the data refresh in the background,
+            // but we can pre-emptively switch the tab for better UX.
+            state.activeFriendsTab = 'all';
+            fetchAndRenderAll(); // Explicitly call to re-render everything with the new state.
         }
-        // On success, the real-time listener will automatically call fetchAndRenderAll(),
-        // which will re-render the state and remove the card.
     };
 
     // --- 6. INITIALIZATION & HELPERS ---
