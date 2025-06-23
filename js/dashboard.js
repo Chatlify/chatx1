@@ -387,16 +387,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const handlePendingRequestAction = async (e) => {
         const acceptBtn = e.target.closest('.accept-btn');
         const rejectBtn = e.target.closest('.reject-btn');
-        if (!acceptBtn && !rejectBtn) return;
 
-        const requestItem = e.target.closest('.friend-request-item');
-        if (!requestItem) return;
+        if (!acceptBtn && !rejectBtn) {
+            return; // Not an action button
+        }
 
-        const requestId = parseInt(requestItem.dataset.requestId, 10);
+        const requestCard = e.target.closest('.request-card');
+        if (!requestCard) {
+            console.error('Request card not found for action button.');
+            return;
+        }
 
-        // Kullanıcıya anında geri bildirim vermek için butonu devre dışı bırak
-        if (acceptBtn) acceptBtn.disabled = true;
-        if (rejectBtn) rejectBtn.disabled = true;
+        const requestId = parseInt(requestCard.dataset.requestId, 10);
+        if (isNaN(requestId)) {
+            console.error('Invalid request ID:', requestCard.dataset.requestId);
+            return;
+        }
+
+        // Disable buttons on the specific card to prevent multiple clicks
+        requestCard.querySelectorAll('button').forEach(btn => btn.disabled = true);
 
         let result;
         if (acceptBtn) {
@@ -407,12 +416,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!result.success) {
             alert("İşlem sırasında bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
-            // Başarısızlık durumunda butonları tekrar aktif et
-            if (acceptBtn) acceptBtn.disabled = false;
-            if (rejectBtn) rejectBtn.disabled = false;
+            // Re-enable buttons on failure
+            requestCard.querySelectorAll('button').forEach(btn => btn.disabled = false);
         }
-        // Başarılı olduğunda, real-time listener değişikliği yakalayıp UI'ı güncelleyecektir.
-        // Bu yüzden burada ek bir UI güncellemesi yapmaya gerek yok.
+        // On success, the real-time listener will automatically call fetchAndRenderAll(),
+        // which will re-render the state and remove the card.
     };
 
     // --- 6. INITIALIZATION & HELPERS ---
