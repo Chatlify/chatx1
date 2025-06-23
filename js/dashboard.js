@@ -135,55 +135,67 @@ window.sendFriendRequest = async function (username) {
             throw new Error('Kendinize arkadaşlık isteği gönderemezsiniz.');
         }
 
-        // Zaten arkadaş olup olmadığını kontrol et
-        // İki farklı sorgu yapıp sonuçları birleştireceğiz
+        // Zaten arkadaş olup olmadığını kontrol et - İlk durum
         const { data: existingFriendship1, error: friendshipError1 } = await supabase
             .from('friendships')
             .select('*')
-            .eq('user_id1', session.user.id)
-            .eq('user_id2', targetUser.id)
+            .eq('user_id_1', session.user.id)
+            .eq('user_id_2', targetUser.id)
             .eq('status', 'accepted');
 
+        // Zaten arkadaş olup olmadığını kontrol et - İkinci durum
         const { data: existingFriendship2, error: friendshipError2 } = await supabase
             .from('friendships')
             .select('*')
-            .eq('user_id1', targetUser.id)
-            .eq('user_id2', session.user.id)
+            .eq('user_id_1', targetUser.id)
+            .eq('user_id_2', session.user.id)
             .eq('status', 'accepted');
 
         if (friendshipError1 || friendshipError2) {
+            console.error("Friendship error 1:", friendshipError1);
+            console.error("Friendship error 2:", friendshipError2);
             throw new Error('Arkadaşlık durumu kontrol edilirken bir hata oluştu.');
         }
 
-        const existingFriendship = [...(existingFriendship1 || []), ...(existingFriendship2 || [])];
+        // Her iki sorgunun sonuçlarını birleştir
+        const existingFriendships = [
+            ...(existingFriendship1 || []),
+            ...(existingFriendship2 || [])
+        ];
 
-        if (existingFriendship && existingFriendship.length > 0) {
+        if (existingFriendships.length > 0) {
             throw new Error(`${targetUsername} zaten arkadaş listenizde.`);
         }
 
-        // Bekleyen bir istek olup olmadığını kontrol et
-        // İki farklı sorgu yapıp sonuçları birleştireceğiz
+        // Bekleyen bir istek olup olmadığını kontrol et - İlk durum
         const { data: pendingRequest1, error: pendingError1 } = await supabase
             .from('friendships')
             .select('*')
-            .eq('user_id1', session.user.id)
-            .eq('user_id2', targetUser.id)
+            .eq('user_id_1', session.user.id)
+            .eq('user_id_2', targetUser.id)
             .eq('status', 'pending');
 
+        // Bekleyen bir istek olup olmadığını kontrol et - İkinci durum
         const { data: pendingRequest2, error: pendingError2 } = await supabase
             .from('friendships')
             .select('*')
-            .eq('user_id1', targetUser.id)
-            .eq('user_id2', session.user.id)
+            .eq('user_id_1', targetUser.id)
+            .eq('user_id_2', session.user.id)
             .eq('status', 'pending');
 
         if (pendingError1 || pendingError2) {
+            console.error("Pending error 1:", pendingError1);
+            console.error("Pending error 2:", pendingError2);
             throw new Error('Bekleyen istekler kontrol edilirken bir hata oluştu.');
         }
 
-        const pendingRequest = [...(pendingRequest1 || []), ...(pendingRequest2 || [])];
+        // Her iki sorgunun sonuçlarını birleştir
+        const pendingRequests = [
+            ...(pendingRequest1 || []),
+            ...(pendingRequest2 || [])
+        ];
 
-        if (pendingRequest && pendingRequest.length > 0) {
+        if (pendingRequests.length > 0) {
             throw new Error(`${targetUsername} için zaten bekleyen bir arkadaşlık isteği var.`);
         }
 
@@ -192,14 +204,16 @@ window.sendFriendRequest = async function (username) {
             .from('friendships')
             .insert([
                 {
-                    user_id1: session.user.id,
-                    user_id2: targetUser.id,
+                    user_id_1: session.user.id,
+                    user_id_2: targetUser.id,
                     status: 'pending',
-                    requested_by: session.user.id
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
                 }
             ]);
 
         if (insertError) {
+            console.error("Insert error:", insertError);
             throw new Error('Arkadaşlık isteği gönderilirken bir hata oluştu.');
         }
 
