@@ -469,16 +469,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const gridHTML = friendsToRender.map(friend => {
                 const isOnline = onlineFriends.has(friend.id);
+                const statusText = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+                const statusClass = isOnline ? 'online' : 'offline';
+
                 return `
                     <div class="friend-card" data-user-id="${friend.id}">
+                        <div class="card-banner"></div>
                         <div class="card-avatar">
                             <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
-                            <div class="status-dot ${isOnline ? 'online' : ''}"></div>
+                            <div class="status-dot ${statusClass}" title="${statusText}"></div>
                         </div>
                         <div class="card-username">${friend.username}</div>
+                        <div class="card-status">${statusText}</div>
                         <div class="card-actions">
-                            <button class="card-action-btn" title="Mesaj Gönder"><i class="fas fa-comment-dots"></i></button>
-                            <button class="card-action-btn" title="Daha Fazla"><i class="fas fa-ellipsis-v"></i></button>
+                            <button class="card-action-btn message-btn" title="Mesaj Gönder">
+                                <i class="fas fa-comment-dots"></i>
+                            </button>
+                            <button class="card-action-btn call-btn" title="Sesli Arama">
+                                <i class="fas fa-phone-alt"></i>
+                            </button>
+                            <button class="card-action-btn more-btn" title="Daha Fazla">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
                         </div>
                     </div>
                 `;
