@@ -574,17 +574,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         hideChatPanel() {
-            const { dashboardContainer, chatPanel, friendsPanel } = ui;
+            const { dashboardContainer } = ui;
             if (dashboardContainer) {
                 dashboardContainer.classList.remove('chat-active');
-            }
-            // Add the 'hidden' class back to the chat panel
-            if (chatPanel) {
-                chatPanel.classList.add('hidden');
-            }
-            // Ensure the friends panel is visible again when chat is closed.
-            if (friendsPanel) {
-                friendsPanel.style.display = 'flex';
             }
             state.currentConversationId = null;
         }
