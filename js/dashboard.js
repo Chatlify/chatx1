@@ -692,95 +692,95 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Realtime mesajlaşma için subscription oluştur
         setupMessageSubscription(conversationId) {
             // Önceki aboneliği temizle
-            if (this.messageSubscription) {
-                this.messageSubscription();
+            if (state.messageSubscription) {
+                state.messageSubscription();
+                state.messageSubscription = null; // Clear reference
             }
 
-            console.log('Setting up message subscription for conversation:', conversationId);
+            console.log(`[Sub] Setting up message subscription for conversation: ${conversationId}`);
 
-            // Supabase realtime subscription oluştur
-            const channel = supabase.channel(`messages:${conversationId}`)
-                .on('postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'messages'
-                        // Filtreyi kaldırıyoruz çünkü bu, mesajların karşılıklı görünmemesine neden olabilir
-                        // filter: `conversation_id=eq.${conversationId}`
-                    },
-                    async (payload) => {
-                        console.log('New message received:', payload);
+            const channel = supabase.channel(`messages:${conversationId}`);
 
-                        // Sadece bu konuşmaya ait mesajları işleyelim
-                        const newMessage = payload.new;
-                        const msgConversationId = newMessage?.conversation_id || newMessage?.conv_id;
+            channel.on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    // Filtre, RLS sorunları nedeniyle güvenilmez olabileceğinden, istemci tarafında filtreleme yapacağız.
+                    // filter: `conversation_id=eq.${conversationId}`
+                },
+                async (payload) => {
+                    console.log('[Sub] Received payload:', JSON.stringify(payload, null, 2));
 
-                        // Konuşma ID'sini kontrol et
-                        if (!msgConversationId) {
-                            console.log('Message has no conversation ID, skipping');
-                            return;
-                        }
+                    const newMessage = payload.new;
+                    const currentConversationId = state.currentConversationId;
 
-                        // Konuşma ID'si eşleşiyor mu?
-                        if (msgConversationId.toString() !== conversationId.toString()) {
-                            console.log(`Message conversation ID ${msgConversationId} doesn't match current conversation ${conversationId}, skipping`);
-                            return;
-                        }
-
-                        console.log('Message is for current conversation, processing');
-
-                        // Gönderen bilgilerini alalım
-                        const { data: senderData } = await supabase
-                            .from('profiles')
-                            .select('username, avatar_url')
-                            .eq('id', newMessage.sender_id || newMessage.sender)
-                            .single();
-
-                        // Mesajı UI için formatlayalım
-                        const formattedMessage = {
-                            id: newMessage.id || newMessage.message_id,
-                            conversation_id: msgConversationId,
-                            sender_id: newMessage.sender_id || newMessage.sender,
-                            content: newMessage.content || newMessage.msg_content,
-                            contentType: newMessage.contentType || newMessage.content_type || 'text',
-                            createdAt: newMessage.createdAt || newMessage.created_at || new Date().toISOString(),
-                            sender: {
-                                username: senderData?.username || 'Kullanıcı',
-                                avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
-                            }
-                        };
-
-                        console.log('Formatted message for UI:', formattedMessage);
-
-                        // Mesaj zaten mevcut mesajlar arasında var mı kontrol edelim
-                        const messageExists = state.messages.some(m => m.id === formattedMessage.id);
-
-                        if (!messageExists) {
-                            // Mevcut mesajlara ekleyelim
-                            state.messages = [...state.messages, formattedMessage];
-                            renderer.renderMessages(state.messages);
-                            console.log('Message added to UI, current messages:', state.messages);
-
-                            // Sohbet penceresini en alta kaydır
-                            if (ui.chatMessages) {
-                                ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
-                            }
-                        } else {
-                            console.log('Message already exists in UI, skipping');
-                        }
+                    if (!newMessage || !newMessage.conversation_id) {
+                        console.warn('[Sub] Payload is invalid or missing conversation_id. Skipping.');
+                        return;
                     }
-                )
-                .subscribe((status) => {
-                    console.log(`Subscription status for conversation ${conversationId}:`, status);
-                });
+
+                    // Gelen mesajın ID'sini ve mevcut sohbetin ID'sini karşılaştır
+                    if (newMessage.conversation_id.toString() !== currentConversationId.toString()) {
+                        console.log(`[Sub] Message for another conversation. Ours: ${currentConversationId}, Theirs: ${newMessage.conversation_id}. Skipping.`);
+                        return;
+                    }
+
+                    console.log('[Sub] Conversation ID matches. Processing message...');
+
+                    // Mesajın UI'da zaten olup olmadığını kontrol et (optimistik güncellemeler için)
+                    const messageExists = state.messages.some(m => m.id === newMessage.id);
+                    if (messageExists) {
+                        console.warn(`[Sub] Message with ID ${newMessage.id} already exists. Skipping.`);
+                        return;
+                    }
+
+                    console.log(`[Sub] Fetching profile for sender_id: ${newMessage.sender_id}`);
+                    const { data: senderData, error: senderError } = await supabase
+                        .from('profiles')
+                        .select('username, avatar_url')
+                        .eq('id', newMessage.sender_id)
+                        .single();
+
+                    if (senderError) {
+                        console.error('[Sub] Error fetching sender profile:', senderError);
+                        // Profil olmasa bile mesajı göstermeye devam et
+                    }
+
+                    const formattedMessage = {
+                        id: newMessage.id,
+                        conversation_id: newMessage.conversation_id,
+                        sender_id: newMessage.sender_id,
+                        content: newMessage.content,
+                        contentType: newMessage.contentType || 'text',
+                        createdAt: newMessage.createdAt,
+                        sender: {
+                            username: senderData?.username || 'Kullanıcı',
+                            avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
+                        }
+                    };
+
+                    console.log('[Sub] Formatted Message:', JSON.stringify(formattedMessage, null, 2));
+
+                    // Mesajı state'e ekle ve UI'yı yeniden render et
+                    state.messages.push(formattedMessage);
+                    renderer.renderMessages(state.messages);
+                }
+            ).subscribe((status) => {
+                console.log(`[Sub] Subscription status for conversation ${conversationId}: ${status}`);
+                if (status === 'SUBSCRIBED') {
+                    console.log(`[Sub] Successfully subscribed to channel: messages:${conversationId}`);
+                }
+            });
 
             // Aboneliği temizlemek için bir fonksiyon döndür
-            this.messageSubscription = () => {
-                console.log('Unsubscribing from message channel');
-                channel.unsubscribe();
+            state.messageSubscription = () => {
+                console.log(`[Sub] Unsubscribing from conversation: ${conversationId}`);
+                supabase.removeChannel(channel);
             };
 
-            return this.messageSubscription;
+            return state.messageSubscription;
         },
     };
 
@@ -981,7 +981,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log('Messages rendered successfully, HTML length:', messagesHTML.length);
 
                 // Scroll to the bottom
-                ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+                // Add a small delay to ensure the DOM has updated before scrolling
+                setTimeout(() => {
+                    if (ui.chatMessages) {
+                        ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+                    }
+                }, 50);
+
             } catch (error) {
                 console.error('Error rendering messages:', error);
             }
