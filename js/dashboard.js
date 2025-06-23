@@ -1297,26 +1297,64 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Sidebar butonları için event listener'ları doğrudan ekleyelim
             const serverManagementBtn = document.querySelector('.sidebar-item.add-server');
             if (serverManagementBtn) {
-                serverManagementBtn.addEventListener('click', () => {
-                    console.log('Sunucu İşlemleri butonuna tıklandı');
-                    // Burada sunucu işlemleri modalını açabilir veya ilgili sayfaya yönlendirebiliriz
-                    alert('Sunucu İşlemleri yakında eklenecek!');
+                serverManagementBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Önce tıklama efekti uygulayalım
+                    const icon = serverManagementBtn.querySelector('.sidebar-item-icon');
+                    icon.style.transform = 'rotate(90deg)';
+                    serverManagementBtn.classList.add('clicked');
+
+                    setTimeout(() => {
+                        icon.style.transform = '';
+                        serverManagementBtn.classList.remove('clicked');
+
+                        // Sonra işlevi gerçekleştirelim
+                        console.log('Sunucu İşlemleri butonuna tıklandı');
+                        alert('Sunucu İşlemleri yakında eklenecek!');
+                    }, 300);
                 });
             }
 
             const shopBtn = document.querySelector('.sidebar-item.shop');
             if (shopBtn) {
-                shopBtn.addEventListener('click', () => {
-                    console.log('Mağaza butonuna tıklandı');
-                    window.location.href = '/shop.html';
+                shopBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Önce tıklama efekti uygulayalım
+                    const icon = shopBtn.querySelector('.sidebar-item-icon');
+                    icon.style.transform = 'scale(1.2)';
+                    shopBtn.classList.add('clicked');
+
+                    setTimeout(() => {
+                        icon.style.transform = '';
+                        shopBtn.classList.remove('clicked');
+
+                        // Sonra işlevi gerçekleştirelim
+                        console.log('Mağaza butonuna tıklandı');
+                        window.location.href = '/shop.html';
+                    }, 300);
                 });
             }
 
             const settingsBtn = document.querySelector('.sidebar-item.settings');
             if (settingsBtn) {
-                settingsBtn.addEventListener('click', () => {
-                    console.log('Ayarlar butonuna tıklandı');
-                    window.location.href = '/settings.html';
+                settingsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Önce tıklama efekti uygulayalım
+                    const icon = settingsBtn.querySelector('.sidebar-item-icon');
+                    icon.style.transform = 'rotate(180deg)';
+                    settingsBtn.classList.add('clicked');
+
+                    setTimeout(() => {
+                        icon.style.transform = '';
+                        settingsBtn.classList.remove('clicked');
+
+                        // Sonra işlevi gerçekleştirelim
+                        console.log('Ayarlar butonuna tıklandı');
+                        window.location.href = '/settings.html';
+                    }, 300);
                 });
             }
 
