@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <form id="add-friend-form" class="input-wrapper">
                         <div class="add-friend-input-container">
                             <input type="text" id="add-friend-username-input" placeholder="Kullanıcı adını yazın..." autocomplete="off" required>
-                            <i class="fas fa-at"></i>
+                            <i class="fas fa-user"></i>
                         </div>
                         <button type="submit" class="send-request-btn">
                             <span>Arkadaşlık İsteği Gönder</span>
@@ -149,9 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         usernameInput.addEventListener('input', () => {
             const value = usernameInput.value.trim();
 
-            if (!value.includes('#') && value.length > 0) {
-                usernameInput.classList.add('warning');
-            } else {
+            // # kontrolünü kaldırdık
+            if (value.length > 0) {
                 usernameInput.classList.remove('warning');
             }
         });
@@ -160,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             const fullUsername = usernameInput.value.trim();
 
-            if (!fullUsername || !fullUsername.includes('#')) {
-                showStatus('Lütfen geçerli bir kullanıcı adı ve etiket girin (örn: kullanici#1234).', 'error');
+            if (!fullUsername) {
+                showStatus('Lütfen bir kullanıcı adı girin.', 'error');
                 usernameInput.classList.add('error');
 
                 // Input alanını kısa bir süre titret

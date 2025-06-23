@@ -99,11 +99,11 @@ document.head.appendChild(styleEl);
 // Global olarak erişilebilir sendFriendRequest fonksiyonu
 window.sendFriendRequest = async function (username) {
     try {
-        // Kullanıcı adını ve etiketi ayır
-        const [targetUsername, tag] = username.split('#');
+        // Kullanıcı adını doğrudan kullan, etiket ayırma işlemini kaldırdık
+        const targetUsername = username.trim();
 
-        if (!targetUsername || !tag) {
-            throw new Error('Geçersiz kullanıcı adı formatı. Örnek: kullanıcı#1234');
+        if (!targetUsername) {
+            throw new Error('Geçersiz kullanıcı adı.');
         }
 
         // Kullanıcı oturumunu kontrol et
@@ -116,9 +116,8 @@ window.sendFriendRequest = async function (username) {
         // Hedef kullanıcıyı bul
         const { data: targetUsers, error: userError } = await supabase
             .from('profiles')
-            .select('id, username, tag')
+            .select('id, username')
             .eq('username', targetUsername)
-            .eq('tag', tag)
             .limit(1);
 
         if (userError) {
@@ -126,7 +125,7 @@ window.sendFriendRequest = async function (username) {
         }
 
         if (!targetUsers || targetUsers.length === 0) {
-            throw new Error(`${username} adlı kullanıcı bulunamadı.`);
+            throw new Error(`${targetUsername} adlı kullanıcı bulunamadı.`);
         }
 
         const targetUser = targetUsers[0];
@@ -148,7 +147,7 @@ window.sendFriendRequest = async function (username) {
         }
 
         if (existingFriendship && existingFriendship.length > 0) {
-            throw new Error(`${username} zaten arkadaş listenizde.`);
+            throw new Error(`${targetUsername} zaten arkadaş listenizde.`);
         }
 
         // Bekleyen bir istek olup olmadığını kontrol et
@@ -163,7 +162,7 @@ window.sendFriendRequest = async function (username) {
         }
 
         if (pendingRequest && pendingRequest.length > 0) {
-            throw new Error(`${username} için zaten bekleyen bir arkadaşlık isteği var.`);
+            throw new Error(`${targetUsername} için zaten bekleyen bir arkadaşlık isteği var.`);
         }
 
         // Arkadaşlık isteği gönder
