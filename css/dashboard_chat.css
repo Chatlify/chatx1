@@ -49,7 +49,8 @@
 }
 
 .message-content {
-    background-color: #2f3136; /* Discord's dark theme color */
+    background-color: #2f3136;
+    /* Discord's dark theme color */
     padding: 10px 15px;
     border-radius: 12px;
     border-top-left-radius: 0;
@@ -65,8 +66,10 @@
 
 /* KULLANICININ KENDİ MESAJLARI (SAĞA HİZALI) */
 .message-group.own-message {
-    margin-left: auto; /* Sağa hizalamak için */
-    flex-direction: row-reverse; /* Avatarı sağa almak için */
+    margin-left: auto;
+    /* Sağa hizalamak için */
+    flex-direction: row-reverse;
+    /* Avatarı sağa almak için */
 }
 
 .message-group.own-message .message-group-avatar {
@@ -75,17 +78,64 @@
 }
 
 .message-group.own-message .message-group-content {
-    align-items: flex-end; /* İçeriği (zaman, isim) sağa hizala */
+    align-items: flex-end;
+    /* İçeriği (zaman, isim) sağa hizala */
 }
 
 .message-group.own-message .message-content {
-    background-color: #3498db; /* Mavi bir arka plan */
-    color: #ffffff; /* Beyaz metin */
+    background-color: #3498db;
+    /* Mavi bir arka plan */
+    color: #ffffff;
+    /* Beyaz metin */
     border-top-left-radius: 12px;
-    border-top-right-radius: 0; /* Sağ üst köşeyi sivri yap */
+    border-top-right-radius: 0;
+    /* Sağ üst köşeyi sivri yap */
 }
 
 .message-group.own-message .message-author {
     /* Kendi mesajında yazar adını gizlemek daha temiz bir görünüm sağlar */
     display: none;
+}
+
+.chat-panel {
+    display: none;
+    /* Varsayılan olarak gizli, .dashboard-container.chat-active ile açılır */
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: var(--background-secondary-alt);
+}
+
+.chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--divider-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    /* Küçülmesini engelle */
+}
+
+.chat-messages {
+    flex: 1 1 auto;
+    /* Esne, büyü, küçül */
+    overflow-y: auto;
+    /* Taşan mesajlar için kaydırma çubuğu */
+    padding: 20px;
+}
+
+.chat-input-area {
+    padding: 12px 20px;
+    background-color: var(--background-primary);
+    border-top: 1px solid var(--divider-color);
+    flex-shrink: 0;
+    /* Küçülmesini engelle */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.chat-header-user {
+    display: flex;
 }
