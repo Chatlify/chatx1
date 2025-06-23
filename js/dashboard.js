@@ -414,15 +414,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         async getOrCreateConversation(userId1, userId2) {
-            const { data, error } = await supabase.rpc('get_or_create_conversation', {
-                user_id_1: userId1,
-                user_id_2: userId2
-            });
-            if (error) {
-                console.error('Error getting or creating conversation:', error);
+            try {
+                // Önce mevcut bir konuşma var mı diye kontrol et
+                const { data: existingConversations, error: queryError } = await supabase
+                    .from('conversations')
+                    .select('id')
+                    .or(`and(participant_1=${userId1},participant_2=${userId2}),and(participant_1=${userId2},participant_2=${userId1})`);
+
+                if (queryError) {
+                    console.error('Error checking for existing conversation:', queryError);
+                    return null;
+                }
+
+                // Eğer konuşma varsa, ilk konuşmayı döndür
+                if (existingConversations && existingConversations.length > 0) {
+                    console.log('Existing conversation found:', existingConversations[0].id);
+                    return existingConversations[0].id;
+                }
+
+                // Konuşma yoksa, yeni bir konuşma oluştur
+                const { data: newConversation, error: insertError } = await supabase
+                    .from('conversations')
+                    .insert([
+                        {
+                            participant_1: userId1,
+                            participant_2: userId2,
+                            created_at: new Date().toISOString()
+                        }
+                    ])
+                    .select();
+
+                if (insertError) {
+                    console.error('Error creating new conversation:', insertError);
+                    return null;
+                }
+
+                if (newConversation && newConversation.length > 0) {
+                    console.log('New conversation created:', newConversation[0].id);
+                    return newConversation[0].id;
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Unexpected error in getOrCreateConversation:', error);
                 return null;
             }
-            return data;
         },
 
         async sendMessage(conversationId, senderId, content) {
