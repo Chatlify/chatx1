@@ -105,50 +105,103 @@ document.addEventListener('DOMContentLoaded', async () => {
             return data;
         },
         async getFriends(userId) {
-            const { data, error } = await supabase
-                .from('friendships')
-                .select('user_id_1, user_id_2, profiles_1:user_id_1(id, username, avatar_url), profiles_2:user_id_2(id, username, avatar_url)')
-                .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
-                .eq('status', 'accepted');
-            if (error) {
-                console.error('Error fetching friends:', error);
+            console.log("Arkadaşlar getiriliyor, userId:", userId);
+            try {
+                const { data, error } = await supabase
+                    .from('friendships')
+                    .select('user_id_1, user_id_2, status, profiles_1:user_id_1(id, username, avatar_url), profiles_2:user_id_2(id, username, avatar_url)')
+                    .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
+                    .eq('status', 'accepted');
+
+                if (error) {
+                    console.error('Error fetching friends:', error);
+                    return [];
+                }
+
+                console.log("Arkadaş verileri:", data);
+
+                // Arkadaş listesini dönüştür
+                const friends = data.map(f => {
+                    // Eğer user_id_1 bizim ID'miz ise, user_id_2'nin profilini döndür
+                    // Değilse, user_id_1'in profilini döndür
+                    return f.user_id_1 === userId ? f.profiles_2 : f.profiles_1;
+                });
+
+                console.log("İşlenmiş arkadaş listesi:", friends);
+                return friends;
+            } catch (err) {
+                console.error("Arkadaşlar getirilirken beklenmeyen hata:", err);
                 return [];
             }
-            return data.map(f => f.user_id_1 === userId ? f.profiles_2 : f.profiles_1);
         },
         async getPendingRequests(userId) {
-            // Kullanıcıya gelen arkadaşlık isteklerini getir
-            const { data, error } = await supabase
-                .from('friendships')
-                .select('id, user_id_1, created_at, profiles:user_id_1(id, username, avatar_url)')
-                .eq('user_id_2', userId)
-                .eq('status', 'pending');
+            console.log("Bekleyen istekler getiriliyor, userId:", userId);
+            try {
+                // Kullanıcıya gelen arkadaşlık isteklerini getir
+                const { data, error } = await supabase
+                    .from('friendships')
+                    .select('id, user_id_1, created_at, profiles:user_id_1(id, username, avatar_url)')
+                    .eq('user_id_2', userId)
+                    .eq('status', 'pending');
 
-            if (error) {
-                console.error('Error fetching pending requests:', error);
+                if (error) {
+                    console.error('Error fetching pending requests:', error);
+                    return [];
+                }
+
+                console.log("Bekleyen istek verileri:", data);
+
+                // İstekleri dönüştür
+                const requests = data.map(request => ({
+                    id: request.id,
+                    userId: request.user_id_1,
+                    username: request.profiles.username,
+                    avatarUrl: request.profiles.avatar_url,
+                    createdAt: request.created_at
+                }));
+
+                console.log("İşlenmiş bekleyen istekler:", requests);
+                return requests;
+            } catch (err) {
+                console.error("Bekleyen istekler getirilirken beklenmeyen hata:", err);
                 return [];
             }
-
-            return data.map(request => ({
-                id: request.id,
-                userId: request.user_id_1,
-                username: request.profiles.username,
-                avatarUrl: request.profiles.avatar_url,
-                createdAt: request.created_at
-            }));
         },
         async acceptFriendRequest(requestId) {
-            const { error } = await supabase
-                .from('friendships')
-                .update({ status: 'accepted' })
-                .eq('id', requestId);
+            try {
+                // Önce isteği getir
+                const { data: request, error: fetchError } = await supabase
+                    .from('friendships')
+                    .select('*')
+                    .eq('id', requestId)
+                    .single();
 
-            if (error) {
-                console.error('Error accepting friend request:', error);
-                return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+                if (fetchError) {
+                    console.error('Error fetching friendship request:', fetchError);
+                    return { success: false, message: 'Arkadaşlık isteği bulunamadı.' };
+                }
+
+                // İsteği kabul et
+                const { error: updateError } = await supabase
+                    .from('friendships')
+                    .update({ status: 'accepted', updated_at: new Date().toISOString() })
+                    .eq('id', requestId);
+
+                if (updateError) {
+                    console.error('Error accepting friend request:', updateError);
+                    return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+                }
+
+                // Başarılı sonuç döndür
+                return {
+                    success: true,
+                    message: 'Arkadaşlık isteği kabul edildi!',
+                    requestData: request
+                };
+            } catch (error) {
+                console.error('Unexpected error accepting friend request:', error);
+                return { success: false, message: 'Beklenmeyen bir hata oluştu.' };
             }
-
-            return { success: true, message: 'Arkadaşlık isteği kabul edildi!' };
         },
         async rejectFriendRequest(requestId) {
             const { error } = await supabase
@@ -309,33 +362,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            console.log("Bekleyen istekler yenileniyor...");
             ui.pendingRequestsList.innerHTML = '';
 
-            const pendingRequests = await supabaseService.getPendingRequests(state.currentUser.id);
-            state.pendingRequests = pendingRequests;
+            try {
+                const pendingRequests = await supabaseService.getPendingRequests(state.currentUser.id);
+                console.log("Bekleyen istekler:", pendingRequests);
+                state.pendingRequests = pendingRequests;
 
-            if (pendingRequests.length === 0) {
-                if (ui.pendingSectionTitle) {
-                    ui.pendingSectionTitle.style.display = 'none';
+                if (pendingRequests.length === 0) {
+                    if (ui.pendingSectionTitle) {
+                        ui.pendingSectionTitle.style.display = 'none';
+                    }
+                    return;
                 }
-                return;
+
+                if (ui.pendingSectionTitle) {
+                    ui.pendingSectionTitle.style.display = 'flex';
+                }
+
+                if (ui.pendingCount) {
+                    ui.pendingCount.textContent = pendingRequests.length;
+                }
+
+                pendingRequests.forEach(request => {
+                    const requestEl = this.createPendingRequestRow(request);
+                    ui.pendingRequestsList.appendChild(requestEl);
+                });
+
+                // Bekleyen isteklerin görünür olduğundan emin ol
+                ui.pendingRequestsList.style.display = 'block';
+            } catch (error) {
+                console.error("Bekleyen istekler yüklenirken hata:", error);
             }
-
-            if (ui.pendingSectionTitle) {
-                ui.pendingSectionTitle.style.display = 'flex';
-            }
-
-            if (ui.pendingCount) {
-                ui.pendingCount.textContent = pendingRequests.length;
-            }
-
-            pendingRequests.forEach(request => {
-                const requestEl = this.createPendingRequestRow(request);
-                ui.pendingRequestsList.appendChild(requestEl);
-            });
-
-            // Bekleyen isteklerin görünür olduğundan emin ol
-            ui.pendingRequestsList.style.display = 'block';
         },
 
         createPendingRequestRow(request) {
@@ -704,16 +763,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Başarıyla kabul edildi, UI'ı güncelle
                     requestItem.classList.add('accepted');
 
-                    // Hemen arkadaş listesini güncelle
-                    const friendProfile = await supabaseService.getUserProfile(userId);
-                    if (friendProfile) {
+                    // İstek gönderen kullanıcının profilini al
+                    const senderProfile = await supabaseService.getUserProfile(userId);
+                    if (senderProfile) {
+                        console.log("Arkadaş listesine ekleniyor:", senderProfile);
+
                         // Arkadaşı listeye ekle
-                        state.friends.push(friendProfile);
-                        // Arkadaş listesini yeniden render et
-                        renderer.renderFriendsList();
+                        if (!state.friends.some(f => f.id === senderProfile.id)) {
+                            state.friends.push(senderProfile);
+                            // Arkadaş listesini yeniden render et
+                            renderer.renderFriendsList();
+                        }
                     }
 
-                    // Bekleyen istekleri listeden kaldır ve yenile
+                    // Bekleyen istekleri listeden kaldır
                     setTimeout(() => {
                         requestItem.remove();
 
@@ -734,6 +797,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Kabul edilen kullanıcıyla sohbet başlatma seçeneği sun
                         showFriendAcceptedNotification(userId);
                     }, 500);
+
+                    // Sayfayı yenilemeden önce biraz bekle
+                    setTimeout(() => {
+                        // Sayfayı yenile (son çare olarak)
+                        // window.location.reload();
+                    }, 2000);
                 }
             } else if (rejectBtn) {
                 // İsteği reddet
@@ -978,11 +1047,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         initEventListeners();
         initAddFriendModal(); // Arkadaş ekle modalını başlat
-        await fetchAndRenderFriends();
 
-        // Bekleyen arkadaşlık isteklerini yükle
-        await renderer.renderPendingRequests();
+        // Arkadaş listesini ve bekleyen istekleri yükle
+        try {
+            console.log("Arkadaş listesi yükleniyor...");
+            const friends = await supabaseService.getFriends(state.currentUser.id);
+            state.friends = friends || [];
+            renderer.renderFriendsList();
 
+            console.log("Bekleyen istekler yükleniyor...");
+            await renderer.renderPendingRequests();
+        } catch (error) {
+            console.error("Arkadaş listesi veya bekleyen istekler yüklenirken hata:", error);
+        }
+
+        // Çevrimiçi durumunu izle
         state.presenceChannel = supabaseService.subscribeToPresence(() => {
             state.onlineFriends.clear();
             const presenceState = state.presenceChannel.state;
@@ -1001,9 +1080,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                 schema: 'public',
                 table: 'friendships',
                 filter: `user_id_2=eq.${state.currentUser.id}`
-            }, () => {
-                // Değişiklik olduğunda bekleyen istekleri yenile
-                renderer.renderPendingRequests();
+            }, async (payload) => {
+                console.log("Arkadaşlık tablosunda değişiklik algılandı:", payload);
+
+                // Değişiklik olduğunda bekleyen istekleri ve arkadaş listesini yenile
+                await renderer.renderPendingRequests();
+
+                // Eğer bir istek kabul edildiyse, arkadaş listesini güncelle
+                if (payload.new && payload.new.status === 'accepted') {
+                    const friends = await supabaseService.getFriends(state.currentUser.id);
+                    state.friends = friends || [];
+                    renderer.renderFriendsList();
+                }
+            })
+            .subscribe();
+
+        // İstek gönderen taraf için de arkadaşlık değişikliklerini izle
+        supabase.channel('friendships-sender-changes')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'friendships',
+                filter: `user_id_1=eq.${state.currentUser.id}`
+            }, async (payload) => {
+                console.log("Gönderilen arkadaşlık isteğinde değişiklik algılandı:", payload);
+
+                // Eğer bir istek kabul edildiyse, arkadaş listesini güncelle
+                if (payload.new && payload.new.status === 'accepted') {
+                    const friends = await supabaseService.getFriends(state.currentUser.id);
+                    state.friends = friends || [];
+                    renderer.renderFriendsList();
+                }
             })
             .subscribe();
     };
