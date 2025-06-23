@@ -181,6 +181,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return { success: false, message: 'Arkadaşlık isteği bulunamadı.' };
                 }
 
+                console.log("Arkadaşlık isteği verileri:", request);
+
                 // İsteği kabul et
                 const { error: updateError } = await supabase
                     .from('friendships')
@@ -192,6 +194,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
                 }
 
+                // İstek gönderen kullanıcıya bildirim gönder
+                // Bu, istek gönderen kullanıcının arkadaş listesini güncellemesini sağlar
+                await this.broadcastFriendshipUpdate({
+                    type: 'friendship_accepted',
+                    friendship_id: requestId,
+                    user_id_1: request.user_id_1,
+                    user_id_2: request.user_id_2,
+                    status: 'accepted',
+                    updated_at: new Date().toISOString()
+                });
+
                 // Başarılı sonuç döndür
                 return {
                     success: true,
@@ -201,6 +214,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 console.error('Unexpected error accepting friend request:', error);
                 return { success: false, message: 'Beklenmeyen bir hata oluştu.' };
+            }
+        },
+
+        async broadcastFriendshipUpdate(data) {
+            try {
+                console.log("Arkadaşlık güncellemesi yayınlanıyor:", data);
+
+                // İstek gönderen kullanıcı için kanal
+                const senderChannel = `friendship_updates_${data.user_id_1}`;
+
+                // İstek alan kullanıcı için kanal
+                const receiverChannel = `friendship_updates_${data.user_id_2}`;
+
+                // Her iki kanala da güncelleme gönder
+                await supabase.channel('any').send({
+                    type: 'broadcast',
+                    event: 'friendship_update',
+                    payload: data,
+                    channel: senderChannel
+                });
+
+                await supabase.channel('any').send({
+                    type: 'broadcast',
+                    event: 'friendship_update',
+                    payload: data,
+                    channel: receiverChannel
+                });
+
+                console.log("Arkadaşlık güncellemesi yayınlandı");
+                return true;
+            } catch (error) {
+                console.error("Arkadaşlık güncellemesi yayınlanırken hata:", error);
+                return false;
             }
         },
         async rejectFriendRequest(requestId) {
@@ -1213,6 +1259,79 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const friends = await supabaseService.getFriends(state.currentUser.id);
                     state.friends = friends || [];
                     renderer.renderFriendsList();
+                }
+            })
+            .subscribe();
+
+        // Arkadaşlık güncellemelerini dinle
+        const friendshipUpdatesChannel = supabase.channel(`friendship_updates_${state.currentUser.id}`);
+        friendshipUpdatesChannel
+            .on('broadcast', { event: 'friendship_update' }, async (payload) => {
+                console.log("Arkadaşlık güncellemesi alındı:", payload);
+
+                // Arkadaşlık isteği kabul edildiyse
+                if (payload.payload && payload.payload.type === 'friendship_accepted') {
+                    console.log("Arkadaşlık isteği kabul edildi bildirimi alındı");
+
+                    // Arkadaş listesini güncelle
+                    const friends = await supabaseService.getFriends(state.currentUser.id);
+                    state.friends = friends || [];
+                    renderer.renderFriendsList();
+
+                    // Eğer istek gönderen kullanıcıysak, bildirim göster
+                    if (payload.payload.user_id_1 === state.currentUser.id) {
+                        // Karşı tarafın profil bilgilerini al
+                        const friendProfile = await supabaseService.getUserProfile(payload.payload.user_id_2);
+                        if (friendProfile) {
+                            // Bildirim göster
+                            const notification = document.createElement('div');
+                            notification.className = 'friend-accepted-notification';
+                            notification.innerHTML = `
+                                <div class="notification-content">
+                                    <i class="fas fa-user-check"></i>
+                                    <span>${friendProfile.username} arkadaşlık isteğinizi kabul etti!</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="start-chat-btn" data-user-id="${friendProfile.id}">
+                                        <i class="fas fa-comment"></i>
+                                        <span>Sohbet Başlat</span>
+                                    </button>
+                                </div>
+                            `;
+
+                            document.body.appendChild(notification);
+
+                            // Animasyon için timeout
+                            setTimeout(() => {
+                                notification.classList.add('show');
+                            }, 100);
+
+                            // Bildirim kapatma
+                            setTimeout(() => {
+                                notification.classList.remove('show');
+                                setTimeout(() => {
+                                    notification.remove();
+                                }, 300);
+                            }, 8000);
+
+                            // Sohbet başlatma butonu olayı
+                            const startChatBtn = notification.querySelector('.start-chat-btn');
+                            startChatBtn.addEventListener('click', async () => {
+                                try {
+                                    // Sohbet panelini aç
+                                    await renderer.renderChatPanel(friendProfile.id);
+
+                                    // Bildirim kapat
+                                    notification.classList.remove('show');
+                                    setTimeout(() => {
+                                        notification.remove();
+                                    }, 300);
+                                } catch (error) {
+                                    console.error('Error starting chat:', error);
+                                }
+                            });
+                        }
+                    }
                 }
             })
             .subscribe();
