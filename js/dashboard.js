@@ -1485,55 +1485,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Profil modal'ını gösterir
-    function showProfileModal(user) {
-        // UI elementlerini seç
-        const modal = document.getElementById('profile-modal-container');
-        const closeBtn = modal.querySelector('.profile-modal-close-btn');
-        const avatar = modal.querySelector('.profile-modal-avatar img');
-        const username = modal.querySelector('.username');
-        const statusText = modal.querySelector('.status-text');
-        const statusDot = modal.querySelector('.status-dot-modal');
-        const bio = modal.querySelector('.bio');
-        const memberSince = modal.querySelector('.member-since');
-        const messageBtn = modal.querySelector('.btn-primary');
+    async function showProfileModal(user) {
+        try {
+            // Profil modal bileşenini yükle
+            await loadComponent('profile-modal');
 
-        // Kullanıcı bilgilerini doldur
-        avatar.src = user.avatar_url || 'images/defaultavatar.png';
-        username.textContent = user.username;
+            // Kullanıcının çevrimiçi durumunu kontrol et
+            user.is_online = state.onlineFriends.has(user.id);
 
-        const isOnline = state.onlineFriends.has(user.id);
-        statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
-
-        // Online/offline durum sınıfını güncelle
-        statusDot.className = 'status-dot-modal';
-        if (isOnline) statusDot.classList.add('online');
-        else statusDot.classList.add('offline');
-
-        // Modalı göster
-        modal.classList.add('is-visible');
-
-        // Mesaj gönder butonuna tıklama işlevi ekle
-        messageBtn.onclick = () => {
-            modal.classList.remove('is-visible');
-            supabaseService.getOrCreateConversation(state.currentUser.id, user.id)
-                .then(conversationId => {
-                    if (conversationId) {
-                        renderer.showChatPanel(user, conversationId);
-                    }
-                });
-        };
-
-        // Kapat butonuna tıklama işlevi ekle
-        closeBtn.onclick = () => {
-            modal.classList.remove('is-visible');
-        };
-
-        // Modal dışına tıklandığında modalı kapat
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('is-visible');
-            }
-        };
+            // Profil modalını başlat
+            window.initializeProfileModal(user, state.currentUser, supabase, (result) => {
+                if (result && result.action === 'message') {
+                    // Kullanıcı mesaj göndermek isterse
+                    supabaseService.getOrCreateConversation(state.currentUser.id, result.userId)
+                        .then(conversationId => {
+                            if (conversationId) {
+                                const friend = state.friends.find(f => f.id === result.userId);
+                                if (friend) {
+                                    renderer.showChatPanel(friend, conversationId);
+                                }
+                            }
+                        });
+                } else if (result && result.action === 'removed') {
+                    // Arkadaş listesini yeniden yükle
+                    fetchAndRenderAll();
+                }
+            });
+        } catch (error) {
+            console.error('Profil modalı yüklenirken bir hata oluştu:', error);
+        }
     }
 
     // --- DYNAMIC COMPONENT LOADER ---
@@ -1556,6 +1536,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     css: 'components/join-server/join-server.css',
                     js: 'components/join-server/join-server.js',
                     initFunction: 'initializeJoinServerPanel'
+                },
+                'profile-modal': {
+                    html: 'components/profile-modal/profile-modal.html',
+                    css: 'components/profile-modal/profile-modal.css',
+                    js: 'components/profile-modal/profile-modal.js',
+                    initFunction: 'initializeProfileModal'
                 }
                 // Diğer komponentler buraya eklenebilir
             };

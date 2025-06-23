@@ -296,48 +296,16 @@
     <!-- ==================================================== -->
     <!-- YENİ, YATAY PROFİL PANELİ (KULLANICI İSTEĞİ) -->
     <!-- ==================================================== -->
-    <div id="profile-modal-container" class="profile-modal-overlay">
-        <div class="profile-modal-content horizontal">
-            <button class="profile-modal-close-btn"><i class="fas fa-times"></i></button>
-
-            <!-- Sol Taraf: Profil Resmi ve Temel Bilgiler -->
-            <div class="profile-modal-left">
-                <div class="profile-modal-avatar">
-                    <img src="images/defaultavatar.png" alt="Avatar">
-                    <div class="status-dot-modal online"></div>
-                </div>
-                <h2 class="username">Kullanıcı Adı</h2>
-                <p class="status-text">Çevrimiçi</p>
-            </div>
-
-            <!-- Sağ Taraf: Detaylar ve Eylemler -->
-            <div class="profile-modal-right">
-                <div class="info-section badges-section">
-                    <h4>ROZETLER</h4>
-                    <div class="badges-container">
-                        <!-- <i class="fas fa-star" title="Özel Rozet"></i> -->
-                        <!-- Rozetler JS ile eklenecek -->
-                    </div>
-                </div>
-                <div class="info-section">
-                    <h4>HAKKINDA</h4>
-                    <p class="bio">Bu kullanıcı henüz hakkında bir şey yazmamış.</p>
-                </div>
-                <div class="info-section member-since-section">
-                    <h4>ÜYELİK TARİHİ</h4>
-                    <p class="member-since">1 Ocak 2024</p>
-                </div>
-                <div class="actions-section">
-                    <button class="btn btn-primary"><i class="fas fa-comment-alt"></i> Mesaj Gönder</button>
-                    <button class="btn btn-danger"><i class="fas fa-user-slash"></i> Arkadaşlıktan Çıkar</button>
-                    <button class="btn btn-secondary"><i class="fas fa-ban"></i> Engelle</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Eski profil modalı kaldırıldı -->
 
     <!-- Arkadaş Ekleme Modalı için Konteyner (JS tarafından dinamik olarak doldurulur) -->
     <div id="add-friend-modal-container"></div>
+
+    <!-- Sunucu Katıl Modalı için Konteyner (JS tarafından dinamik olarak doldurulur) -->
+    <div id="join-server-modal-container"></div>
+
+    <!-- Profil Modalı için Konteyner (JS tarafından dinamik olarak doldurulur) -->
+    <div id="profile-modal-container"></div>
 
     <!-- Gerekli Scriptler -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

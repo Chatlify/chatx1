@@ -1,0 +1,381 @@
+/* 
+  Profile Modal Component Styles
+  - Scoped to #profile-modal to prevent global conflicts.
+*/
+
+/* Overlay: The semi-transparent background behind the modal */
+#profile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#profile-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal Content: The actual box */
+#profile-modal .modal-container {
+    background-color: var(--main-bg);
+    padding: 0;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--divider-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 600px;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#profile-modal.active .modal-container {
+    transform: scale(1);
+}
+
+/* Modal Header */
+#profile-modal .modal-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--divider-color);
+    background: linear-gradient(135deg, var(--primary-color-dark), var(--primary-color));
+    color: white;
+}
+
+#profile-modal .modal-header .modal-icon {
+    font-size: 18px;
+    margin-right: 12px;
+}
+
+#profile-modal .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#profile-modal .modal-header .close-modal-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+#profile-modal .modal-header .close-modal-btn:hover {
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Modal Body */
+#profile-modal .modal-body {
+    padding: 0;
+}
+
+#profile-modal .profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Profile Main Section */
+#profile-modal .profile-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+#profile-modal .profile-avatar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#profile-modal .profile-avatar {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+#profile-modal .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#profile-modal .status-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--main-bg);
+    background-color: var(--text-muted);
+}
+
+#profile-modal .status-indicator.online {
+    background-color: var(--success-color);
+}
+
+#profile-modal .status-indicator.offline {
+    background-color: var(--text-muted);
+}
+
+#profile-modal .status-indicator.idle {
+    background-color: #f0b232;
+}
+
+#profile-modal .status-indicator.dnd {
+    background-color: var(--danger-color);
+}
+
+#profile-modal .profile-badges {
+    display: flex;
+    gap: 5px;
+}
+
+#profile-modal .profile-badges .badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+#profile-modal .profile-info {
+    flex: 1;
+}
+
+#profile-modal .profile-username {
+    margin: 0 0 5px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+#profile-modal .profile-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+
+#profile-modal .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+}
+
+#profile-modal .status-dot.online {
+    background-color: var(--success-color);
+}
+
+#profile-modal .status-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+#profile-modal .profile-tag {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Profile Cards */
+#profile-modal .profile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#profile-modal .profile-card {
+    background-color: var(--background-secondary);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    border: 1px solid var(--divider-color);
+    transition: all 0.2s ease;
+}
+
+#profile-modal .profile-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color-muted);
+}
+
+#profile-modal .card-header {
+    padding: 12px 15px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+#profile-modal .card-header h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#profile-modal .card-header h4 i {
+    color: var(--primary-color);
+}
+
+#profile-modal .card-content {
+    padding: 15px;
+}
+
+#profile-modal .bio {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Membership Info */
+#profile-modal .membership-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#profile-modal .info-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+#profile-modal .info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+#profile-modal .info-value {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Mutual Friends */
+#profile-modal .mutual-friends {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+#profile-modal .no-mutual-friends {
+    margin: 0;
+    font-style: italic;
+}
+
+/* Profile Actions */
+#profile-modal .profile-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#profile-modal .action-btn {
+    padding: 12px;
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+#profile-modal .action-btn i {
+    font-size: 16px;
+}
+
+#profile-modal .message-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#profile-modal .message-btn:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+}
+
+#profile-modal .call-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+#profile-modal .call-btn:hover {
+    background-color: var(--success-color-hover);
+    transform: translateY(-2px);
+}
+
+#profile-modal .remove-friend-btn {
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+    color: var(--danger-color);
+}
+
+#profile-modal .remove-friend-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+#profile-modal .block-btn {
+    background-color: var(--background-tertiary);
+    color: var(--text-secondary);
+}
+
+#profile-modal .block-btn:hover {
+    background-color: var(--background-secondary);
+    color: var(--text-color);
+    transform: translateY(-2px);
+}
+
+/* Responsive Styles */
+@media (max-width: 576px) {
+    #profile-modal .modal-container {
+        max-width: 95%;
+        max-height: 80vh;
+    }
+
+    #profile-modal .profile-main {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    #profile-modal .profile-actions {
+        grid-template-columns: 1fr;
+    }
+}
