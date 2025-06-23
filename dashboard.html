@@ -124,6 +124,18 @@
                     <div class="header-right"><button class="add-friend-btn" id="add-friend-button"><i
                                 class="fas fa-user-plus"></i><span>Arkadaş Ekle</span></button></div>
                 </div>
+
+                <!-- Arkadaş Ekle Paneli (Başlangıçta Gizli) -->
+                <div class="add-friend-panel hidden">
+                    <h3>Arkadaş Ekle</h3>
+                    <p>Arkadaşını kullanıcı adıyla ekleyebilirsin.</p>
+                    <div class="add-friend-input-wrapper">
+                        <input type="text" id="add-friend-username" placeholder="Kullanıcı adını girin...">
+                        <button id="send-friend-request-btn">İstek Gönder</button>
+                    </div>
+                    <div class="request-status-message"></div>
+                </div>
+
                 <div class="friends-content-container">
                     <!-- Bu alan, yeni JavaScript render fonksiyonu tarafından doldurulacak -->
                     <!-- Örnek: Arkadaş kartları, bekleyen istekler, yükleniyor animasyonu vb. -->

@@ -519,54 +519,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderer.renderDirectMessagesList(); // Render the DMs list in the left sidebar
     }
 
+    // --- 4. EVENT HANDLERS & UI LOGIC ---
+
+    // Arkadaş Ekle Paneli'ni aç/kapa
+    const handleAddFriendClick = () => {
+        // Not: `add-friend-panel` adında bir panelin HTML'de olması gerekiyor.
+        // Bu panel başlangıçta `hidden` sınıfına sahip olmalı.
+        const addFriendPanel = document.querySelector('.add-friend-panel');
+        if (addFriendPanel) {
+            addFriendPanel.classList.toggle('hidden');
+        } else {
+            console.error('Add Friend Panel not found in the DOM.');
+        }
+    };
+
+    // Sidebar'ı aç/kapa
+    const handleSidebarToggle = () => {
+        document.body.classList.toggle('sidebar-closed');
+        // İkonu değiştir (isteğe bağlı)
+        const icon = ui.sidebarToggleButton.querySelector('i');
+        if (document.body.classList.contains('sidebar-closed')) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        } else {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+        }
+    };
+
     const init = async () => {
         state.currentUser = await supabaseService.getUserSession();
         if (!state.currentUser) return;
 
-        // Mevcut kullanıcının profilini çek ve footer'ı render et
         const userProfile = await supabaseService.getUserProfile(state.currentUser.id);
-        renderer.renderUserFooter(userProfile);
+        if (userProfile) {
+            state.currentUser = { ...state.currentUser, ...userProfile };
+            uiLogic.renderUserFooter(state.currentUser);
+        }
 
-        // Sayfa ilk yüklendiğinde tüm verileri çek ve render et
+        // --- EVENT LISTENERS ---
+        // Yeni eklenen olay dinleyicileri
+        const addFriendButton = document.getElementById('add-friend-button');
+        if (addFriendButton) {
+            addFriendButton.addEventListener('click', handleAddFriendClick);
+        }
+
+        if (ui.sidebarToggleButton) {
+            ui.sidebarToggleButton.addEventListener('click', handleSidebarToggle);
+        }
+
+        if (ui.tabsContainer) {
+            ui.tabsContainer.addEventListener('click', handleTabClick);
+        }
+        // ... (diğer event listenerlar)
+
         await fetchAndRenderAll();
-
-        // `friendships` tablosundaki tüm değişiklikleri dinle
-        supabase.channel('public:friendships')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
-                console.log('Friendship table change detected, refetching all data.', payload);
-                fetchAndRenderAll();
-            })
-            .subscribe();
-
-        // Real-time presence channel
-        const presenceChannel = supabase.channel('global-presence', {
-            config: {
-                presence: {
-                    key: state.currentUser.id,
-                },
-            },
-        });
-
-        presenceChannel.on('presence', { event: 'sync' }, () => {
-            const newState = presenceChannel.presenceState();
-            const onlineUserIds = Object.keys(newState);
-            state.onlineFriends = new Set(onlineUserIds);
-            console.log('Online users synced:', Array.from(state.onlineFriends));
-            renderer.render();
-            renderer.renderDirectMessagesList();
-        });
-
-        presenceChannel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                console.log('Subscribed to presence channel!');
-                await presenceChannel.track({ online_at: new Date().toISOString() });
-            }
-        });
-
-        // Event Listeners
-        ui.tabsContainer.addEventListener('click', handleTabClick);
-        ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction);
-        ui.dmList.addEventListener('click', handleDmItemClick);
+        setupRealtimeSubscriptions();
     };
 
     init();
