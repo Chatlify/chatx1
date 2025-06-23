@@ -1111,9 +1111,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 5. EVENT HANDLERS ---
     const handleTabClick = (e) => {
         const tab = e.target.closest('.tab');
-        if (!tab || tab.classList.contains('active')) return;
+        if (!tab) return;
 
-        state.activeFriendsTab = tab.dataset.tab;
+        // Tüm tabları pasif yap
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        // Tıklanan tabı aktif yap
+        tab.classList.add('active');
+
+        // İlgili içeriği göster (data-tab attribute'una göre)
+        const selectedTab = tab.dataset.tab;
+        console.log(`Selected tab: ${selectedTab}`);
+
+        // Seçilen tab'a göre içeriği güncelle
         renderer.render();
     };
 
@@ -1121,18 +1130,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dmItem = e.target.closest('.dm-item');
         if (!dmItem) return;
 
-        const targetUserId = dmItem.dataset.userId;
-        if (!targetUserId || targetUserId === state.currentUser.id) return;
+        const userId = dmItem.dataset.userId;
+        if (!userId) {
+            console.error('DM item does not have a user ID');
+            return;
+        }
 
-        const friend = state.friends.find(f => f.id === targetUserId);
-        if (!friend) return;
+        const friend = state.friends.find(f => f.id === userId);
+        if (!friend) {
+            console.error(`Friend with ID ${userId} not found in state`);
+            return;
+        }
 
-        const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, targetUserId);
-
+        // Konuşma ID'sini al veya oluştur
+        const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, userId);
         if (conversationId) {
             renderer.showChatPanel(friend, conversationId);
-        } else {
-            alert('Sohbet başlatılırken bir hata oluştu.');
         }
     }
 
@@ -1273,10 +1286,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             renderer.renderUserFooter(state.currentUser);
 
-            // 3. Fetch and render all other data (friends, DMs, etc.)
-            await fetchAndRenderAll();
+            // 3. Fetch and render all data
+            fetchAndRenderAll();
 
-            // 4. Setup all event listeners now that the UI is populated
+            // 4. Set up event listeners
             if (ui.tabsContainer) {
                 ui.tabsContainer.addEventListener('click', handleTabClick);
             }
@@ -1292,6 +1305,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (ui.addFriendModal.button) {
                 ui.addFriendModal.button.addEventListener('click', () => loadComponent('add-friend'));
+            }
+
+            // Grup sohbeti butonuna event listener ekle
+            const groupChatBtn = document.querySelector('.chat-type-btn:not(.active)');
+            if (groupChatBtn) {
+                groupChatBtn.addEventListener('click', handleGroupChatClick);
+            }
+
+            // Profil butonuna event listener ekle
+            const profileBtn = document.querySelector('.profile-btn');
+            if (profileBtn) {
+                profileBtn.addEventListener('click', handleProfileButtonClick);
             }
 
             // Sidebar butonları için event listener'ları doğrudan ekleyelim
@@ -1409,6 +1434,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.log('Friendship change detected, refetching data.', payload);
                     fetchAndRenderAll();
                 }).subscribe();
+
+            // Emoji ve GIF butonlarına event listener ekle
+            const emojiBtn = document.querySelector('.emoji-btn');
+            if (emojiBtn) {
+                emojiBtn.addEventListener('click', handleEmojiButtonClick);
+            }
+
+            const gifBtn = document.querySelector('.gif-btn');
+            if (gifBtn) {
+                gifBtn.addEventListener('click', handleGifButtonClick);
+            }
+
+            // Panel dışına tıklanınca kapatma için document'a event listener ekle
+            document.addEventListener('click', handleClickOutsidePanels);
 
         } catch (error) {
             console.error('Fatal initialization error:', error);
@@ -1633,6 +1672,71 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tempElement.dataset.messageId = serverMessage.id;
                 }
             }
+        }
+    }
+
+    // Grup Sohbeti butonuna tıklandığında
+    function handleGroupChatClick(e) {
+        alert("Grup sohbeti özelliği yakında eklenecek!");
+    }
+
+    // Profil butonuna tıklandığında
+    function handleProfileButtonClick() {
+        if (!state.currentFriend) return;
+
+        // Profil modalını aç
+        showProfileModal(state.currentFriend);
+    }
+
+    // Emoji butonuna tıklandığında
+    function handleEmojiButtonClick() {
+        const emojiPanel = document.querySelector('.emoji-panel');
+        const gifPanel = document.querySelector('.gif-panel');
+
+        // GIF panelini kapat
+        gifPanel.classList.remove('active');
+        document.querySelector('.gif-btn').classList.remove('active');
+
+        // Emoji panelini aç/kapat
+        emojiPanel.classList.toggle('active');
+        document.querySelector('.emoji-btn').classList.toggle('active');
+    }
+
+    // GIF butonuna tıklandığında
+    function handleGifButtonClick() {
+        const emojiPanel = document.querySelector('.emoji-panel');
+        const gifPanel = document.querySelector('.gif-panel');
+
+        // Emoji panelini kapat
+        emojiPanel.classList.remove('active');
+        document.querySelector('.emoji-btn').classList.remove('active');
+
+        // GIF panelini aç/kapat
+        gifPanel.classList.toggle('active');
+        document.querySelector('.gif-btn').classList.toggle('active');
+    }
+
+    // Panellerin dışına tıklandığında kapatma
+    function handleClickOutsidePanels(e) {
+        const emojiPanel = document.querySelector('.emoji-panel');
+        const gifPanel = document.querySelector('.gif-panel');
+        const emojiBtn = document.querySelector('.emoji-btn');
+        const gifBtn = document.querySelector('.gif-btn');
+
+        // Eğer emoji paneli açıksa ve emoji butonu veya panel dışına tıklandıysa
+        if (emojiPanel.classList.contains('active') &&
+            !emojiPanel.contains(e.target) &&
+            !emojiBtn.contains(e.target)) {
+            emojiPanel.classList.remove('active');
+            emojiBtn.classList.remove('active');
+        }
+
+        // Eğer GIF paneli açıksa ve GIF butonu veya panel dışına tıklandıysa
+        if (gifPanel.classList.contains('active') &&
+            !gifPanel.contains(e.target) &&
+            !gifBtn.contains(e.target)) {
+            gifPanel.classList.remove('active');
+            gifBtn.classList.remove('active');
         }
     }
 
