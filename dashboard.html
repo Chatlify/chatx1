@@ -241,6 +241,7 @@
                             </div>
                         </div>
                         <div class="sponsor-server-badge">SPONSOR</div>
+                        <button class="sponsor-server-join-btn">Katıl</button>
                     </div>
                     <div class="sponsor-server">
                         <div class="sponsor-server-icon"><img src="https://picsum.photos/seed/art/100"
@@ -255,6 +256,7 @@
                             </div>
                         </div>
                         <div class="sponsor-server-badge">SPONSOR</div>
+                        <button class="sponsor-server-join-btn">Katıl</button>
                     </div>
                     <div class="sponsor-server">
                         <div class="sponsor-server-icon"><img src="https://picsum.photos/seed/music/100"
@@ -269,6 +271,7 @@
                             </div>
                         </div>
                         <div class="sponsor-server-badge">SPONSOR</div>
+                        <button class="sponsor-server-join-btn">Katıl</button>
                     </div>
                 </div>
             </div>
@@ -333,6 +336,27 @@
     <!-- <script src="js/server.js"></script> -->
     <script src="js/voice-call.js" type="module"></script>
     <script src="js/add-friend.js"></script>
+
+    <!-- Arkadaş Ekle Paneli (Dinamik olarak yüklenmek yerine doğrudan eklendi) -->
+    <div id="add-friend-panel" class="modal-overlay">
+        <div class="modal-container">
+            <button class="close-modal-btn" aria-label="Close">&times;</button>
+            <div class="modal-header">
+                <h2>Arkadaş Ekle</h2>
+                <p>Chatlify kullanıcı adıyla doğrudan arkadaş ekle.</p>
+            </div>
+            <div class="modal-body">
+                <form id="addFriendForm" novalidate>
+                    <div class="input-group">
+                        <input type="text" id="friendUsername" name="username" placeholder="Kullanıcı adı girin"
+                            autocomplete="off" required>
+                        <button type="submit" class="add-btn">İstek Gönder</button>
+                    </div>
+                    <div id="addFriendStatus" class="status-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 </body>
 

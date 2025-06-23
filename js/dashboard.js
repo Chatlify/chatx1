@@ -646,27 +646,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const init = async () => {
         try {
+            state.currentUser = await supabaseService.getUserSession();
+            if (!state.currentUser) return;
+
+            const userProfile = await supabaseService.getUserProfile(state.currentUser.id);
+            renderer.renderUserFooter(userProfile);
+
             await fetchAndRenderAll();
 
-            // Setup Event Listeners
-            ui.friendsListContainer.addEventListener('click', handleDmItemClick);
-            document.querySelector('.friends-tabs').addEventListener('click', handleTabClick);
-            document.querySelector('.pending-requests-container').addEventListener('click', handlePendingRequestAction);
-            document.getElementById('add-friend-btn').addEventListener('click', () => actions.loadComponent('add-friend'));
+            // Setup Event Listeners using delegation where necessary
+            if (ui.friendsContentContainer) {
+                ui.friendsContentContainer.addEventListener('click', (e) => {
+                    // Delegate clicks for pending request actions
+                    if (e.target.closest('.accept-btn') || e.target.closest('.reject-btn')) {
+                        handlePendingRequestAction(e);
+                    }
+                    // TODO: Delegate clicks for friend card actions here if needed
+                });
+            }
+
+            if (ui.tabsContainer) {
+                ui.tabsContainer.addEventListener('click', handleTabClick);
+            }
+
+            if (ui.dmList) {
+                ui.dmList.addEventListener('click', handleDmItemClick);
+            }
+
+            const addFriendButton = document.getElementById('add-friend-button');
+            if (addFriendButton) {
+                addFriendButton.addEventListener('click', () => {
+                    if (typeof window.initializeAddFriendPanel === 'function') {
+                        // This function is in add-friend.js and handles showing the panel
+                        window.initializeAddFriendPanel(supabase);
+                    } else {
+                        console.error('Arkadaş Ekle panelini başlatma fonksiyonu bulunamadı.');
+                    }
+                });
+            }
 
             // Add navigation for sidebar buttons
             if (ui.settingsButton) {
-                ui.settingsButton.addEventListener('click', () => {
-                    window.location.href = '/settings.html';
-                });
+                ui.settingsButton.addEventListener('click', () => { window.location.href = '/settings.html'; });
             }
             if (ui.shopButton) {
-                ui.shopButton.addEventListener('click', () => {
-                    window.location.href = '/shop.html';
-                });
+                ui.shopButton.addEventListener('click', () => { window.location.href = '/shop.html'; });
             }
 
-            // Sidebar toggle butonu için olay dinleyicisi ekle
+            // Sidebar toggle button
             if (ui.sidebarToggleButton) {
                 ui.sidebarToggleButton.addEventListener('click', () => {
                     document.body.classList.toggle('sidebar-closed');
@@ -674,28 +701,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
+            // Real-time subscriptions
+            supabase.channel('public:friendships')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
+                    console.log('Friendship table change detected, refetching all data.', payload);
+                    fetchAndRenderAll();
+                })
+                .subscribe();
+
             // Real-time presence tracking
             if (state.currentUser) {
                 const presenceChannel = supabase.channel(`user-presence:${state.currentUser.id}`, {
-                    config: {
-                        presence: {
-                            key: state.currentUser.id,
-                        },
-                    },
+                    config: { presence: { key: state.currentUser.id } }
                 });
 
                 presenceChannel.on('presence', { event: 'sync' }, () => {
                     const newState = presenceChannel.presenceState();
-                    const onlineUserIds = Object.keys(newState);
-                    state.onlineFriends = new Set(onlineUserIds);
-                    console.log('Online users synced:', Array.from(state.onlineFriends));
+                    state.onlineFriends = new Set(Object.keys(newState));
                     renderer.render();
                     renderer.renderDirectMessagesList();
                 });
 
                 presenceChannel.subscribe(async (status) => {
                     if (status === 'SUBSCRIBED') {
-                        console.log('Subscribed to presence channel!');
                         await presenceChannel.track({ online_at: new Date().toISOString() });
                     }
                 });
@@ -705,63 +733,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Initialization error:', error);
         }
     };
-
-    // --- DYNAMIC COMPONENT LOADER ---
-    async function loadComponent(componentName) {
-        if (document.getElementById(`${componentName}-panel`)) {
-            console.log(`${componentName} component is already loaded.`);
-            return;
-        }
-
-        const basePath = `components/${componentName}`;
-        const htmlPath = `${basePath}/${componentName}.html`;
-        const cssPath = `${basePath}/${componentName}.css`;
-        const jsPath = `${basePath}/${componentName}.js`;
-
-        try {
-            // 1. Fetch and inject HTML
-            const htmlResponse = await fetch(htmlPath);
-            if (!htmlResponse.ok) throw new Error(`Failed to load ${htmlPath}`);
-            const htmlContent = await htmlResponse.text();
-            document.body.insertAdjacentHTML('beforeend', htmlContent);
-
-            // 2. Load CSS
-            if (!document.querySelector(`link[href="${cssPath}"]`)) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = cssPath;
-                document.head.appendChild(link);
-            }
-
-            // 3. Load and execute JS
-            const script = document.createElement('script');
-            script.src = jsPath;
-            script.onload = () => {
-                const initializerName = `initialize${componentName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Panel`;
-                if (window[initializerName] && typeof window[initializerName] === 'function') {
-                    window[initializerName](supabase, () => {
-                        script.remove(); // Clean up script tag
-                    });
-                } else {
-                    console.error(`${initializerName} function not found on window object.`);
-                }
-            };
-            document.body.appendChild(script);
-
-        } catch (error) {
-            console.error(`Error loading component ${componentName}:`, error);
-            const panel = document.getElementById(`${componentName}-panel`);
-            if (panel) panel.remove();
-        }
-    }
-
-    // Attach listener to the Add Friend button
-    if (ui.addFriendModal.button) {
-        ui.addFriendModal.button.addEventListener('click', (e) => {
-            e.preventDefault();
-            loadComponent('add-friend');
-        });
-    }
 
     init();
 });
