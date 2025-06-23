@@ -740,93 +740,46 @@
 
     <div class="container">
         <div class="form-container">
-            <div class="logo-wrapper">
-                <img src="assets/logo.png" alt="Chatlify Logo" class="logo">
+            <div class="form-header">
+                <h2 class="form-title">Hesap Oluştur</h2>
+                <p class="form-subtitle">Sohbete katılmak için yeni bir hesap oluşturun.</p>
             </div>
-            <h1>Join Chatlify</h1>
-            <p class="form-subtitle">Create a new account to get started</p>
-
-            <form id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label for="profile-photo">Profile Photo</label>
-                    <div class="photo-upload-container">
-                        <div class="profile-photo-preview" id="profile-photo-preview">
-                            <i class="fas fa-camera upload-icon"></i>
-                            <span class="upload-text">Click to upload</span>
-                            <img class="preview-image" id="preview-image" src="" alt="Profile Preview">
-                        </div>
-                        <input type="file" id="profile-photo" name="profile-photo" accept="image/*"
-                            class="profile-photo-input">
-                        <button type="button" id="reset-photo" class="reset-photo-btn">
-                            <i class="fas fa-times"></i>
-                        </button>
+            <form id="registerForm" novalidate>
+                <div class="input-group">
+                    <label for="username"><i class="fas fa-user"></i> Kullanıcı Adı</label>
+                    <input type="text" id="username" name="username" required>
+                    <div class="form-error" data-for="username"></div>
+                </div>
+                <div class="input-group">
+                    <label for="email"><i class="fas fa-envelope"></i> E-posta</label>
+                    <input type="email" id="email" name="email" required>
+                    <div class="form-error" data-for="email"></div>
+                </div>
+                <div class="input-group">
+                    <label for="password"><i class="fas fa-lock"></i> Şifre</label>
+                    <input type="password" id="password" name="password" required>
+                    <div class="form-error" data-for="password"></div>
+                </div>
+                <div class="input-group">
+                    <label for="confirmPassword"><i class="fas fa-lock"></i> Şifreyi Onayla</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <div class="form-error" data-for="confirmPassword"></div>
+                </div>
+                <div class="form-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">Kullanım <a href="/legal/terms-of-service.html"
+                                target="_blank">koşullarını</a> ve <a href="/legal/privacy-policy.html"
+                                target="_blank">gizlilik politikasını</a> kabul ediyorum.</label>
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <div class="input-container">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="username" name="username" required placeholder="Your username">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <div class="input-container">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" name="email" required placeholder="Your email address">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-container">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                        <span class="toggle-password" data-target="password" aria-label="Show/hide password">
-                            <i class="fas fa-eye"></i>
-                        </span>
-                    </div>
-                    <div class="password-strength">
-                        <div class="strength-meter">
-                            <div class="strength-segment"></div>
-                            <div class="strength-segment"></div>
-                            <div class="strength-segment"></div>
-                            <div class="strength-segment"></div>
-                        </div>
-                        <div class="strength-text">Password Strength: <span id="strength-value">Weak</span></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password-confirm">Confirm Password</label>
-                    <div class="input-container">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password-confirm" name="password-confirm"
-                            placeholder="Confirm your password" required>
-                        <span class="toggle-password" data-target="password-confirm" aria-label="Show/hide password">
-                            <i class="fas fa-eye"></i>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="terms-container">
-                    <input type="checkbox" id="terms" name="terms" required>
-                    <label for="terms">
-                        I have read and agree to the <a href="legal/terms-of-service.html" target="_blank">Terms of
-                            Service</a> and <a href="legal/privacy-policy.html" target="_blank">Privacy Policy</a>
-                    </label>
-                </div>
-
-                <div id="error-message" class="error-message"></div>
-
-                <button type="submit" id="register-button" class="register-button">Sign Up</button>
-
-                <div class="form-footer">
-                    <p>Already have an account? <a href="login.html">Sign In</a></p>
-                </div>
+                <button type="submit" id="submitBtn" class="form-btn" disabled>
+                    <span class="btn-text">Hesap Oluştur</span>
+                </button>
             </form>
+            <div class="form-footer">
+                Zaten bir hesabın var mı? <a href="/login.html">Giriş Yap</a>
+            </div>
         </div>
 
         <div class="info-container">
