@@ -107,6 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         onlineFriends: new Set(),
         presenceChannel: null,
         pendingRequests: [],
+        activeFriendsTab: 'all', // 'all', 'online', 'pending'
     };
 
     // --- 2. UI ELEMENTS ---
@@ -182,6 +183,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             statusMessage: null,
             closeBtn: null,
         },
+        friendsContentContainer: document.querySelector('.friends-content-container'),
+        tabsContainer: document.querySelector('.tabs-container'),
     };
 
     // --- 3. SUPABASE SERVICE ---
@@ -283,64 +286,86 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 4. UI RENDERER ---
     const renderer = {
-        renderFriendsList() {
-            const { friends, onlineFriends } = state;
-            const { onlineFriendsList, offlineFriendsList, onlineCount, offlineCount, onlineSectionTitle, offlineSectionTitle } = ui;
+        render() {
+            // Update active tab UI
+            ui.tabsContainer.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === state.activeFriendsTab);
+            });
 
-            onlineFriendsList.innerHTML = '';
-            offlineFriendsList.innerHTML = '';
-
-            // Henüz anlık online/offline takip sistemi (presence) eklenmediği için
-            // tüm arkadaşlar çevrimdışı görünecektir. Bu, ileride geliştirilebilir.
-            const online = friends.filter(f => onlineFriends.has(f.id));
-            const offline = friends.filter(f => !onlineFriends.has(f.id));
-
-            onlineCount.textContent = online.length;
-            offlineCount.textContent = offline.length;
-
-            // Listenin içeriği varsa başlığı ve listeyi görünür yap
-            onlineSectionTitle.style.display = online.length > 0 ? 'flex' : 'none';
-            offlineSectionTitle.style.display = offline.length > 0 ? 'flex' : 'none';
-
-            const createFriendHTML = (friend, isOnline) => `
-                <li class="dm-item" data-user-id="${friend.id}">
-                    <div class="dm-item-avatar">
-                        <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
-                        <div class="status-dot ${isOnline ? 'online' : ''}"></div>
-                    </div>
-                    <span class="dm-item-name">${friend.username}</span>
-                </li>`;
-
-            online.forEach(friend => onlineFriendsList.innerHTML += createFriendHTML(friend, true));
-            offline.forEach(friend => offlineFriendsList.innerHTML += createFriendHTML(friend, false));
+            // Render content based on active tab
+            switch (state.activeFriendsTab) {
+                case 'all':
+                case 'online':
+                    this.renderFriendCards();
+                    break;
+                case 'pending':
+                    this.renderPendingRequestCards();
+                    break;
+                default:
+                    ui.friendsContentContainer.innerHTML = '';
+            }
         },
-        renderPendingRequests() {
-            const { pendingRequests } = state;
-            const { pendingRequestsList, pendingCount, pendingSectionTitle } = ui;
 
-            pendingRequestsList.innerHTML = '';
-            pendingCount.textContent = pendingRequests.length;
+        renderFriendCards() {
+            const { friends, onlineFriends, activeFriendsTab } = state;
+            let friendsToRender = friends;
 
-            if (pendingRequests.length > 0) {
-                pendingSectionTitle.style.display = 'block';
-            } else {
-                pendingSectionTitle.style.display = 'none';
+            if (activeFriendsTab === 'online') {
+                friendsToRender = friends.filter(f => onlineFriends.has(f.id));
             }
 
-            const createRequestHTML = (request) => `
-                <div class="friend-request-item" data-request-id="${request.id}">
-                    <div class="request-info">
-                        <img src="${request.avatarUrl || 'images/defaultavatar.png'}" alt="${request.username}'s avatar">
-                        <span>${request.username}</span>
-                    </div>
-                    <div class="request-actions">
-                        <button class="accept-btn"><i class="fas fa-check"></i></button>
-                        <button class="reject-btn"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>`;
+            if (friendsToRender.length === 0) {
+                const message = activeFriendsTab === 'online'
+                    ? 'Kimse aktif değil gibi görünüyor.'
+                    : 'Henüz hiç arkadaşın yok. Birilerini eklemeye ne dersin?';
+                ui.friendsContentContainer.innerHTML = `<div class="empty-state"><i class="fas fa-ghost"></i><p>${message}</p></div>`;
+                return;
+            }
 
-            pendingRequests.forEach(req => pendingRequestsList.innerHTML += createRequestHTML(req));
+            const gridHTML = friendsToRender.map(friend => {
+                const isOnline = onlineFriends.has(friend.id);
+                return `
+                    <div class="friend-card" data-user-id="${friend.id}">
+                        <div class="card-avatar">
+                            <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
+                            <div class="status-dot ${isOnline ? 'online' : ''}"></div>
+                        </div>
+                        <div class="card-username">${friend.username}</div>
+                        <div class="card-actions">
+                            <button class="card-action-btn" title="Mesaj Gönder"><i class="fas fa-comment-dots"></i></button>
+                            <button class="card-action-btn" title="Daha Fazla"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            ui.friendsContentContainer.innerHTML = `<div class="friends-grid">${gridHTML}</div>`;
         },
+
+        renderPendingRequestCards() {
+            const { pendingRequests } = state;
+
+            if (pendingRequests.length === 0) {
+                ui.friendsContentContainer.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Bekleyen arkadaşlık isteğin yok.</p></div>`;
+                return;
+            }
+
+            const requestsHTML = pendingRequests.map(req => `
+                <div class="request-card" data-request-id="${req.id}">
+                    <div class="request-card-info">
+                        <img src="${req.avatarUrl || 'images/defaultavatar.png'}" alt="${req.username}'s avatar">
+                        <span><strong>${req.username}</strong> sana bir istek gönderdi.</span>
+                    </div>
+                    <div class="request-card-actions">
+                        <button class="accept-btn accept" title="Kabul Et"><i class="fas fa-check"></i></button>
+                        <button class="reject-btn reject" title="Reddet"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+            `).join('');
+
+            ui.friendsContentContainer.innerHTML = `<div class="pending-requests-container">${requestsHTML}</div>`;
+        },
+
         renderUserFooter(profile) {
             const { userFooterName, userFooterAvatar } = ui;
             if (!profile) return;
@@ -351,6 +376,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // --- 5. EVENT HANDLERS ---
+    const handleTabClick = (e) => {
+        const tab = e.target.closest('.tab');
+        if (!tab || tab.classList.contains('active')) return;
+
+        state.activeFriendsTab = tab.dataset.tab;
+        renderer.render();
+    };
+
     const handlePendingRequestAction = async (e) => {
         const acceptBtn = e.target.closest('.accept-btn');
         const rejectBtn = e.target.closest('.reject-btn');
@@ -394,8 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.friends = friends;
         state.pendingRequests = pendingRequests;
 
-        renderer.renderFriendsList();
-        renderer.renderPendingRequests();
+        renderer.render(); // Call the main render function
     }
 
     const init = async () => {
@@ -426,8 +458,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Mevcut online/offline ve broadcast kanallarını kaldırıyoruz.
         // Onların yerine daha basit ve merkezi bir yapı kurduk.
 
-        ui.pendingRequestsList.addEventListener('click', handlePendingRequestAction);
-        // ... other event listeners if any
+        ui.tabsContainer.addEventListener('click', handleTabClick);
+        ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction); // Moved listener
     };
 
     init();

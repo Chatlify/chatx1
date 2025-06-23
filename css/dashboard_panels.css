@@ -968,3 +968,177 @@
 /* ==================
    Chat Panel
    ================== */
+
+/* Friends Panel - New Card Layout */
+.friends-content-container {
+    padding: 24px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.friend-card {
+    background-color: var(--background-secondary);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid var(--background-tertiary);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.friend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.friend-card .card-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.friend-card .card-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--background-tertiary);
+}
+
+.friend-card .card-avatar .status-dot {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    /* Offline color */
+    border: 3px solid var(--background-secondary);
+}
+
+.friend-card .card-avatar .status-dot.online {
+    background-color: #28a745;
+    /* Online color */
+}
+
+.friend-card .card-username {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 16px;
+}
+
+.friend-card .card-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.friend-card .card-action-btn {
+    background-color: var(--background-tertiary);
+    color: var(--text-muted);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.friend-card .card-action-btn:hover {
+    background-color: var(--brand-color);
+    color: #fff;
+}
+
+/* Pending Request Card Styles */
+.pending-requests-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.request-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--background-secondary);
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--background-tertiary);
+    transition: box-shadow 0.2s ease;
+}
+
+.request-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.request-card-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.request-card-info img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+.request-card-info span {
+    font-weight: 500;
+    font-size: 1.05em;
+}
+
+.request-card-actions button {
+    background: var(--background-tertiary);
+    border: none;
+    color: var(--text-color);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.request-card-actions button.accept:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.request-card-actions button.reject:hover {
+    background-color: #F44336;
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    font-size: 1.2em;
+}

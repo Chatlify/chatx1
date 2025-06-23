@@ -115,28 +115,18 @@
                         <div class="main-title"><i class="fas fa-user-friends"></i><span>Arkadaşlar</span></div>
                     </div>
                     <div class="tabs-wrapper">
-                        <div class="tabs-container"><button class="tab active">Tüm Arkadaşlar</button><button
-                                class="tab">Çevrimiçi</button><button class="tab">Bekleyen</button></div>
+                        <div class="tabs-container">
+                            <button class="tab active" data-tab="all">Tüm Arkadaşlar</button>
+                            <button class="tab" data-tab="online">Çevrimiçi</button>
+                            <button class="tab" data-tab="pending">Bekleyen</button>
+                        </div>
                     </div>
                     <div class="header-right"><button class="add-friend-btn" id="add-friend-button"><i
                                 class="fas fa-user-plus"></i><span>Arkadaş Ekle</span></button></div>
                 </div>
-                <div class="friends-list-container">
-                    <div class="friends-section-title online-section-title" style="display: none;">
-                        <i class="fas fa-circle"></i><span>Çevrimiçi</span>
-                        <div class="online-count">0</div>
-                    </div>
-                    <div class="friends-list online-friends"></div>
-                    <div class="friends-section-title offline-section-title" style="display: none;">
-                        <i class="far fa-circle"></i><span>Çevrimdışı</span>
-                        <div class="offline-count">0</div>
-                    </div>
-                    <div class="friends-list offline-friends"></div>
-                    <div class="friends-section-title pending-requests-section-title" style="display: none;">
-                        <i class="fas fa-hourglass-half"></i><span>Bekleyen İstekler</span>
-                        <div class="pending-requests-count">0</div>
-                    </div>
-                    <div class="friends-list pending-requests-list"></div>
+                <div class="friends-content-container">
+                    <!-- Bu alan, yeni JavaScript render fonksiyonu tarafından doldurulacak -->
+                    <!-- Örnek: Arkadaş kartları, bekleyen istekler, yükleniyor animasyonu vb. -->
                 </div>
             </div>
 
