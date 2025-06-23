@@ -39,9 +39,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal HTML'ini body'ye ekle
     document.body.insertAdjacentHTML('beforeend', addFriendModalHTML);
 
+    // Tüm olası seçicileri deneyelim
+    const possibleSelectors = [
+        '#addFriendBtn',
+        '.add-friend-button',
+        '#add-friend-button',
+        '.friend-add-button',
+        '#friend-add-button',
+        '.add-friend',
+        '#add-friend',
+        '.add-friend-btn',
+        '.friends-add-button',
+        '.friend-list-add',
+        '[data-action="add-friend"]'
+    ];
+
+    // Tüm seçicileri dene ve ilk bulunanı kullan
+    let addFriendBtn = null;
+    for (const selector of possibleSelectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+            addFriendBtn = element;
+            console.log(`Arkadaş ekle butonu bulundu: ${selector}`, element);
+            break;
+        }
+    }
+
+    // Buton bulunamadıysa, sidebar içindeki tüm butonları kontrol et
+    if (!addFriendBtn) {
+        console.log("Sidebar içindeki butonları kontrol ediyorum...");
+        const sidebarButtons = document.querySelectorAll('.sidebar button, .sidebar-item, .sidebar a, .friends-list button, .friends-section button');
+
+        for (const button of sidebarButtons) {
+            const text = button.textContent.toLowerCase();
+            if (text.includes('arkadaş') || text.includes('friend') || text.includes('ekle') || text.includes('add')) {
+                addFriendBtn = button;
+                console.log("İçeriğe göre arkadaş ekle butonu bulundu:", button);
+                break;
+            }
+        }
+    }
+
     // Modal elementlerini seç
     const addFriendModal = document.getElementById('addFriendModal');
-    const addFriendBtn = document.getElementById('addFriendBtn') || document.querySelector('.add-friend-button');
     const closeAddFriendBtn = addFriendModal.querySelector('.close');
     const addFriendForm = document.getElementById('addFriendForm');
     const addFriendStatus = document.getElementById('addFriendStatus');
@@ -78,10 +118,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Arkadaş ekle butonuna tıklandığında modalı aç
     if (addFriendBtn) {
-        console.log('Arkadaş ekle butonu bulundu:', addFriendBtn);
-        addFriendBtn.addEventListener('click', openAddFriendModal);
+        console.log('Arkadaş ekle butonuna tıklama olayı ekleniyor...');
+        addFriendBtn.addEventListener('click', function (e) {
+            console.log('Arkadaş ekle butonuna tıklandı');
+            e.preventDefault();
+            openAddFriendModal();
+        });
     } else {
-        console.error('Arkadaş ekle butonu bulunamadı! Buton ID veya sınıfını kontrol edin.');
+        console.error('Arkadaş ekle butonu bulunamadı! Sayfadaki butonlar:', document.querySelectorAll('button'));
+
+        // Buton bulunamadığında manuel bir buton ekleyelim
+        console.log('Manuel arkadaş ekle butonu ekleniyor...');
+        const manualButton = document.createElement('button');
+        manualButton.id = 'manualAddFriendButton';
+        manualButton.textContent = 'Arkadaş Ekle';
+        manualButton.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 999; padding: 10px 15px; background-color: #7289da; color: white; border: none; border-radius: 5px; cursor: pointer;';
+        document.body.appendChild(manualButton);
+
+        manualButton.addEventListener('click', openAddFriendModal);
     }
 
     // X butonuna tıklandığında modalı kapat
