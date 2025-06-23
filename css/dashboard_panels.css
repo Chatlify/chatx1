@@ -19,7 +19,6 @@
 
 .friends-panel-container {
     display: flex;
-    /* Varsayılan olarak görünür */
     flex-direction: column;
     width: 100%;
     height: 100%;
@@ -28,6 +27,25 @@
 .friends-panel-container.hidden {
     display: none;
     /* JS ile sohbet açıldığında gizlenecek */
+}
+
+/* 2. Sohbet Paneli (Chat Panel) */
+.chat-panel {
+    display: none;
+    /* Varsayılan olarak gizli */
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-primary);
+}
+
+/* 3. Aktif Sohbet Durumu (Chat Active State) */
+.main-content.chat-active .friends-panel-container {
+    display: none;
+}
+
+.main-content.chat-active .chat-panel {
+    display: flex;
 }
 
 /* Panel Header (Tüm Arkadaşlar, Çevrimiçi sekmeleri vs.) */
@@ -343,27 +361,6 @@
 
 .notification-actions .start-chat-btn:hover {
     background-color: var(--primary-color-hover);
-}
-
-/* 2. Sohbet Paneli (Chat Panel) - YENİ MODERN TASARIM */
-
-.chat-panel {
-    display: none;
-    /* Varsayılan olarak gizli */
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    background-color: var(--main-bg);
-    position: absolute;
-    /* .main-content'e göre konumlanacak */
-    top: 0;
-    left: 0;
-    z-index: 100;
-}
-
-.chat-panel:not(.hidden) {
-    display: flex;
-    /* JS ile .hidden class'ı kaldırıldığında görünür hale gelir */
 }
 
 /* Şık Sohbet Başlığı */

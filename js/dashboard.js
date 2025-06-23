@@ -542,10 +542,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         showChatPanel(friend, conversationId) {
-            const { chatPanel, friendsPanel, sponsorServersContainer, chatHeaderUser, chatMessages } = ui;
+            const { chatPanel, chatHeaderUser, chatMessages, mainContent } = ui;
 
-            if (!chatPanel || !friendsPanel) {
-                console.error("Critical panel element not found!");
+            if (!mainContent || !chatPanel) {
+                console.error("Critical UI element not found! Cannot display chat panel.");
                 return;
             }
 
@@ -563,14 +563,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
             }
 
-            // Toggle panel visibility
-            friendsPanel.style.display = 'none';
-            if (sponsorServersContainer) {
-                sponsorServersContainer.style.display = 'none';
-            }
-            chatPanel.classList.remove('hidden');
-            chatPanel.style.display = 'flex';
+            // Add 'chat-active' class to the main content area to show the chat panel via CSS
+            mainContent.classList.add('chat-active');
         },
+
+        hideChatPanel() {
+            const { mainContent } = ui;
+            if (mainContent) {
+                mainContent.classList.remove('chat-active');
+            }
+            state.currentConversationId = null;
+        }
     };
 
     // --- 5. EVENT HANDLERS ---
@@ -704,6 +707,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.body.classList.toggle('sidebar-closed');
                     ui.serverSidebar.classList.toggle('sidebar-collapsed');
                 });
+            }
+            // Add listener for the new close button in the chat panel
+            if (ui.chatCloseBtn) {
+                ui.chatCloseBtn.addEventListener('click', renderer.hideChatPanel);
             }
 
             // 5. Setup Real-time Subscriptions
