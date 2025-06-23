@@ -673,96 +673,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Realtime mesajlaşma için subscription oluştur
         setupMessageSubscription(conversationId) {
-            // Önceki aboneliği temizle
-            if (state.messageSubscription) {
-                state.messageSubscription();
-                state.messageSubscription = null; // Clear reference
-            }
-
-            console.log(`[Sub] Setting up message subscription for conversation: ${conversationId}`);
-
-            const channel = supabase.channel(`messages:${conversationId}`);
-
-            channel.on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'messages',
-                    // Filtre, RLS sorunları nedeniyle güvenilmez olabileceğinden, istemci tarafında filtreleme yapacağız.
-                    // filter: `conversation_id=eq.${conversationId}`
-                },
-                async (payload) => {
-                    console.log('[Sub] Received payload:', JSON.stringify(payload, null, 2));
-
-                    const newMessage = payload.new;
-                    const currentConversationId = state.currentConversationId;
-
-                    if (!newMessage || !newMessage.conversation_id) {
-                        console.warn('[Sub] Payload is invalid or missing conversation_id. Skipping.');
-                        return;
-                    }
-
-                    // Gelen mesajın ID'sini ve mevcut sohbetin ID'sini karşılaştır
-                    if (newMessage.conversation_id.toString() !== currentConversationId.toString()) {
-                        console.log(`[Sub] Message for another conversation. Ours: ${currentConversationId}, Theirs: ${newMessage.conversation_id}. Skipping.`);
-                        return;
-                    }
-
-                    console.log('[Sub] Conversation ID matches. Processing message...');
-
-                    // Mesajın UI'da zaten olup olmadığını kontrol et (optimistik güncellemeler için)
-                    const messageExists = state.messages.some(m => m.id === newMessage.id);
-                    if (messageExists) {
-                        console.warn(`[Sub] Message with ID ${newMessage.id} already exists. Skipping.`);
-                        return;
-                    }
-
-                    console.log(`[Sub] Fetching profile for sender_id: ${newMessage.sender_id}`);
-                    const { data: senderData, error: senderError } = await supabase
-                        .from('profiles')
-                        .select('username, avatar_url')
-                        .eq('id', newMessage.sender_id)
-                        .single();
-
-                    if (senderError) {
-                        console.error('[Sub] Error fetching sender profile:', senderError);
-                        // Profil olmasa bile mesajı göstermeye devam et
-                    }
-
-                    const formattedMessage = {
-                        id: newMessage.id,
-                        conversation_id: newMessage.conversation_id,
-                        sender_id: newMessage.sender_id,
-                        content: newMessage.content,
-                        contentType: newMessage.contentType || 'text',
-                        createdAt: newMessage.createdAt,
-                        sender: {
-                            username: senderData?.username || 'Kullanıcı',
-                            avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
-                        }
-                    };
-
-                    console.log('[Sub] Formatted Message:', JSON.stringify(formattedMessage, null, 2));
-
-                    // Mesajı state'e ekle ve UI'yı yeniden render et
-                    state.messages.push(formattedMessage);
-                    renderer.renderMessages(state.messages);
-                }
-            ).subscribe((status) => {
-                console.log(`[Sub] Subscription status for conversation ${conversationId}: ${status}`);
-                if (status === 'SUBSCRIBED') {
-                    console.log(`[Sub] Successfully subscribed to channel: messages:${conversationId}`);
-                }
-            });
-
-            // Aboneliği temizlemek için bir fonksiyon döndür
-            state.messageSubscription = () => {
-                console.log(`[Sub] Unsubscribing from conversation: ${conversationId}`);
-                supabase.removeChannel(channel);
-            };
-
-            return state.messageSubscription;
+            // Bu fonksiyon artık showChatPanel içinde yönetildiği için boş bırakılabilir
+            // veya doğrudan showChatPanel içindeki mantık buraya taşınabilir.
+            // Şimdilik temizlik adına doğrudan showChatPanel içinde yönetmek daha güvenli.
         },
     };
 
@@ -1030,10 +943,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         },
 
-        showChatPanel(friend, conversationId) {
+        // --- 5. CHAT PANEL LOGIC ---
+        async showChatPanel(friend, conversationId) {
             console.log(`[CHAT] Showing chat panel for friend: ${friend.username}, conversation: ${conversationId}`);
 
-            // UI elementlerini kontrol et
             const { chatPanel, chatHeaderUser, chatMessages, dashboardContainer, chatInput } = ui;
 
             if (!dashboardContainer || !chatPanel) {
@@ -1041,95 +954,109 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // Önceki abonelikten çık
+            // Önceki sohbet aboneliğinden tamamen çıkıldığından emin ol
             if (state.messageSubscription) {
-                state.messageSubscription();
+                console.log(`[Sub] Removing previous subscription for conversation: ${state.currentConversationId}`);
+                supabase.removeChannel(state.messageSubscription);
                 state.messageSubscription = null;
             }
 
             // Başlığı arkadaş bilgileriyle güncelle
             if (chatHeaderUser) {
-                const usernameEl = chatHeaderUser.querySelector('.chat-username');
-                const avatarEl = chatHeaderUser.querySelector('.chat-avatar img');
-                const statusEl = chatHeaderUser.querySelector('.chat-status');
-
-                if (usernameEl) usernameEl.textContent = friend.username;
-                if (avatarEl) avatarEl.src = friend.avatar_url || 'images/defaultavatar.png';
-                if (statusEl) {
-                    const isOnline = state.onlineFriends.has(friend.id);
-                    statusEl.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
-                    statusEl.className = `chat-status ${isOnline ? 'online' : 'offline'}`;
-                }
-            }
-
-            // Durumu güncelle
-            state.currentConversationId = conversationId;
-            state.currentFriend = friend;
-
-            // Önceki mesajları temizle ve yükleniyor mesajını göster
-            if (chatMessages) {
-                chatMessages.innerHTML = `
-                    <div class="loading-messages">
-                        <div class="spinner">
-                            <i class="fas fa-spinner fa-spin"></i>
-                        </div>
-                        <p>Mesajlar yükleniyor...</p>
+                chatHeaderUser.innerHTML = `
+                    <div class="chat-avatar">
+                        <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
+                        <div class="status-dot ${state.onlineFriends.has(friend.id) ? 'online' : ''}"></div>
+                    </div>
+                    <div class="chat-user-info">
+                        <div class="chat-username">${friend.username}</div>
+                        <div class="chat-status">${state.onlineFriends.has(friend.id) ? 'Çevrimiçi' : 'Çevrimdışı'}</div>
                     </div>
                 `;
             }
 
+            // Mevcut sohbet ve arkadaş bilgilerini state'e kaydet
+            state.currentConversationId = conversationId;
+            state.currentFriend = friend;
+
             // Mesajları getir ve göster
-            this.fetchAndRenderMessages(conversationId);
+            await this.fetchAndRenderMessages(conversationId);
 
             // Realtime mesaj aboneliği kur
-            state.messageSubscription = supabaseService.setupMessageSubscription(conversationId);
+            const channel = supabase.channel(`public:messages:conversation_id=eq.${conversationId}`);
+            state.messageSubscription = channel; // Kanalı state'e kaydet
 
-            // Dashboard'a 'chat-active' sınıfını ekleyerek tüm CSS değişikliklerini tetikle
+            channel.on('postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `conversation_id=eq.${conversationId}`
+                },
+                async (payload) => {
+                    console.log('[Sub] Received payload:', JSON.stringify(payload, null, 2));
+
+                    const newMessage = payload.new;
+                    const currentConversationId = state.currentConversationId;
+
+                    if (!newMessage || !newMessage.conversation_id || newMessage.conversation_id.toString() !== currentConversationId.toString()) {
+                        console.log(`[Sub] Message for another conversation or invalid payload. Skipping.`);
+                        return;
+                    }
+
+                    const messageExists = state.messages.some(m => m.id === newMessage.id);
+                    if (messageExists) {
+                        console.warn(`[Sub] Message with ID ${newMessage.id} already exists. Skipping.`);
+                        return;
+                    }
+
+                    const { data: senderData } = await supabaseService.getUserProfile(newMessage.sender_id);
+                    const formattedMessage = {
+                        ...newMessage,
+                        sender: senderData || { username: 'Bilinmeyen', avatar_url: 'images/defaultavatar.png' }
+                    };
+
+                    state.messages.push(formattedMessage);
+                    renderer.renderMessages(state.messages);
+                }
+            ).subscribe((status, err) => {
+                if (err) {
+                    console.error(`[Sub] Subscription error for conversation ${conversationId}:`, err);
+                    return;
+                }
+                console.log(`[Sub] Subscription status for conversation ${conversationId}: ${status}`);
+            });
+
             dashboardContainer.classList.add('chat-active');
-
-            // 'hidden' sınıfını sohbet panelinden kaldır
-            chatPanel.classList.remove('hidden');
-
-            // Metin kutusuna odaklan
-            if (chatInput) {
-                setTimeout(() => {
-                    chatInput.focus();
-                }, 300);
-            }
+            if (chatInput) chatInput.focus();
         },
 
-        // Mesajları getir ve göster (ayrı bir fonksiyon olarak)
         async fetchAndRenderMessages(conversationId) {
             console.log(`[CHAT] Fetching messages for conversation: ${conversationId}`);
 
-            try {
-                // Önce normal sorgu ile deneyelim
-                const messages = await supabaseService.getMessages(conversationId);
-                console.log(`[CHAT] Retrieved ${messages.length} messages`);
+            // Önceki mesajları temizle
+            state.messages = [];
+            ui.chatMessages.innerHTML = '<div class="loading-messages"><i class="fas fa-spinner fa-spin"></i> Mesajlar yükleniyor...</div>';
 
-                // Mesajları state'e kaydet
-                state.messages = messages;
+            const messages = await supabaseService.getMessages(conversationId);
+            state.messages = messages || [];
 
-                // Mesajları göster
-                if (messages.length > 0) {
-                    this.renderMessages(messages);
-                } else if (ui.chatMessages && state.currentFriend) {
-                    // Mesaj yoksa boş durum göster
-                    ui.chatMessages.innerHTML = `
-                        <div class="empty-state">
-                            <p>${state.currentFriend.username} ile sohbetinize başlayın!</p>
+            console.log(`[CHAT] Retrieved ${state.messages.length} messages`);
+
+            // Mesajları render et
+            renderer.renderMessages(state.messages);
+
+            // Eğer mesaj yoksa, başlangıç mesajını göster
+            if (state.messages.length === 0) {
+                ui.chatMessages.innerHTML = `
+                    <div class="chat-start-info">
+                        <div class="chat-start-avatar">
+                            <img src="${state.currentFriend.avatar_url || 'images/defaultavatar.png'}" alt="${state.currentFriend.username}'s avatar">
                         </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('[CHAT] Error fetching messages:', error);
-                if (ui.chatMessages) {
-                    ui.chatMessages.innerHTML = `
-                        <div class="error-state">
-                            <p>Mesajlar yüklenirken bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.</p>
-                        </div>
-                    `;
-                }
+                        <h3>${state.currentFriend.username}</h3>
+                        <p>Bu, <strong>${state.currentFriend.username}</strong> ile olan sohbetinizin başlangıcı.</p>
+                    </div>
+                `;
             }
         },
 
@@ -1158,19 +1085,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     async function handleDmItemClick(e) {
-        const dmItem = e.target.closest('.dm-item');
-        if (!dmItem) return;
+        const item = e.target.closest('.dm-item');
+        if (!item) return;
 
-        const targetUserId = dmItem.dataset.userId;
-        if (!targetUserId || targetUserId === state.currentUser.id) return;
-
+        const targetUserId = item.dataset.userId;
         const friend = state.friends.find(f => f.id === targetUserId);
-        if (!friend) return;
+        if (!friend) {
+            console.error('Could not find friend data for DM click.');
+            return;
+        }
 
         const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, targetUserId);
 
         if (conversationId) {
-            renderer.showChatPanel(friend, conversationId);
+            await renderer.showChatPanel(friend, conversationId);
         } else {
             alert('Sohbet başlatılırken bir hata oluştu.');
         }
@@ -1384,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // This function needs to be created to handle clicks on friend cards
-    function handleFriendCardAction(e) {
+    async function handleFriendCardAction(e) {
         const messageBtn = e.target.closest('.card-action-btn[title="Mesaj Gönder"]');
         const callBtn = e.target.closest('.card-action-btn[title="Sesli Arama"]');
         const profileBtn = e.target.closest('.card-action-btn[title="Profil"]');
@@ -1399,20 +1327,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!friend) return;
 
         if (messageBtn) {
-            // Mesaj gönderme işlevi
-            supabaseService.getOrCreateConversation(state.currentUser.id, userId)
-                .then(conversationId => {
-                    if (conversationId) {
-                        renderer.showChatPanel(friend, conversationId);
-                    }
-                });
+            const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, userId);
+            if (conversationId) {
+                await renderer.showChatPanel(friend, conversationId);
+            }
         }
         else if (profileBtn) {
-            // Profil modalını aç
             showProfileModal(friend);
         }
         else if (callBtn) {
-            // Sesli arama işlevi (gelecekte eklenebilir)
             alert('Sesli arama özelliği yakında eklenecek!');
         }
     }
@@ -1428,7 +1351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const statusDot = modal.querySelector('.status-dot-modal');
         const bio = modal.querySelector('.bio');
         const memberSince = modal.querySelector('.member-since');
-        const messageBtn = modal.querySelector('.btn-primary');
+        const sendMessageBtn = modal.querySelector('.actions-section .btn-primary');
 
         // Kullanıcı bilgilerini doldur
         avatar.src = user.avatar_url || 'images/defaultavatar.png';
@@ -1446,15 +1369,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         modal.classList.add('is-visible');
 
         // Mesaj gönder butonuna tıklama işlevi ekle
-        messageBtn.onclick = () => {
-            modal.classList.remove('is-visible');
-            supabaseService.getOrCreateConversation(state.currentUser.id, user.id)
-                .then(conversationId => {
-                    if (conversationId) {
-                        renderer.showChatPanel(user, conversationId);
-                    }
-                });
-        };
+        if (sendMessageBtn) {
+            // Birikmeyi önlemek için event listener'ı yeniden oluştur
+            const newSendMessageBtn = sendMessageBtn.cloneNode(true);
+            sendMessageBtn.parentNode.replaceChild(newSendMessageBtn, sendMessageBtn);
+
+            newSendMessageBtn.addEventListener('click', async () => {
+                modal.classList.remove('is-visible');
+                const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, user.id);
+                if (conversationId) {
+                    await renderer.showChatPanel(user, conversationId);
+                }
+            });
+        }
 
         // Kapat butonuna tıklama işlevi ekle
         closeBtn.onclick = () => {
