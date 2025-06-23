@@ -414,6 +414,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getOrCreateConversation(userId1, userId2) {
             try {
+                // NOT: Bu bir geçici çözümdür. Supabase'in salt okunur modundan çıktığında,
+                // aşağıdaki RLS politikalarını uygulamanız gerekir:
+                /*
+                -- Drop the problematic policy that's causing infinite recursion
+                DROP POLICY IF EXISTS "Allow participants to view other participants in the same conve" ON public.conversation_participants;
+                
+                -- Drop the policy that's causing infinite recursion
+                DROP POLICY IF EXISTS "Participants: Select own" ON public.conversation_participants;
+                
+                -- Create a simpler policy that doesn't cause recursion
+                CREATE POLICY "Allow participants to view conversations they're in" 
+                ON public.conversation_participants
+                FOR SELECT 
+                TO authenticated
+                USING (user_id = auth.uid());
+                
+                -- Update conversations table RLS
+                ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+                
+                -- Create policies for conversations table
+                DROP POLICY IF EXISTS "Users can view conversations they participate in" ON public.conversations;
+                CREATE POLICY "Users can view conversations they participate in" 
+                ON public.conversations
+                FOR SELECT 
+                TO authenticated
+                USING (
+                  id IN (
+                    SELECT conversation_id 
+                    FROM public.conversation_participants 
+                    WHERE user_id = auth.uid()
+                  )
+                );
+                
+                -- Update messages table RLS
+                DROP POLICY IF EXISTS "Users can view messages in their conversations" ON public.messages;
+                CREATE POLICY "Users can view messages in their conversations" 
+                ON public.messages
+                FOR SELECT 
+                TO authenticated
+                USING (
+                  conversation_id IN (
+                    SELECT conversation_id 
+                    FROM public.conversation_participants 
+                    WHERE user_id = auth.uid()
+                  )
+                );
+                
+                DROP POLICY IF EXISTS "Users can insert messages in their conversations" ON public.messages;
+                CREATE POLICY "Users can insert messages in their conversations" 
+                ON public.messages
+                FOR INSERT 
+                TO authenticated
+                WITH CHECK (
+                  sender_id = auth.uid() AND
+                  conversation_id IN (
+                    SELECT conversation_id 
+                    FROM public.conversation_participants 
+                    WHERE user_id = auth.uid()
+                  )
+                );
+                */
+
                 // Sonsuz döngü hatasını tamamen bypass etmek için basit bir yaklaşım kullanıyoruz
                 // Benzersiz bir konuşma ID'si oluşturalım
                 const conversationId = `dm_${[userId1, userId2].sort().join('_')}`;
@@ -472,6 +534,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 console.log('Message saved locally:', newMessage);
 
+                // WebSocket ile diğer sekmelere/pencerelere mesajı gönderelim
+                // Bu, aynı tarayıcıda farklı sekmelerde oturum açmış kullanıcılar için çalışır
+                try {
+                    const broadcastChannel = new BroadcastChannel('chatlify_messages_channel');
+                    broadcastChannel.postMessage({
+                        conversationId,
+                        message: newMessage
+                    });
+                    broadcastChannel.close();
+                } catch (e) {
+                    console.warn('BroadcastChannel not supported in this browser, falling back to localStorage only');
+                }
+
                 // Başarılı bir yanıt döndürelim
                 return {
                     data: [newMessage],
@@ -514,25 +589,55 @@ document.addEventListener('DOMContentLoaded', async () => {
                 this.messageSubscription();
             }
 
-            // localStorage'daki değişiklikleri dinlemek için bir event listener ekleyelim
-            const storageListener = (event) => {
-                if (event.key === 'chatlify_messages') {
-                    const messages = JSON.parse(event.newValue || '{}')[conversationId] || [];
-                    if (messages.length > 0) {
-                        // Yeni mesajlar varsa, UI'ı güncelleyelim
+            // BroadcastChannel API kullanarak gerçek zamanlı mesajlaşma sağlayalım
+            let broadcastChannel;
+            try {
+                broadcastChannel = new BroadcastChannel('chatlify_messages_channel');
+
+                const messageHandler = (event) => {
+                    // Sadece bu konuşmaya ait mesajları işleyelim
+                    if (event.data && event.data.conversationId === conversationId) {
+                        // Mevcut mesajları güncelleyelim
+                        const storedMessages = JSON.parse(localStorage.getItem('chatlify_messages') || '{}');
+                        const messages = storedMessages[conversationId] || [];
+
+                        // UI'ı güncelleyelim
                         state.messages = messages;
                         renderer.renderMessages(state.messages);
                     }
-                }
-            };
+                };
 
-            // Event listener'ı ekleyelim
-            window.addEventListener('storage', storageListener);
+                // Mesaj dinleyicisini ekleyelim
+                broadcastChannel.addEventListener('message', messageHandler);
 
-            // Aboneliği temizlemek için bir fonksiyon döndürelim
-            this.messageSubscription = () => {
-                window.removeEventListener('storage', storageListener);
-            };
+                // Aboneliği temizlemek için bir fonksiyon döndürelim
+                this.messageSubscription = () => {
+                    broadcastChannel.removeEventListener('message', messageHandler);
+                    broadcastChannel.close();
+                };
+            } catch (e) {
+                console.warn('BroadcastChannel not supported in this browser, falling back to localStorage only');
+
+                // localStorage'daki değişiklikleri dinlemek için bir event listener ekleyelim
+                const storageListener = (event) => {
+                    if (event.key === 'chatlify_messages') {
+                        const messages = JSON.parse(event.newValue || '{}')[conversationId] || [];
+                        if (messages.length > 0) {
+                            // Yeni mesajlar varsa, UI'ı güncelleyelim
+                            state.messages = messages;
+                            renderer.renderMessages(state.messages);
+                        }
+                    }
+                };
+
+                // Event listener'ı ekleyelim
+                window.addEventListener('storage', storageListener);
+
+                // Aboneliği temizlemek için bir fonksiyon döndürelim
+                this.messageSubscription = () => {
+                    window.removeEventListener('storage', storageListener);
+                };
+            }
 
             return this.messageSubscription;
         },
