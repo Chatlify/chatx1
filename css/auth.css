@@ -535,3 +535,218 @@ body::before {
         padding: 1.2rem;
     }
 }
+
+.auth-container .info-panel {
+    background: linear-gradient(45deg, #6c63ff, #4a4dff);
+    color: #fff;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.info-panel .feature-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 40px;
+}
+
+.info-panel .feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    font-size: 1rem;
+}
+
+.info-panel .feature-item i {
+    font-size: 1.5rem;
+    margin-right: 20px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.info-panel .feature-text h4 {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
+
+.info-panel .feature-text p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* Yeni Form Yapısı İçin Stil Kuralları */
+.form-container {
+    background-color: #2c2f33;
+    padding: 40px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+}
+
+.form-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.form-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.form-subtitle {
+    color: #b9bbbe;
+}
+
+#registerForm .input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+#registerForm label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+#registerForm label i {
+    margin-right: 10px;
+    color: #7289da;
+}
+
+#registerForm input[type="text"],
+#registerForm input[type="email"],
+#registerForm input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #23272a;
+    border: 1px solid #202225;
+    border-radius: 5px;
+    color: #dcddde;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+#registerForm input:focus {
+    outline: none;
+    border-color: #7289da;
+}
+
+.form-error {
+    color: #f04747;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: none;
+    /* JS ile gösterilecek */
+    height: 1.2em;
+    /* Hata mesajı için yer ayır */
+}
+
+#registerForm .form-options {
+    margin-bottom: 25px;
+}
+
+#registerForm .checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+#registerForm input[type="checkbox"] {
+    margin-right: 10px;
+    accent-color: #7289da;
+    width: 16px;
+    height: 16px;
+}
+
+#registerForm .checkbox-group label {
+    margin: 0;
+    font-weight: 400;
+    color: #b9bbbe;
+}
+
+#registerForm .checkbox-group a {
+    color: #7289da;
+    text-decoration: none;
+}
+
+#registerForm .checkbox-group a:hover {
+    text-decoration: underline;
+}
+
+.form-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #7289da;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.form-btn:hover:not(:disabled) {
+    background-color: #677bc4;
+}
+
+.form-btn:disabled {
+    background-color: #5f6a8e;
+    cursor: not-allowed;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #b9bbbe;
+}
+
+.form-footer a {
+    color: #7289da;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Geri Butonu */
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Eski stilleri temizle veya override et */
+.auth-form .form-group {
+    margin-bottom: 0;
+    /* Gerekirse eski stilleri sıfırla */
+}
