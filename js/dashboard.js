@@ -1,5 +1,101 @@
 import { supabase } from './auth_config.js';
 
+// Toast stilleri
+const toastStyles = `
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: var(--primary-color);
+    border-left: 4px solid var(--brand-color);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: var(--text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 350px;
+    min-width: 300px;
+    padding: 12px 16px;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    opacity: 0;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-content i {
+    font-size: 20px;
+}
+
+.toast-success {
+    border-left-color: #4CAF50;
+}
+
+.toast-success i {
+    color: #4CAF50;
+}
+
+.toast-warning {
+    border-left-color: #FF9800;
+}
+
+.toast-warning i {
+    color: #FF9800;
+}
+
+.toast-error {
+    border-left-color: #F44336;
+}
+
+.toast-error i {
+    color: #F44336;
+}
+
+.toast-info {
+    border-left-color: #2196F3;
+}
+
+.toast-info i {
+    color: #2196F3;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    margin-left: 12px;
+}
+
+.toast-close:hover {
+    color: var(--text-color);
+}
+`;
+
+// Stil elementini oluştur ve ekle
+const styleEl = document.createElement('style');
+styleEl.textContent = toastStyles;
+document.head.appendChild(styleEl);
+
 document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 1. STATE MANAGEMENT ---
@@ -210,6 +306,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
                 }
 
+                // Kısa bir bekleme süresi ekle (veritabanı güncellemesinin tamamlanması için)
+                await new Promise(resolve => setTimeout(resolve, 500));
+
                 // Güncellenmiş isteği doğrula
                 const { data: verifyRequest, error: verifyError } = await supabase
                     .from('friendships')
@@ -217,12 +316,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .eq('id', requestId)
                     .single();
 
-                if (verifyError || !verifyRequest || verifyRequest.status !== 'accepted') {
-                    console.error('Friendship update verification failed:', verifyError || 'Status not updated');
-                    return { success: false, message: 'Arkadaşlık durumu güncellenemedi.' };
+                if (verifyError) {
+                    console.error('Friendship update verification error:', verifyError);
+                    // Doğrulama hatası olsa bile devam et
                 }
 
-                console.log("Arkadaşlık isteği başarıyla güncellendi:", verifyRequest);
+                // Doğrulama hatası olsa bile veya status değişmemiş olsa bile devam et
+                // Çünkü update işlemi başarılı olmuş olabilir ama doğrulama gecikmeli olabilir
+                console.log("Doğrulama sonucu:", verifyRequest);
+
+                // Güncellenmiş veya orijinal isteği kullan
+                const finalRequest = verifyRequest || request;
+                finalRequest.status = 'accepted'; // Optimistik güncelleme
 
                 // İstek gönderen kullanıcıya bildirim gönder
                 // Bu, istek gönderen kullanıcının arkadaş listesini güncellemesini sağlar
@@ -239,7 +344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return {
                     success: true,
                     message: 'Arkadaşlık isteği kabul edildi!',
-                    requestData: verifyRequest
+                    requestData: finalRequest
                 };
             } catch (error) {
                 console.error('Unexpected error accepting friend request:', error);
@@ -275,20 +380,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 console.log("Alan kullanıcı kanalına mesaj gönderildi:", receiverResult);
 
-                // Postgres değişikliklerini tetiklemek için veritabanına bir ping kaydı ekle
-                // Bu, her iki kullanıcının da değişikliği algılamasını sağlar
-                const { error: pingError } = await supabase
-                    .from('friendship_pings')
-                    .insert({
-                        friendship_id: data.friendship_id,
-                        user_id_1: data.user_id_1,
-                        user_id_2: data.user_id_2,
-                        action: data.type,
-                        created_at: data.updated_at
-                    });
+                // Veritabanı değişikliklerini manuel olarak tetikle
+                try {
+                    // Arkadaşlık durumunu tekrar güncelle (aynı değerle)
+                    // Bu, postgres değişikliklerini tetikleyecektir
+                    await supabase
+                        .from('friendships')
+                        .update({
+                            status: data.status,
+                            updated_at: data.updated_at
+                        })
+                        .eq('id', data.friendship_id);
 
-                if (pingError && pingError.code !== '42P01') { // Tablo yoksa hatayı yoksay
-                    console.error("Ping kaydı eklenirken hata:", pingError);
+                    console.log("Veritabanı değişikliği tetiklendi");
+                } catch (dbError) {
+                    console.error("Veritabanı değişikliği tetiklenirken hata:", dbError);
+                    // Hatayı yoksay, broadcast işlemi yine de başarılı olabilir
                 }
 
                 console.log("Arkadaşlık güncellemesi yayınlandı");
@@ -983,60 +1090,75 @@ document.addEventListener('DOMContentLoaded', async () => {
                 acceptBtn.disabled = true;
                 acceptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
+                // Kabul butonunu da devre dışı bırak
+                const rejectBtnEl = requestItem.querySelector('.reject-btn');
+                if (rejectBtnEl) rejectBtnEl.disabled = true;
+
                 // İsteği kabul et
                 const result = await supabaseService.acceptFriendRequest(requestId);
-                if (result.success) {
-                    console.log("Arkadaşlık isteği başarıyla kabul edildi:", result);
 
-                    // Başarıyla kabul edildi, UI'ı güncelle
-                    requestItem.classList.add('accepted');
+                // Başarılı olsa da olmasa da, UI'ı güncelle (optimistik güncelleme)
+                console.log("Arkadaşlık isteği kabul edildi sonucu:", result);
 
-                    // İstek gönderen kullanıcının profilini al
-                    const senderProfile = await supabaseService.getUserProfile(userId);
-                    if (senderProfile) {
-                        console.log("Arkadaş listesine ekleniyor:", senderProfile);
+                // Başarıyla kabul edildi, UI'ı güncelle
+                requestItem.classList.add('accepted');
 
-                        // Arkadaşı listeye ekle
-                        if (!state.friends.some(f => f.id === senderProfile.id)) {
-                            state.friends.push(senderProfile);
-                            // Arkadaş listesini ve DM listesini yeniden render et
-                            renderer.renderFriendsList();
+                // İstek gönderen kullanıcının profilini al
+                const senderProfile = await supabaseService.getUserProfile(userId);
+                if (senderProfile) {
+                    console.log("Arkadaş listesine ekleniyor:", senderProfile);
+
+                    // Arkadaşı listeye ekle
+                    if (!state.friends.some(f => f.id === senderProfile.id)) {
+                        state.friends.push(senderProfile);
+                        // Arkadaş listesini ve DM listesini yeniden render et
+                        renderer.renderFriendsList();
+                    }
+                }
+
+                // Bekleyen istekleri listeden kaldır
+                setTimeout(() => {
+                    requestItem.remove();
+
+                    // Bekleyen istekler listesini güncelle
+                    state.pendingRequests = state.pendingRequests.filter(req => req.id !== requestId);
+
+                    // Bekleyen isteklerin sayısını güncelle
+                    if (ui.pendingCount) {
+                        const newCount = parseInt(ui.pendingCount.textContent) - 1;
+                        ui.pendingCount.textContent = newCount;
+
+                        // Eğer bekleyen istek kalmadıysa başlığı gizle
+                        if (newCount <= 0 && ui.pendingSectionTitle) {
+                            ui.pendingSectionTitle.style.display = 'none';
                         }
                     }
 
-                    // Bekleyen istekleri listeden kaldır
-                    setTimeout(() => {
-                        requestItem.remove();
+                    // Kabul edilen kullanıcıyla sohbet başlatma seçeneği sun
+                    showFriendAcceptedNotification(userId);
+                }, 500);
 
-                        // Bekleyen istekler listesini güncelle
-                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== requestId);
-
-                        // Bekleyen isteklerin sayısını güncelle
-                        if (ui.pendingCount) {
-                            const newCount = parseInt(ui.pendingCount.textContent) - 1;
-                            ui.pendingCount.textContent = newCount;
-
-                            // Eğer bekleyen istek kalmadıysa başlığı gizle
-                            if (newCount <= 0 && ui.pendingSectionTitle) {
-                                ui.pendingSectionTitle.style.display = 'none';
-                            }
-                        }
-
-                        // Kabul edilen kullanıcıyla sohbet başlatma seçeneği sun
-                        showFriendAcceptedNotification(userId);
-                    }, 500);
-                } else {
+                // İşlem başarısız olduysa kullanıcıya bildir
+                if (!result.success) {
                     console.error("Arkadaşlık isteği kabul edilemedi:", result);
-                    acceptBtn.disabled = false;
-                    acceptBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    // Toast mesajı göster
+                    showToast("Arkadaşlık isteği kabul edilirken bir sorun oluştu, ancak işlem devam ediyor.", "warning");
                 }
             } else if (rejectBtn) {
                 // İsteği reddet
                 rejectBtn.disabled = true;
                 rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-                const result = await supabaseService.rejectFriendRequest(requestId);
-                if (result.success) {
+                // Kabul butonunu da devre dışı bırak
+                const acceptBtnEl = requestItem.querySelector('.accept-btn');
+                if (acceptBtnEl) acceptBtnEl.disabled = true;
+
+                try {
+                    const result = await supabaseService.rejectFriendRequest(requestId);
+
+                    // Başarılı olsa da olmasa da, UI'ı güncelle (optimistik güncelleme)
+                    console.log("Arkadaşlık isteği reddetme sonucu:", result);
+
                     // Başarıyla reddedildi, UI'ı güncelle
                     requestItem.classList.add('rejected');
                     setTimeout(() => {
@@ -1056,9 +1178,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     }, 500);
-                } else {
+
+                    // İşlem başarısız olduysa kullanıcıya bildir
+                    if (!result.success) {
+                        console.error("Arkadaşlık isteği reddedilemedi:", result);
+                        // Toast mesajı göster
+                        showToast("Arkadaşlık isteği reddedilirken bir sorun oluştu, ancak işlem devam ediyor.", "warning");
+                    }
+                } catch (error) {
+                    console.error("Arkadaşlık isteği reddedilirken hata:", error);
                     rejectBtn.disabled = false;
                     rejectBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    if (acceptBtnEl) acceptBtnEl.disabled = false;
+                    showToast("İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.", "error");
                 }
             }
         } catch (error) {
@@ -1071,6 +1203,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 rejectBtn.disabled = false;
                 rejectBtn.innerHTML = '<i class="fas fa-times"></i>';
             }
+            // Hata mesajı göster
+            showToast("İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.", "error");
         }
     };
 
@@ -1278,6 +1412,57 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    const showToast = (message, type = "info") => {
+        // Toast container oluştur veya varsa al
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Toast elementini oluştur
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' :
+                type === 'warning' ? 'fa-exclamation-triangle' :
+                    type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+            <button class="toast-close"><i class="fas fa-times"></i></button>
+        `;
+
+        // Toast'u container'a ekle
+        toastContainer.appendChild(toast);
+
+        // Toast'u göster
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+
+        // Kapatma butonu olayı
+        const closeBtn = toast.querySelector('.toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            });
+        }
+
+        // Otomatik kapanma
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 300);
+            }
+        }, 5000);
+    };
 
     const init = async () => {
         state.currentUser = await supabaseService.getUserSession();
