@@ -419,7 +419,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { data: existingConversations, error: queryError } = await supabase
                     .from('conversations')
                     .select('id')
-                    .or(`and(participant_1=${userId1},participant_2=${userId2}),and(participant_1=${userId2},participant_2=${userId1})`);
+                    .or(`participant_1.eq.${userId1},participant_2.eq.${userId2}`)
+                    .or(`participant_1.eq.${userId2},participant_2.eq.${userId1}`);
 
                 if (queryError) {
                     console.error('Error checking for existing conversation:', queryError);
