@@ -249,8 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Eğer hala bir avatar URL'si yoksa (kullanıcı seçmediyse), varsayılanı ata
             if (!finalAvatarUrl) {
                 const randomIndex = Math.floor(Math.random() * defaultAvatarFiles.length);
-                finalAvatarUrl = defaultAvatarFiles[randomIndex]; // Varsayılan URL'yi ata
-                console.log('Varsayılan avatar atandı:', finalAvatarUrl);
+                const randomAvatarPath = defaultAvatarFiles[randomIndex];
+                // DÜZELTME: Göreli yolu mutlak URL'ye çevir
+                finalAvatarUrl = new URL(randomAvatarPath, window.location.origin).href;
+                console.log('Varsayılan avatar atandı (mutlak URL):', finalAvatarUrl);
             }
 
             const { data, error } = await supabase.auth.signUp({
