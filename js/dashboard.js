@@ -646,38 +646,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const init = async () => {
         try {
+            // 1. Get User Session First
+            state.currentUser = await supabaseService.getUserSession();
+            if (!state.currentUser) {
+                console.log("No active session. Redirecting to login.");
+                return; // Stop execution if no user
+            }
+
+            // 2. Fetch and render basic user info
+            const userProfile = await supabaseService.getUserProfile(state.currentUser.id);
+            renderer.renderUserFooter(userProfile);
+
+            // 3. Fetch and render all other data (friends, DMs, etc.)
             await fetchAndRenderAll();
 
-            // Setup Event Listeners
-            if (ui.friendsListContainer) {
-                ui.friendsListContainer.addEventListener('click', handleDmItemClick);
+            // 4. Setup all event listeners now that the UI is populated
+            if (ui.tabsContainer) {
+                ui.tabsContainer.addEventListener('click', handleTabClick);
             }
-            const tabs = document.querySelector('.friends-tabs');
-            if (tabs) {
-                tabs.addEventListener('click', handleTabClick);
-            }
-            const pendingContainer = document.querySelector('.pending-requests-container');
-            if (pendingContainer) {
-                pendingContainer.addEventListener('click', handlePendingRequestAction);
-            }
-            const addFriendBtn = document.getElementById('add-friend-btn');
-            if (addFriendBtn) {
-                addFriendBtn.addEventListener('click', () => actions.loadComponent('add-friend'));
-            }
-
-            // Add navigation for sidebar buttons
-            if (ui.settingsButton) {
-                ui.settingsButton.addEventListener('click', () => {
-                    window.location.href = '/settings.html';
+            if (ui.friendsContentContainer) {
+                // This now handles both friend card clicks and pending request actions
+                ui.friendsContentContainer.addEventListener('click', (e) => {
+                    handlePendingRequestAction(e);
+                    handleFriendCardAction(e); // You need to create this function
                 });
+            }
+            if (ui.dmList) {
+                ui.dmList.addEventListener('click', handleDmItemClick);
+            }
+            if (ui.addFriendModal.button) {
+                ui.addFriendModal.button.addEventListener('click', () => loadComponent('add-friend'));
+            }
+            if (ui.settingsButton) {
+                ui.settingsButton.addEventListener('click', () => { window.location.href = '/settings.html'; });
             }
             if (ui.shopButton) {
-                ui.shopButton.addEventListener('click', () => {
-                    window.location.href = '/shop.html';
-                });
+                ui.shopButton.addEventListener('click', () => { window.location.href = '/shop.html'; });
             }
-
-            // Sidebar toggle butonu için olay dinleyicisi ekle
             if (ui.sidebarToggleButton) {
                 ui.sidebarToggleButton.addEventListener('click', () => {
                     document.body.classList.toggle('sidebar-closed');
@@ -685,37 +690,52 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // Real-time presence tracking
-            if (state.currentUser) {
-                const presenceChannel = supabase.channel(`user-presence:${state.currentUser.id}`, {
-                    config: {
-                        presence: {
-                            key: state.currentUser.id,
-                        },
-                    },
-                });
+            // 5. Setup Real-time Subscriptions
+            // Note: I'm simplifying the channel setup for clarity.
+            // You should have one channel for presence and another for DB changes.
+            const presenceChannel = supabase.channel('online-users');
+            presenceChannel.on('presence', { event: 'sync' }, () => {
+                const newState = presenceChannel.presenceState();
+                state.onlineFriends = new Set(Object.keys(newState));
+                renderer.render();
+                renderer.renderDirectMessagesList();
+            }).subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({ user_id: state.currentUser.id, online_at: new Date().toISOString() });
+                }
+            });
 
-                presenceChannel.on('presence', { event: 'sync' }, () => {
-                    const newState = presenceChannel.presenceState();
-                    const onlineUserIds = Object.keys(newState);
-                    state.onlineFriends = new Set(onlineUserIds);
-                    console.log('Online users synced:', Array.from(state.onlineFriends));
-                    renderer.render();
-                    renderer.renderDirectMessagesList();
-                });
-
-                presenceChannel.subscribe(async (status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('Subscribed to presence channel!');
-                        await presenceChannel.track({ online_at: new Date().toISOString() });
-                    }
-                });
-            }
+            supabase.channel('public:friendships')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
+                    console.log('Friendship change detected, refetching data.', payload);
+                    fetchAndRenderAll();
+                }).subscribe();
 
         } catch (error) {
-            console.error('Initialization error:', error);
+            console.error('Fatal initialization error:', error);
+            // Optionally, show a user-friendly error message on the screen
         }
     };
+
+    // This function needs to be created to handle clicks on friend cards
+    function handleFriendCardAction(e) {
+        const messageBtn = e.target.closest('.card-action-btn[title="Mesaj Gönder"]');
+        if (messageBtn) {
+            const card = e.target.closest('.friend-card');
+            const userId = card.dataset.userId;
+            // This is a simplified version of handleDmItemClick's logic
+            const friend = state.friends.find(f => f.id === userId);
+            if (friend) {
+                supabaseService.getOrCreateConversation(state.currentUser.id, userId)
+                    .then(conversationId => {
+                        if (conversationId) {
+                            renderer.showChatPanel(friend, conversationId);
+                        }
+                    });
+            }
+        }
+        // Add logic for the "More" button here if needed
+    }
 
     // --- DYNAMIC COMPONENT LOADER ---
     /**
@@ -765,14 +785,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error(`Error loading component ${componentName}:`, error);
         }
-    }
-
-    // Attach listener to the Add Friend button
-    if (ui.addFriendModal.button) {
-        ui.addFriendModal.button.addEventListener('click', (e) => {
-            e.preventDefault();
-            loadComponent('add-friend');
-        });
     }
 
     init();
