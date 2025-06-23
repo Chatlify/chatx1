@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         async getPendingRequests(userId) {
             const { data, error } = await supabase
                 .from('friendships')
-                .select('id, createdAt, profiles:user_id_1(id, username, avatar_url)')
+                .select('id, created_at, profiles:user_id_1(id, username, avatar_url)')
                 .eq('user_id_2', userId)
                 .eq('status', 'pending');
 
@@ -371,22 +371,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Error fetching pending requests:', error);
                 return [];
             }
+
             return data.map(req => ({
                 id: req.id,
-                userId: req.profiles.id,
                 username: req.profiles.username,
                 avatarUrl: req.profiles.avatar_url,
-                createdAt: req.createdAt,
+                createdAt: req.created_at,
             }));
         },
 
         async acceptFriendRequest(requestId) {
-            console.log(`Accepting friend request: ${requestId}`);
             const { error } = await supabase
                 .from('friendships')
                 .update({
                     status: 'accepted',
-                    updatedAt: new Date().toISOString()
+                    updated_at: new Date().toISOString()
                 })
                 .eq('id', requestId);
 
@@ -415,67 +414,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getOrCreateConversation(userId1, userId2) {
             try {
-                // Doğrudan konuşma oluşturalım, conversation_participants tablosunu kullanmadan
-                // İlk olarak, bu iki kullanıcı arasında mevcut bir konuşma var mı kontrol edelim
+                // Sonsuz döngü hatasını tamamen bypass etmek için basit bir yaklaşım kullanıyoruz
+                // Benzersiz bir konuşma ID'si oluşturalım
+                const conversationId = `dm_${[userId1, userId2].sort().join('_')}`;
 
-                // DM konuşmaları için özel bir sorgu
-                const { data: directMessages, error: dmError } = await supabase
-                    .from('messages')
-                    .select('conversation_id')
-                    .or(`sender_id.eq.${userId1},sender_id.eq.${userId2}`)
-                    .or(`receiverId.eq.${userId1},receiverId.eq.${userId2}`)
-                    .order('createdAt', { ascending: false })
-                    .limit(1);
+                console.log('Using direct conversation ID:', conversationId);
 
-                if (dmError) {
-                    console.error('Error checking for existing messages:', dmError);
-                }
-
-                // Eğer bu iki kullanıcı arasında mesaj varsa, o konuşmayı kullan
-                if (directMessages && directMessages.length > 0 && directMessages[0].conversation_id) {
-                    console.log('Existing conversation found through messages:', directMessages[0].conversation_id);
-                    return directMessages[0].conversation_id;
-                }
-
-                // Konuşma yoksa, yeni bir konuşma oluştur
-                const { data: newConversation, error: insertError } = await supabase
-                    .from('conversations')
-                    .insert([{
-                        is_group_chat: false,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    }])
-                    .select();
-
-                if (insertError) {
-                    console.error('Error creating new conversation:', insertError);
-                    return null;
-                }
-
-                if (newConversation && newConversation.length > 0) {
-                    const conversationId = newConversation[0].id;
-                    console.log('New conversation created:', conversationId);
-
-                    // Başlangıç mesajı gönder (bu, konuşmayı başlatır ve RLS politikalarını tetiklemeden çalışır)
-                    const { error: msgError } = await supabase
-                        .from('messages')
-                        .insert([{
-                            conversation_id: conversationId,
-                            sender_id: userId1,
-                            receiverId: userId2,
-                            content: "Merhaba! Sohbet başlatıldı.",
-                            contentType: 'text',
-                            createdAt: new Date().toISOString()
-                        }]);
-
-                    if (msgError) {
-                        console.error('Error sending initial message:', msgError);
-                    }
-
-                    return conversationId;
-                }
-
-                return null;
+                // Bu ID'yi doğrudan kullanarak mesaj göndermeyi deneyebiliriz
+                return conversationId;
             } catch (error) {
                 console.error('Unexpected error in getOrCreateConversation:', error);
                 return null;
@@ -491,7 +437,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     {
                         conversation_id: conversationId,
                         sender_id: senderId,
-                        content: content.trim()
+                        content: content.trim(),
+                        contentType: 'text',
+                        createdAt: new Date().toISOString()
                     }
                 ])
                 .select();
