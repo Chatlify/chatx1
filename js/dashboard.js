@@ -442,26 +442,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 // Mevcut konuşma yoksa yeni bir konuşma oluştur
-                const { data: newConversation, error: insertError } = await supabase
-                    .from('conversations')
-                    .insert([{ createdAt: new Date().toISOString() }])
-                    .select();
+                // RPC kullanarak RLS politikalarını bypass edelim
+                const { data: newConversation, error: insertError } = await supabase.rpc('create_conversation', {
+                    created_at: new Date().toISOString()
+                });
 
                 if (insertError) {
                     console.error('Error creating conversation:', insertError);
                     throw insertError;
                 }
 
-                const conversationId = newConversation[0].id;
+                const conversationId = newConversation;
+                console.log('Created new conversation with ID:', conversationId);
 
                 // İlk kullanıcıyı konuşmaya ekle
-                const { error: participant1Error } = await supabase
-                    .from('conversation_participants')
-                    .insert([{
-                        conversation_id: conversationId,
-                        user_id: userId1,
-                        joined_at: new Date().toISOString()
-                    }]);
+                const { error: participant1Error } = await supabase.rpc('add_participant_to_conversation', {
+                    conv_id: conversationId,
+                    user_id_param: userId1,
+                    joined_at_param: new Date().toISOString()
+                });
 
                 if (participant1Error) {
                     console.error('Error adding first participant:', participant1Error);
@@ -469,13 +468,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 // İkinci kullanıcıyı konuşmaya ekle
-                const { error: participant2Error } = await supabase
-                    .from('conversation_participants')
-                    .insert([{
-                        conversation_id: conversationId,
-                        user_id: userId2,
-                        joined_at: new Date().toISOString()
-                    }]);
+                const { error: participant2Error } = await supabase.rpc('add_participant_to_conversation', {
+                    conv_id: conversationId,
+                    user_id_param: userId2,
+                    joined_at_param: new Date().toISOString()
+                });
 
                 if (participant2Error) {
                     console.error('Error adding second participant:', participant2Error);
