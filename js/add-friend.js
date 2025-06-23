@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modal elementlerini seç
     const addFriendModal = document.getElementById('addFriendModal');
-    const addFriendBtn = document.getElementById('add-friend-button');
+    const addFriendBtn = document.getElementById('addFriendBtn') || document.querySelector('.add-friend-button');
     const closeAddFriendBtn = addFriendModal.querySelector('.close');
     const addFriendForm = document.getElementById('addFriendForm');
     const addFriendStatus = document.getElementById('addFriendStatus');
@@ -78,7 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Arkadaş ekle butonuna tıklandığında modalı aç
     if (addFriendBtn) {
+        console.log('Arkadaş ekle butonu bulundu:', addFriendBtn);
         addFriendBtn.addEventListener('click', openAddFriendModal);
+    } else {
+        console.error('Arkadaş ekle butonu bulunamadı! Buton ID veya sınıfını kontrol edin.');
     }
 
     // X butonuna tıklandığında modalı kapat
