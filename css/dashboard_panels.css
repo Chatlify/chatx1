@@ -1190,9 +1190,9 @@
 .pending-requests-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     max-width: 800px;
-    margin: 0 auto;
+    margin: 20px auto;
 }
 
 .request-card {
@@ -1200,66 +1200,212 @@
     align-items: center;
     justify-content: space-between;
     background-color: var(--background-secondary);
-    padding: 16px 20px;
-    border-radius: 8px;
+    padding: 18px 24px;
+    border-radius: 12px;
     border: 1px solid var(--background-tertiary);
-    transition: box-shadow 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.request-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary-color), var(--brand-color));
+    opacity: 0.7;
 }
 
 .request-card:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
 }
 
 .request-card-info {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
 }
 
 .request-card-info img {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
+    border: 2px solid var(--background-tertiary);
+    transition: all 0.3s ease;
+    object-fit: cover;
 }
 
-.request-card-info span {
-    font-weight: 500;
-    font-size: 1.05em;
+.request-card:hover .request-card-info img {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.request-card-info .user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.request-card-info .username {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+.request-card-info .request-time {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+.request-card-actions {
+    display: flex;
+    gap: 12px;
 }
 
 .request-card-actions button {
-    background: var(--background-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
     border: none;
-    color: var(--text-color);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    margin-left: 8px;
+    border-radius: 8px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: all 0.3s ease;
+    font-size: 0.95em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.request-card-actions button.accept:hover {
-    background-color: #4CAF50;
+.request-card-actions button i {
+    margin-right: 8px;
+    font-size: 1.1em;
+}
+
+.request-card-actions button.accept-btn {
+    background-color: var(--success-color);
     color: white;
 }
 
-.request-card-actions button.reject:hover {
-    background-color: #F44336;
+.request-card-actions button.accept-btn:hover {
+    background-color: var(--success-color-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--success-color-rgb), 0.3);
+}
+
+.request-card-actions button.reject-btn {
+    background-color: var(--danger-color);
     color: white;
 }
 
+.request-card-actions button.reject-btn:hover {
+    background-color: var(--danger-color-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--danger-color-rgb), 0.3);
+}
+
+/* Disabled state for buttons */
+.request-card-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Processing state animation */
+.request-card-actions button.processing {
+    position: relative;
+    overflow: hidden;
+}
+
+.request-card-actions button.processing::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: processing 1.5s infinite;
+}
+
+@keyframes processing {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Empty state styling */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
 }
 
 .empty-state i {
-    font-size: 48px;
-    margin-bottom: 20px;
+    font-size: 64px;
+    margin-bottom: 24px;
+    color: var(--primary-color);
+    opacity: 0.7;
 }
 
 .empty-state p {
     font-size: 1.2em;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+/* Bekleyen istekler başlık stili */
+.pending-requests-header {
+    margin: 0 auto 20px;
+    max-width: 800px;
+    padding: 0 10px;
+}
+
+.pending-requests-header h3 {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pending-requests-header h3 i {
+    color: var(--primary-color);
+}
+
+/* İşlem başarılı mesajı için stil */
+.action-success {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    padding: 10px 0;
+}
+
+.action-success i {
+    font-size: 1.2em;
+}
+
+.action-success i.fa-check-circle {
+    color: var(--success-color);
+}
+
+.action-success i.fa-times-circle {
+    color: var(--danger-color);
 }

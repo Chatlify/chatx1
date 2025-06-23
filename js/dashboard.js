@@ -855,27 +855,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         renderPendingRequestCards() {
+            console.log('[RENDER] Rendering pending friend requests');
             const { pendingRequests } = state;
 
-            if (pendingRequests.length === 0) {
-                ui.friendsContentContainer.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Bekleyen arkadaşlık isteğin yok.</p></div>`;
+            if (!pendingRequests || pendingRequests.length === 0) {
+                ui.friendsContentContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Bekleyen arkadaşlık isteğin yok. Yeni arkadaşlar eklemek için "Arkadaş Ekle" butonunu kullanabilirsin.</p>
+                    </div>
+                `;
                 return;
             }
 
-            const requestsHTML = pendingRequests.map(req => `
-                <div class="request-card" data-request-id="${req.id}">
-                    <div class="request-card-info">
-                        <img src="${req.avatarUrl || 'images/defaultavatar.png'}" alt="${req.username}'s avatar">
-                        <span><strong>${req.username}</strong> sana bir istek gönderdi.</span>
-                    </div>
-                    <div class="request-card-actions">
-                        <button class="accept-btn accept" title="Kabul Et"><i class="fas fa-check"></i></button>
-                        <button class="reject-btn reject" title="Reddet"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>
-            `).join('');
+            // Bekleyen isteklerin sayısını göster
+            const requestCount = pendingRequests.length;
+            console.log(`[RENDER] Found ${requestCount} pending requests`);
 
-            ui.friendsContentContainer.innerHTML = `<div class="pending-requests-container">${requestsHTML}</div>`;
+            const requestsHTML = pendingRequests.map(req => {
+                // İstek tarihi formatı
+                let requestTime = '';
+                try {
+                    const date = new Date(req.createdAt);
+                    requestTime = date.toLocaleDateString('tr-TR', {
+                        day: 'numeric',
+                        month: 'long'
+                    });
+                } catch (e) {
+                    console.warn('[RENDER] Error formatting request date:', e);
+                    requestTime = 'Bilinmeyen tarih';
+                }
+
+                return `
+                    <div class="request-card" data-request-id="${req.id}">
+                        <div class="request-card-info">
+                            <img src="${req.avatarUrl || 'images/defaultavatar.png'}" alt="${req.username}'s avatar">
+                            <div class="user-details">
+                                <span class="username">${req.username}</span>
+                                <span class="request-time">${requestTime} tarihinde istek gönderdi</span>
+                            </div>
+                        </div>
+                        <div class="request-card-actions">
+                            <button class="accept-btn" title="Kabul Et">
+                                <i class="fas fa-check"></i> Kabul Et
+                            </button>
+                            <button class="reject-btn" title="Reddet">
+                                <i class="fas fa-times"></i> Reddet
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            ui.friendsContentContainer.innerHTML = `
+                <div class="pending-requests-header">
+                    <h3><i class="fas fa-user-clock"></i> Bekleyen İstekler (${requestCount})</h3>
+                </div>
+                <div class="pending-requests-container">${requestsHTML}</div>
+            `;
         },
 
         renderUserFooter(profile) {
@@ -1158,45 +1195,106 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const handlePendingRequestAction = async (e) => {
+        // Tıklanan butonun accept-btn veya reject-btn sınıfına sahip olup olmadığını kontrol et
         const acceptBtn = e.target.closest('.accept-btn');
         const rejectBtn = e.target.closest('.reject-btn');
 
         if (!acceptBtn && !rejectBtn) {
-            return; // Not an action button
+            return; // Buton tıklaması değil, çık
         }
 
+        // İstek kartını bul
         const requestCard = e.target.closest('.request-card');
         if (!requestCard) {
-            console.error('Request card not found for action button.');
+            console.error('[FRIEND REQUEST] Request card not found for action button');
             return;
         }
 
+        // İstek ID'sini al
         const requestId = parseInt(requestCard.dataset.requestId, 10);
         if (isNaN(requestId)) {
-            console.error('Invalid request ID:', requestCard.dataset.requestId);
+            console.error('[FRIEND REQUEST] Invalid request ID:', requestCard.dataset.requestId);
             return;
         }
 
-        // Disable buttons on the specific card to prevent multiple clicks
-        requestCard.querySelectorAll('button').forEach(btn => btn.disabled = true);
+        console.log(`[FRIEND REQUEST] Processing action for request ID: ${requestId}, action: ${acceptBtn ? 'accept' : 'reject'}`);
 
-        let result;
-        if (acceptBtn) {
-            result = await supabaseService.acceptFriendRequest(requestId);
-        } else {
-            result = await supabaseService.rejectFriendRequest(requestId);
-        }
+        // Tüm butonları devre dışı bırak ve işlem göstergesini ekle
+        const buttons = requestCard.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('processing');
+        });
 
-        if (!result.success) {
-            alert("İşlem sırasında bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
-            // Re-enable buttons on failure
-            requestCard.querySelectorAll('button').forEach(btn => btn.disabled = false);
-        } else {
-            // On success, switch to the 'all' tab to see the new friend
-            // The real-time listener will handle the data refresh in the background,
-            // but we can pre-emptively switch the tab for better UX.
-            state.activeFriendsTab = 'all';
-            fetchAndRenderAll(); // Explicitly call to re-render everything with the new state.
+        try {
+            // İşlemi gerçekleştir
+            let result;
+            if (acceptBtn) {
+                result = await supabaseService.acceptFriendRequest(requestId);
+            } else {
+                result = await supabaseService.rejectFriendRequest(requestId);
+            }
+
+            if (!result.success) {
+                console.error('[FRIEND REQUEST] Action failed:', result.error);
+                alert("İşlem sırasında bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
+
+                // Hata durumunda butonları tekrar etkinleştir
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('processing');
+                });
+            } else {
+                console.log('[FRIEND REQUEST] Action successful:', acceptBtn ? 'accepted' : 'rejected');
+
+                // İşlem başarılı olduğunda animasyon ekle
+                requestCard.style.transition = 'all 0.5s ease';
+
+                if (acceptBtn) {
+                    requestCard.style.backgroundColor = 'rgba(67, 181, 129, 0.1)';
+                    requestCard.style.borderColor = 'var(--success-color)';
+
+                    // Kabul edildi mesajını göster
+                    const actionsDiv = requestCard.querySelector('.request-card-actions');
+                    actionsDiv.innerHTML = '<div class="action-success"><i class="fas fa-check-circle"></i> Arkadaşlık isteği kabul edildi</div>';
+
+                    // Kısa bir süre sonra tüm arkadaşlar sekmesine geç
+                    setTimeout(() => {
+                        state.activeFriendsTab = 'all';
+                        fetchAndRenderAll(); // Tüm verileri yeniden çek ve render et
+                    }, 1500);
+                } else {
+                    requestCard.style.backgroundColor = 'rgba(240, 71, 71, 0.1)';
+                    requestCard.style.borderColor = 'var(--danger-color)';
+
+                    // Reddedildi mesajını göster
+                    const actionsDiv = requestCard.querySelector('.request-card-actions');
+                    actionsDiv.innerHTML = '<div class="action-success"><i class="fas fa-times-circle"></i> Arkadaşlık isteği reddedildi</div>';
+
+                    // Kısa bir süre sonra kartı kaldır
+                    setTimeout(() => {
+                        requestCard.style.opacity = '0';
+                        requestCard.style.height = '0';
+                        requestCard.style.margin = '0';
+                        requestCard.style.padding = '0';
+                        requestCard.style.overflow = 'hidden';
+
+                        setTimeout(() => {
+                            // Tüm bekleyen istekleri yeniden render et
+                            fetchAndRenderAll();
+                        }, 500);
+                    }, 1500);
+                }
+            }
+        } catch (error) {
+            console.error('[FRIEND REQUEST] Unexpected error:', error);
+            alert("Beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
+
+            // Hata durumunda butonları tekrar etkinleştir
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('processing');
+            });
         }
     };
 
