@@ -54,29 +54,66 @@ window.initializeAddFriendPanel = function(supabase, onComplete) {
         }
 
         try {
-            const { data, error } = await supabase.rpc('send_friend_request', { target_username: targetUsername });
+            // 1. Get current user session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError || !session) {
+                throw new Error('İşlem yapmak için oturum açmalısınız.');
+            }
+            const currentUser = session.user;
 
-            if (error) {
-                throw error;
+            // 2. Find target user by username
+            const { data: targetUser, error: userError } = await supabase
+                .from('profiles')
+                .select('id, username')
+                .eq('username', targetUsername)
+                .single();
+
+            if (userError || !targetUser) {
+                throw new Error(`'${targetUsername}' adlı kullanıcı bulunamadı.`);
             }
 
-            // The RPC function returns a status message
-            if (data) {
-                 if (data.includes('zaten')) { // If the message indicates they are already friends
-                    showStatus(data, 'error');
-                } else {
-                    showStatus(data, 'success');
-                    usernameInput.value = ''; // Clear input on success
-                    setTimeout(closePanel, 2000); // Close panel after 2 seconds on success
+            // 3. Prevent sending request to oneself
+            if (targetUser.id === currentUser.id) {
+                throw new Error('Kendinize arkadaşlık isteği gönderemezsiniz.');
+            }
+
+            // 4. Check for existing friendship or pending request in a single query
+            const { data: existing, error: existingError } = await supabase
+                .from('friendships')
+                .select('status')
+                .or(`(user_id_1.eq.${currentUser.id},user_id_2.eq.${targetUser.id}),(user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUser.id})`)
+                .limit(1)
+                .single();
+
+            // Ignore 'no rows found' error, as it's expected if no relationship exists
+            if (existingError && existingError.code !== 'PGRST116') {
+                throw existingError;
+            }
+
+            if (existing) {
+                if (existing.status === 'accepted') {
+                    throw new Error(`${targetUsername} ile zaten arkadaşsınız.`);
+                } else if (existing.status === 'pending') {
+                    throw new Error(`Bu kullanıcıyla aranızda zaten bekleyen bir istek var.`);
                 }
-            } else {
-                 showStatus('Bir hata oluştu, ancak sunucudan mesaj alınamadı.', 'error');
             }
+
+            // 5. If no existing relationship, insert a new friend request
+            const { error: insertError } = await supabase
+                .from('friendships')
+                .insert({ user_id_1: currentUser.id, user_id_2: targetUser.id, status: 'pending' });
+
+            if (insertError) {
+                throw insertError;
+            }
+
+            showStatus(`'${targetUsername}' adlı kullanıcıya istek gönderildi!`, 'success');
+            usernameInput.value = '';
+            setTimeout(closePanel, 2000);
 
         } catch (error) {
             console.error('Error sending friend request:', error);
-            const errorMessage = error.message.includes('not found') ? 'Kullanıcı bulunamadı.' : 'İstek gönderilirken bir hata oluştu. Lütfen tekrar deneyin.';
-            showStatus(errorMessage, 'error');
+            showStatus(error.message, 'error');
         }
     }
 
