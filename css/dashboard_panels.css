@@ -40,11 +40,11 @@
 }
 
 /* 3. Aktif Sohbet Durumu (Chat Active State) */
-.main-content.chat-active .friends-panel-container {
+.dashboard-container.chat-active .friends-panel-container {
     display: none;
 }
 
-.main-content.chat-active .chat-panel {
+.dashboard-container.chat-active .chat-panel {
     display: flex;
 }
 
