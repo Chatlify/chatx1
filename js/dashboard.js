@@ -519,6 +519,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return { data: null, error };
                 }
 
+                console.log('Message sent successfully:', data);
+
                 // Dönen veriyi UI için uygun formata dönüştür
                 const formattedMessages = data.map(msg => ({
                     id: msg.id,
@@ -564,6 +566,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return [];
                 }
 
+                console.log('Retrieved messages from database:', data);
+
                 // Dönen veriyi UI için uygun formata dönüştür
                 const formattedMessages = data.map(msg => ({
                     id: msg.id,
@@ -596,6 +600,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 this.messageSubscription();
             }
 
+            console.log('Setting up message subscription for conversation:', conversationId);
+
             // Supabase realtime subscription oluştur
             const channel = supabase.channel(`messages:${conversationId}`)
                 .on('postgres_changes',
@@ -608,16 +614,47 @@ document.addEventListener('DOMContentLoaded', async () => {
                     async (payload) => {
                         console.log('New message received:', payload);
 
-                        // Yeni mesaj geldiğinde tüm mesajları yeniden yükle
-                        const messages = await this.getMessages(conversationId);
-                        state.messages = messages;
-                        renderer.renderMessages(state.messages);
+                        // Yeni mesajı doğrudan ekleyelim
+                        if (payload.new) {
+                            const newMessage = payload.new;
+
+                            // Gönderen bilgilerini alalım
+                            const { data: senderData } = await supabase
+                                .from('profiles')
+                                .select('username, avatar_url')
+                                .eq('id', newMessage.sender_id)
+                                .single();
+
+                            // Mesajı UI için formatlayalım
+                            const formattedMessage = {
+                                id: newMessage.id,
+                                conversation_id: newMessage.conversation_id,
+                                sender_id: newMessage.sender_id,
+                                content: newMessage.content,
+                                contentType: newMessage.contentType,
+                                createdAt: newMessage.createdAt,
+                                sender: {
+                                    username: senderData?.username || 'Kullanıcı',
+                                    avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
+                                }
+                            };
+
+                            // Mevcut mesajlara ekleyelim
+                            state.messages = [...state.messages, formattedMessage];
+                            renderer.renderMessages(state.messages);
+                        } else {
+                            // Alternatif olarak tüm mesajları yeniden yükleyelim
+                            const messages = await this.getMessages(conversationId);
+                            state.messages = messages;
+                            renderer.renderMessages(state.messages);
+                        }
                     }
                 )
                 .subscribe();
 
             // Aboneliği temizlemek için bir fonksiyon döndür
             this.messageSubscription = () => {
+                console.log('Unsubscribing from message channel');
                 channel.unsubscribe();
             };
 
