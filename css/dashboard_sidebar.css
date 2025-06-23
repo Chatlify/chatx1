@@ -428,71 +428,163 @@
 }
 
 .dm-footer {
+    border-top: 1px solid var(--divider-color);
+    padding: 10px 16px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 8px;
-    background-color: rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
+    align-items: center;
+    margin-top: auto;
+    background: linear-gradient(to bottom, var(--dm-bg), rgba(32, 34, 60, 0.95));
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.dm-footer:hover {
+    background: linear-gradient(to bottom, var(--dm-bg), rgba(40, 43, 75, 0.98));
 }
 
 .dm-user {
     display: flex;
     align-items: center;
+    gap: 12px;
+    transition: transform 0.2s ease;
+}
+
+.dm-user:hover {
+    transform: translateY(-2px);
 }
 
 .dm-user-avatar {
     position: relative;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.dm-user:hover .dm-user-avatar {
+    border-color: var(--brand-color);
+    transform: scale(1.05);
 }
 
 .dm-user-avatar img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    margin-right: 8px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.dm-user:hover .dm-user-avatar img {
+    transform: scale(1.1);
 }
 
 .dm-user-avatar .dm-status {
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--dm-bg);
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    background-color: var(--status-offline);
+    transition: all 0.3s ease;
+}
+
+.dm-user-avatar .dm-status.online {
+    background-color: var(--status-online);
+    box-shadow: 0 0 8px rgba(35, 165, 90, 0.8);
+}
+
+.dm-user-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .dm-user-name {
     font-weight: 600;
+    font-size: 14px;
+    color: var(--text-color);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 120px;
+    letter-spacing: 0.3px;
+    transition: color 0.2s ease;
+}
+
+.dm-user:hover .dm-user-name {
+    color: var(--brand-color);
+}
+
+/* Durum bilgisi ekleyelim */
+.dm-user-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    transition: color 0.2s ease;
+}
+
+.dm-user:hover .dm-user-status {
+    color: var(--text-secondary);
 }
 
 .dm-user-controls {
     display: flex;
-    align-items: center;
     gap: 8px;
 }
 
 .dm-user-control {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    color: var(--text-muted);
-    background-color: var(--item-hover);
+    transition: all 0.2s ease;
+    font-size: 16px;
+    border: 1px solid transparent;
 }
 
 .dm-user-control:hover {
-    color: var(--text-normal);
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Çıkış Yap Butonu Özel Stilleri */
 .logout-button {
-    background-color: var(--danger-color-muted);
-    color: var(--danger-color);
+    color: #e74c3c;
 }
 
 .logout-button:hover {
-    background-color: var(--danger-color);
-    color: #fff;
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    box-shadow: 0 0 8px rgba(231, 76, 60, 0.4);
+}
+
+/* Ayarlar butonu için ek efekt */
+.dm-user-control.settings-icon:hover i {
+    animation: rotate 1s infinite linear;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* 3. Sponsorlu Sunucular Kenar Çubuğu (Sponsor Sidebar) */

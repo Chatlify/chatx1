@@ -820,8 +820,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { userFooterName, userFooterAvatar } = ui;
             if (!profile) return;
 
-            userFooterName.textContent = profile.username || 'Kullanıcı';
-            userFooterAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
+            // UI elementlerini seçelim
+            const dmUserName = document.querySelector('.dm-user-name');
+            const dmUserAvatar = document.querySelector('.dm-user-avatar img');
+            const dmUserStatus = document.querySelector('.dm-user-status');
+            const dmStatusDot = document.querySelector('.dm-user-avatar .dm-status');
+
+            if (dmUserName) dmUserName.textContent = profile.username || 'Kullanıcı';
+            if (dmUserAvatar) dmUserAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
+
+            // Durum bilgisini ayarla
+            const isOnline = true; // Şu an için her zaman çevrimiçi gösterelim
+            if (dmUserStatus) dmUserStatus.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+
+            // Durum noktasını güncelle
+            if (dmStatusDot) {
+                dmStatusDot.className = 'dm-status';
+                if (isOnline) dmStatusDot.classList.add('online');
+            }
         },
 
         renderDirectMessagesList() {
@@ -1277,12 +1293,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (ui.addFriendModal.button) {
                 ui.addFriendModal.button.addEventListener('click', () => loadComponent('add-friend'));
             }
-            if (ui.settingsButton) {
-                ui.settingsButton.addEventListener('click', () => { window.location.href = '/settings.html'; });
+
+            // Sidebar butonları için event listener'ları doğrudan ekleyelim
+            const serverManagementBtn = document.querySelector('.sidebar-item.add-server');
+            if (serverManagementBtn) {
+                serverManagementBtn.addEventListener('click', () => {
+                    console.log('Sunucu İşlemleri butonuna tıklandı');
+                    // Burada sunucu işlemleri modalını açabilir veya ilgili sayfaya yönlendirebiliriz
+                    alert('Sunucu İşlemleri yakında eklenecek!');
+                });
             }
-            if (ui.shopButton) {
-                ui.shopButton.addEventListener('click', () => { window.location.href = '/shop.html'; });
+
+            const shopBtn = document.querySelector('.sidebar-item.shop');
+            if (shopBtn) {
+                shopBtn.addEventListener('click', () => {
+                    console.log('Mağaza butonuna tıklandı');
+                    window.location.href = '/shop.html';
+                });
             }
+
+            const settingsBtn = document.querySelector('.sidebar-item.settings');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', () => {
+                    console.log('Ayarlar butonuna tıklandı');
+                    window.location.href = '/settings.html';
+                });
+            }
+
+            // Yeni eklenen footer butonları için listener'lar ekleyelim
+            const settingsIconBtn = document.querySelector('.dm-user-control.settings-icon');
+            if (settingsIconBtn) {
+                settingsIconBtn.addEventListener('click', () => {
+                    console.log('Ayarlar butonuna tıklandı');
+                    window.location.href = '/settings.html';
+                });
+            }
+
+            const musicIconBtn = document.querySelector('.dm-user-control.music-icon');
+            if (musicIconBtn) {
+                musicIconBtn.addEventListener('click', () => {
+                    console.log('Müzik butonuna tıklandı');
+                    alert('Müzik özelliği yakında eklenecek!');
+                });
+            }
+
+            const logoutBtn = document.querySelector('.dm-user-control.logout-button');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    console.log('Çıkış yapılıyor...');
+                    await supabase.auth.signOut();
+                    window.location.href = '/login.html';
+                });
+            }
+
             if (ui.sidebarToggleButton) {
                 ui.sidebarToggleButton.addEventListener('click', () => {
                     document.body.classList.toggle('sidebar-closed');
