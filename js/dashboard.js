@@ -470,98 +470,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         async sendMessage(conversationId, senderId, content) {
-            if (!content.trim()) return { error: { message: "Mesaj boş olamaz." } };
+            console.log(`[MESSAGE] Attempting to send message to conv ${conversationId}`);
+
+            if (!content || !content.trim()) {
+                console.error('[MESSAGE] Cannot send an empty message.');
+                return { error: { message: "Mesaj içeriği boş olamaz." } };
+            }
 
             try {
-                console.log('Sending message to conversation:', conversationId, 'from sender:', senderId);
+                const messageData = {
+                    conversation_id: conversationId,
+                    sender_id: senderId,
+                    content: content.trim(),
+                    contentType: 'text' // Varsayılan olarak 'text'
+                };
 
-                // Önce normal insert ile deneyelim
+                // Mesajı doğrudan 'messages' tablosuna ekle.
+                // Bu, RLS politikaları doğru ayarlandığı için en güvenli ve standart yoldur.
                 const { data, error } = await supabase
                     .from('messages')
-                    .insert([{
-                        conversation_id: conversationId,
-                        sender_id: senderId,
-                        content: content.trim(),
-                        contentType: 'text',
-                        createdAt: new Date().toISOString()
-                    }])
+                    .insert(messageData)
                     .select(`
-                        id, 
-                        conversation_id, 
-                        sender_id, 
-                        content, 
-                        contentType, 
-                        createdAt,
-                        profiles:sender_id (
+                        *,
+                        sender:profiles (
                             username,
                             avatar_url
                         )
-                    `);
+                    `)
+                    .single();
 
-                // Eğer normal insert başarısız olursa, RPC ile deneyelim
                 if (error) {
-                    console.log('Normal insert failed, trying RPC:', error);
-
-                    // RPC kullanarak mesaj gönder
-                    const { data: rpcData, error: rpcError } = await supabase.rpc('insert_message', {
-                        conv_id: conversationId,
-                        sender: senderId,
-                        msg_content: content.trim(),
-                        content_type: 'text',
-                        created_at: new Date().toISOString()
-                    });
-
-                    if (rpcError) {
-                        console.error('Error sending message with RPC:', rpcError);
-                        return { data: null, error: rpcError };
+                    console.error('[MESSAGE] Error inserting message directly:', error);
+                    // RLS hatası olup olmadığını kontrol et
+                    if (error.code === '42501') {
+                        alert('Mesaj gönderilemedi. Güvenlik kuralları bu işlemi engelliyor. Lütfen sayfayı yenileyip tekrar deneyin.');
                     }
-
-                    console.log('Message sent successfully via RPC:', rpcData);
-
-                    // Gönderen bilgilerini alalım
-                    const { data: senderData } = await supabase
-                        .from('profiles')
-                        .select('username, avatar_url')
-                        .eq('id', senderId)
-                        .single();
-
-                    // RPC'den dönen veriyi UI için uygun formata dönüştür
-                    const formattedMessages = [{
-                        id: rpcData.id,
-                        conversation_id: conversationId,
-                        sender_id: senderId,
-                        content: content.trim(),
-                        contentType: 'text',
-                        createdAt: new Date().toISOString(),
-                        sender: {
-                            username: senderData?.username || 'Kullanıcı',
-                            avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
-                        }
-                    }];
-
-                    return { data: formattedMessages, error: null };
+                    throw error;
                 }
 
-                console.log('Message sent successfully via normal insert:', data);
+                console.log('[MESSAGE] Message sent successfully via direct insert:', data);
+                return { data };
 
-                // Dönen veriyi UI için uygun formata dönüştür
-                const formattedMessages = data.map(msg => ({
-                    id: msg.id,
-                    conversation_id: msg.conversation_id,
-                    sender_id: msg.sender_id,
-                    content: msg.content,
-                    contentType: msg.contentType,
-                    createdAt: msg.createdAt,
-                    sender: {
-                        username: msg.profiles?.username || 'Kullanıcı',
-                        avatar_url: msg.profiles?.avatar_url || 'images/defaultavatar.png'
-                    }
-                }));
-
-                return { data: formattedMessages, error: null };
             } catch (error) {
-                console.error('Error sending message:', error);
-                return { data: null, error };
+                console.error('[MESSAGE] Final error in sendMessage:', error);
+                return { error };
             }
         },
 
