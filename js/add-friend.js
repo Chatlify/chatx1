@@ -14,220 +14,274 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('Arkadaş ekleme butonuna olay dinleyicisi ekleniyor...');
 
-    // Modalı doğrudan HTML'e ekle
-    modalContainer.innerHTML = `
-        <div id="add-friend-modal" class="modal-overlay">
-            <div class="modal-container">
+    // Modal HTML'ini oluştur
+    const addFriendModalHTML = `
+        <div id="addFriendModal" class="modal">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-icon"><i class="fas fa-user-plus"></i></div>
-                    <h3>Arkadaş Ekle</h3>
-                    <button class="close-modal-btn" title="Kapat"><i class="fas fa-times"></i></button>
+                    <h2>Arkadaş Ekle</h2>
+                    <span class="close">&times;</span>
                 </div>
                 <div class="modal-body">
-                    <p class="modal-info">Arkadaş eklemek için Chatlify kullanıcı adını girin.</p>
-                    <form id="add-friend-form" class="input-wrapper">
-                        <div class="add-friend-input-container">
-                            <input type="text" id="add-friend-username-input" placeholder="Kullanıcı adını yazın..." autocomplete="off" required>
-                            <i class="fas fa-user"></i>
+                    <form id="addFriendForm">
+                        <div class="form-group">
+                            <label for="friendUsername">Kullanıcı Adı</label>
+                            <input type="text" id="friendUsername" name="friendUsername" placeholder="Kullanıcı adını girin" required>
                         </div>
-                        <button type="submit" class="send-request-btn">
-                            <span>Arkadaşlık İsteği Gönder</span>
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                        <div id="addFriendStatus" class="status-message"></div>
+                        <button type="submit" id="addFriendSubmit">Arkadaşlık İsteği Gönder</button>
                     </form>
-                    <div id="friend-request-status" class="status-message"></div>
                 </div>
             </div>
         </div>
     `;
 
-    // Butona tıklandığında modalı açacak olay dinleyicisini ekle
-    addFriendButton.addEventListener('click', () => {
-        console.log('Arkadaş ekle butonuna tıklandı');
-        const modalOverlay = document.getElementById('add-friend-modal');
-        if (modalOverlay) {
-            openModal(modalOverlay);
-        } else {
-            console.error('Arkadaş ekleme modalı (#add-friend-modal) bulunamadı.');
+    // Modal HTML'ini body'ye ekle
+    document.body.insertAdjacentHTML('beforeend', addFriendModalHTML);
+
+    // Modal elementlerini seç
+    const addFriendModal = document.getElementById('addFriendModal');
+    const addFriendBtn = document.getElementById('add-friend-button');
+    const closeAddFriendBtn = addFriendModal.querySelector('.close');
+    const addFriendForm = document.getElementById('addFriendForm');
+    const addFriendStatus = document.getElementById('addFriendStatus');
+
+    if (!addFriendModal || !addFriendBtn || !closeAddFriendBtn || !addFriendForm || !addFriendStatus) {
+        console.error('Arkadaş ekleme modülü için gerekli HTML elementleri bulunamadı.', {
+            addFriendModal,
+            addFriendBtn,
+            closeAddFriendBtn,
+            addFriendForm,
+            addFriendStatus
+        });
+        return;
+    }
+
+    console.log('Arkadaş ekleme butonuna tıklandığında modalı aç');
+
+    // Modal açma fonksiyonu
+    function openAddFriendModal() {
+        console.log('Modal açılıyor...');
+        addFriendModal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Scroll'u engelle
+    }
+
+    // Modal kapatma fonksiyonu
+    function closeAddFriendModal() {
+        console.log('Modal kapatılıyor...');
+        addFriendModal.style.display = 'none';
+        document.body.style.overflow = ''; // Scroll'u serbest bırak
+        addFriendForm.reset(); // Formu sıfırla
+        addFriendStatus.textContent = ''; // Durum mesajını temizle
+        addFriendStatus.className = 'status-message'; // Sınıfı sıfırla
+    }
+
+    // Arkadaş ekle butonuna tıklandığında modalı aç
+    if (addFriendBtn) {
+        addFriendBtn.addEventListener('click', openAddFriendModal);
+    }
+
+    // X butonuna tıklandığında modalı kapat
+    closeAddFriendBtn.addEventListener('click', closeAddFriendModal);
+
+    // Modal dışına tıklandığında modalı kapat
+    window.addEventListener('click', (event) => {
+        if (event.target === addFriendModal) {
+            closeAddFriendModal();
         }
     });
 
-    // Modalı açma fonksiyonu
-    function openModal(modalOverlay) {
-        console.log('Modal açılıyor...');
-        document.body.style.overflow = 'hidden'; // Arka planın kaydırılmasını engelle
-        modalOverlay.style.display = 'flex';
+    // ESC tuşuna basıldığında modalı kapat
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && addFriendModal.style.display === 'block') {
+            closeAddFriendModal();
+        }
+    });
 
-        // Kısa bir gecikme sonrası active sınıfını ekle (CSS geçişi için)
-        setTimeout(() => {
-            modalOverlay.classList.add('active');
-            // Panel açıldığında input alanına odaklan ve herhangi bir metni seç
-            const usernameInput = modalOverlay.querySelector('#add-friend-username-input');
-            if (usernameInput) {
-                usernameInput.focus();
-                usernameInput.select();
-            }
-        }, 10);
-    }
+    // Form gönderildiğinde arkadaşlık isteği gönder
+    addFriendForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-    // Olay dinleyicilerini kur
-    setupModalEventListeners();
+        const friendUsername = document.getElementById('friendUsername').value.trim();
 
-    function setupModalEventListeners() {
-        console.log('Modal olay dinleyicileri kuruluyor...');
-        // Elementleri, global document yerine modal konteynerı içinde arıyoruz.
-        const modalOverlay = document.getElementById('add-friend-modal');
-        if (!modalOverlay) {
-            console.error('Modal overlay elementi (#add-friend-modal) bulunamadı.');
+        if (!friendUsername) {
+            showStatus('Lütfen bir kullanıcı adı girin.', 'error');
             return;
         }
 
-        const modalContainer = modalOverlay.querySelector('.modal-container');
-        const closeModalButton = modalOverlay.querySelector('.close-modal-btn');
-        const addFriendForm = modalOverlay.querySelector('#add-friend-form');
-        const usernameInput = modalOverlay.querySelector('#add-friend-username-input');
-        const statusMessage = modalOverlay.querySelector('#friend-request-status');
+        // Butonun durumunu güncelle
+        const submitButton = document.getElementById('addFriendSubmit');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Gönderiliyor...';
+        submitButton.disabled = true;
 
-        // Elementlerin bulunup bulunmadığını daha sağlam bir şekilde kontrol et
-        if (!modalContainer || !closeModalButton || !addFriendForm || !usernameInput || !statusMessage) {
-            console.error('Modal içindeki alt elementlerden biri veya birkaçı bulunamadı.', {
-                modalContainer,
-                closeModalButton,
-                addFriendForm,
-                usernameInput,
-                statusMessage
-            });
-            return;
-        }
+        try {
+            // Global sendFriendRequest fonksiyonunu çağır
+            await window.sendFriendRequest(friendUsername);
 
-        const closeModal = () => {
-            console.log('Modal kapatılıyor...');
-            modalOverlay.classList.remove('active');
+            showStatus(`${friendUsername} kullanıcısına arkadaşlık isteği gönderildi.`, 'success');
 
-            // Animasyon süresi kadar bekleyip modalı gizle
+            // Kısa bir süre sonra modalı kapat
             setTimeout(() => {
-                modalOverlay.style.display = 'none';
-                document.body.style.overflow = ''; // Kaydırmayı geri aç
-
-                // Formu ve durum mesajını sıfırla
-                addFriendForm.reset();
-                clearStatusMessage();
-            }, 300);
-        };
-
-        const clearStatusMessage = () => {
-            statusMessage.className = 'status-message';
-            statusMessage.textContent = '';
-        };
-
-        // Klavye erişilebilirliği
-        closeModalButton.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                closeModal();
-            }
-        });
-
-        // Gösterme ve gizleme olayları
-        closeModalButton.addEventListener('click', closeModal);
-
-        // Klavye kontrolü - ESC tuşu ile modalı kapatma
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && modalOverlay.classList.contains('active')) {
-                closeModal();
-            }
-        });
-
-        modalOverlay.addEventListener('click', (event) => {
-            // Sadece overlay'in kendisine tıklandığında kapat
-            if (event.target === modalOverlay) {
-                closeModal();
-            }
-        });
-
-        // Input alanında # karakteri olmadığında otomatik olarak placeholder'ı göster
-        usernameInput.addEventListener('input', () => {
-            const value = usernameInput.value.trim();
-
-            // # kontrolünü kaldırdık
-            if (value.length > 0) {
-                usernameInput.classList.remove('warning');
-            }
-        });
-
-        addFriendForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const fullUsername = usernameInput.value.trim();
-
-            if (!fullUsername) {
-                showStatus('Lütfen bir kullanıcı adı girin.', 'error');
-                usernameInput.classList.add('error');
-
-                // Input alanını kısa bir süre titret
-                usernameInput.classList.add('shake');
-                setTimeout(() => {
-                    usernameInput.classList.remove('shake');
-                }, 500);
-
-                return;
-            }
-
-            usernameInput.classList.remove('error');
-
-            if (typeof window.sendFriendRequest === 'function') {
-                try {
-                    // Gönder butonunu devre dışı bırak ve yükleniyor göster
-                    const submitButton = addFriendForm.querySelector('.send-request-btn');
-                    const originalText = submitButton.innerHTML;
-
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
-
-                    await window.sendFriendRequest(fullUsername);
-
-                    // Butonu eski haline getir
-                    submitButton.innerHTML = originalText;
-                    submitButton.disabled = false;
-
-                    // Başarılı mesajı göster
-                    showStatus(`'${fullUsername}' kişisine arkadaşlık isteği gönderildi!`, 'success');
-
-                    // Başarılı olduğunda input alanını temizle
-                    usernameInput.value = '';
-
-                    setTimeout(() => {
-                        closeModal();
-                    }, 2000);
-
-                } catch (error) {
-                    // Gönder butonunu eski haline getir
-                    const submitButton = addFriendForm.querySelector('.send-request-btn');
-
-                    // originalText değişkenini tekrar tanımlamak yerine doğrudan içeriği ayarlıyoruz
-                    submitButton.innerHTML = '<span>Arkadaşlık İsteği Gönder</span><i class="fas fa-paper-plane"></i>';
-                    submitButton.disabled = false;
-
-                    showStatus(error.message || 'İstek gönderilirken bir hata oluştu.', 'error');
-                }
-            } else {
-                console.error('`sendFriendRequest` fonksiyonu bulunamadı. dashboard.js yüklendiğinden emin olun.');
-                showStatus('Arkadaş ekleme sistemi şu an kullanılamıyor.', 'error');
-            }
-        });
-
-        function showStatus(message, type) {
-            // Önce mevcut durum mesajını temizle
-            clearStatusMessage();
-
-            // Küçük bir gecikmeyle yeni mesajı göster (animasyon için)
-            setTimeout(() => {
-                statusMessage.textContent = message;
-                statusMessage.className = `status-message ${type}`; // 'success' veya 'error'
-
-                // Bir okuma asistanı için ARIA özniteliklerini ayarla
-                statusMessage.setAttribute('role', 'status');
-                statusMessage.setAttribute('aria-live', 'polite');
-            }, 10);
+                closeAddFriendModal();
+            }, 2000);
+        } catch (error) {
+            console.error('Arkadaşlık isteği gönderme hatası:', error);
+            showStatus(error.message || 'Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        } finally {
+            // Butonun durumunu geri al
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
         }
+    });
+
+    // Durum mesajı gösterme fonksiyonu
+    function showStatus(message, type) {
+        addFriendStatus.textContent = message;
+        addFriendStatus.className = `status-message ${type}`;
     }
+
+    // CSS stillerini ekle
+    const style = document.createElement('style');
+    style.textContent = `
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: #2c2f33;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #40444b;
+        }
+
+        .modal-header h2 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .close {
+            color: #72767d;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b9bbbe;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #40444b;
+            background-color: #40444b;
+            color: #ffffff;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #7289da;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #7289da;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #677bc4;
+        }
+
+        button[type="submit"]:disabled {
+            background-color: #677bc4;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message:not(:empty) {
+            display: block;
+        }
+
+        .status-message.error {
+            background-color: rgba(240, 71, 71, 0.1);
+            color: #f04747;
+            border: 1px solid rgba(240, 71, 71, 0.3);
+        }
+
+        .status-message.success {
+            background-color: rgba(67, 181, 129, 0.1);
+            color: #43b581;
+            border: 1px solid rgba(67, 181, 129, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    `;
+
+    document.head.appendChild(style);
 }); 
