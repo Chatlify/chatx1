@@ -78,10 +78,12 @@ window.initializeAddFriendPanel = function(supabase, onComplete) {
             }
 
             // 4. Check for existing friendship or pending request in a single query
+            const senderId = currentUser.id;
+            const receiverId = targetUser.id;
             const { data: existing, error: existingError } = await supabase
                 .from('friendships')
                 .select('status')
-                .or(`(user_id_1.eq.${currentUser.id},user_id_2.eq.${targetUser.id}),(user_id_1.eq.${targetUser.id},user_id_2.eq.${currentUser.id})`)
+                .or(`and(user_id_1.eq.${senderId},user_id_2.eq.${receiverId}),and(user_id_1.eq.${receiverId},user_id_2.eq.${senderId})`)
                 .limit(1)
                 .single();
 
