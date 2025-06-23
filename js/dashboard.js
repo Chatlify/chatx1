@@ -413,76 +413,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         async getOrCreateConversation(userId1, userId2) {
+            console.log(`[CONVERSATION] Getting or creating conversation between ${userId1} and ${userId2}`);
+
+            // Kullanıcı ID'lerini her zaman aynı sırada (küçükten büyüğe) kullanarak
+            // A->B ve B->A için aynı sohbeti bulmayı garantile.
+            const sortedUserIds = [userId1, userId2].sort();
+            const user_a = sortedUserIds[0];
+            const user_b = sortedUserIds[1];
+
             try {
-                // Önce mevcut bir konuşma var mı kontrol et
-                const { data: existingConversations, error: selectError } = await supabase
+                // 1. İki kullanıcı arasında mevcut bir sohbet var mı diye kontrol et.
+                // Bu RPC fonksiyonu, iki kullanıcının da bulunduğu ortak sohbetleri arar.
+                const { data: existing, error: rpcError } = await supabase.rpc('get_conversation_between_users', {
+                    user_a_id: user_a,
+                    user_b_id: user_b
+                });
+
+                if (rpcError) {
+                    console.error('[CONVERSATION] Error checking for existing conversation via RPC:', rpcError);
+                    throw rpcError;
+                }
+
+                if (existing && existing.length > 0) {
+                    const conversationId = existing[0].conversation_id;
+                    console.log(`[CONVERSATION] Found existing conversation: ${conversationId}`);
+                    return conversationId;
+                }
+
+                // 2. Mevcut sohbet yoksa, yeni bir tane oluştur.
+                console.log('[CONVERSATION] No existing conversation found, creating a new one.');
+
+                // a. Yeni bir sohbet oluştur
+                const { data: conversationData, error: convError } = await supabase
+                    .from('conversations')
+                    .insert([{}])
+                    .select('id')
+                    .single();
+
+                if (convError) {
+                    console.error('[CONVERSATION] Error creating new conversation:', convError);
+                    throw convError;
+                }
+                const newConversationId = conversationData.id;
+                console.log(`[CONVERSATION] Created new conversation row: ${newConversationId}`);
+
+                // b. İki kullanıcıyı da bu yeni sohbete "katılımcı" olarak ekle
+                const { error: participantsError } = await supabase
                     .from('conversation_participants')
-                    .select('conversation_id')
-                    .in('user_id', [userId1, userId2])
-                    .order('conversation_id');
+                    .insert([
+                        { conversation_id: newConversationId, user_id: userId1 },
+                        { conversation_id: newConversationId, user_id: userId2 }
+                    ]);
 
-                if (selectError) {
-                    console.error('Error checking existing conversations:', selectError);
-                    throw selectError;
+                if (participantsError) {
+                    console.error('[CONVERSATION] Error adding participants:', participantsError);
+                    // Oluşturulan sohbeti temizle, çünkü katılımcı eklenemedi
+                    await supabase.from('conversations').delete().eq('id', newConversationId);
+                    throw participantsError;
                 }
 
-                // Konuşma ID'lerini grupla ve her iki kullanıcının da olduğu konuşmaları bul
-                const conversationCounts = {};
-                existingConversations.forEach(participant => {
-                    const convId = participant.conversation_id;
-                    conversationCounts[convId] = (conversationCounts[convId] || 0) + 1;
-                });
+                console.log(`[CONVERSATION] Successfully created new conversation and added participants: ${newConversationId}`);
+                return newConversationId;
 
-                // Her iki kullanıcının da olduğu bir konuşma var mı kontrol et
-                for (const [convId, count] of Object.entries(conversationCounts)) {
-                    if (count >= 2) {
-                        console.log('Found existing conversation:', convId);
-                        return convId;
-                    }
-                }
-
-                // Mevcut konuşma yoksa yeni bir konuşma oluştur
-                // RPC kullanarak RLS politikalarını bypass edelim
-                const { data: newConversation, error: insertError } = await supabase.rpc('create_conversation', {
-                    created_at: new Date().toISOString()
-                });
-
-                if (insertError) {
-                    console.error('Error creating conversation:', insertError);
-                    throw insertError;
-                }
-
-                const conversationId = newConversation;
-                console.log('Created new conversation with ID:', conversationId);
-
-                // İlk kullanıcıyı konuşmaya ekle
-                const { error: participant1Error } = await supabase.rpc('add_participant_to_conversation', {
-                    conv_id: conversationId,
-                    user_id_param: userId1,
-                    joined_at_param: new Date().toISOString()
-                });
-
-                if (participant1Error) {
-                    console.error('Error adding first participant:', participant1Error);
-                    throw participant1Error;
-                }
-
-                // İkinci kullanıcıyı konuşmaya ekle
-                const { error: participant2Error } = await supabase.rpc('add_participant_to_conversation', {
-                    conv_id: conversationId,
-                    user_id_param: userId2,
-                    joined_at_param: new Date().toISOString()
-                });
-
-                if (participant2Error) {
-                    console.error('Error adding second participant:', participant2Error);
-                    throw participant2Error;
-                }
-
-                console.log('Created new conversation:', conversationId);
-                return conversationId;
             } catch (error) {
-                console.error('Unexpected error in getOrCreateConversation:', error);
+                console.error('[CONVERSATION] Failed to get or create conversation:', error);
+                // Kullanıcıya bir hata mesajı gösterilebilir.
+                alert('Sohbet oluşturulurken kritik bir hata meydana geldi. Lütfen tekrar deneyin.');
                 return null;
             }
         },
