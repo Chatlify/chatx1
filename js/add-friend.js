@@ -200,8 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 2000);
 
                 } catch (error) {
+                    // Gönder butonunu eski haline getir
                     const submitButton = addFriendForm.querySelector('.send-request-btn');
-                    submitButton.innerHTML = originalText;
+
+                    // originalText değişkenini tekrar tanımlamak yerine doğrudan içeriği ayarlıyoruz
+                    submitButton.innerHTML = '<span>Arkadaşlık İsteği Gönder</span><i class="fas fa-paper-plane"></i>';
                     submitButton.disabled = false;
 
                     showStatus(error.message || 'İstek gönderilirken bir hata oluştu.', 'error');

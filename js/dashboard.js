@@ -136,30 +136,52 @@ window.sendFriendRequest = async function (username) {
         }
 
         // Zaten arkadaş olup olmadığını kontrol et
-        const { data: existingFriendship, error: friendshipError } = await supabase
+        // İki farklı sorgu yapıp sonuçları birleştireceğiz
+        const { data: existingFriendship1, error: friendshipError1 } = await supabase
             .from('friendships')
             .select('*')
-            .or(`(user_id1.eq.${session.user.id},user_id2.eq.${targetUser.id}),(user_id1.eq.${targetUser.id},user_id2.eq.${session.user.id})`)
+            .eq('user_id1', session.user.id)
+            .eq('user_id2', targetUser.id)
             .eq('status', 'accepted');
 
-        if (friendshipError) {
+        const { data: existingFriendship2, error: friendshipError2 } = await supabase
+            .from('friendships')
+            .select('*')
+            .eq('user_id1', targetUser.id)
+            .eq('user_id2', session.user.id)
+            .eq('status', 'accepted');
+
+        if (friendshipError1 || friendshipError2) {
             throw new Error('Arkadaşlık durumu kontrol edilirken bir hata oluştu.');
         }
+
+        const existingFriendship = [...(existingFriendship1 || []), ...(existingFriendship2 || [])];
 
         if (existingFriendship && existingFriendship.length > 0) {
             throw new Error(`${targetUsername} zaten arkadaş listenizde.`);
         }
 
         // Bekleyen bir istek olup olmadığını kontrol et
-        const { data: pendingRequest, error: pendingError } = await supabase
+        // İki farklı sorgu yapıp sonuçları birleştireceğiz
+        const { data: pendingRequest1, error: pendingError1 } = await supabase
             .from('friendships')
             .select('*')
-            .or(`(user_id1.eq.${session.user.id},user_id2.eq.${targetUser.id}),(user_id1.eq.${targetUser.id},user_id2.eq.${session.user.id})`)
+            .eq('user_id1', session.user.id)
+            .eq('user_id2', targetUser.id)
             .eq('status', 'pending');
 
-        if (pendingError) {
+        const { data: pendingRequest2, error: pendingError2 } = await supabase
+            .from('friendships')
+            .select('*')
+            .eq('user_id1', targetUser.id)
+            .eq('user_id2', session.user.id)
+            .eq('status', 'pending');
+
+        if (pendingError1 || pendingError2) {
             throw new Error('Bekleyen istekler kontrol edilirken bir hata oluştu.');
         }
+
+        const pendingRequest = [...(pendingRequest1 || []), ...(pendingRequest2 || [])];
 
         if (pendingRequest && pendingRequest.length > 0) {
             throw new Error(`${targetUsername} için zaten bekleyen bir arkadaşlık isteği var.`);
