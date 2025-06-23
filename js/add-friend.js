@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             usernameInput.classList.remove('error');
 
-            if (typeof sendFriendRequest === 'function') {
+            if (typeof window.sendFriendRequest === 'function') {
                 try {
                     // Gönder butonunu devre dışı bırak ve yükleniyor göster
                     const submitButton = addFriendForm.querySelector('.send-request-btn');
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     submitButton.disabled = true;
                     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
 
-                    await sendFriendRequest(fullUsername);
+                    await window.sendFriendRequest(fullUsername);
 
                     // Butonu eski haline getir
                     submitButton.innerHTML = originalText;
