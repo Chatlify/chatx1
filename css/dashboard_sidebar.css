@@ -614,3 +614,63 @@
     padding: 3px 6px;
     border-radius: 4px;
 }
+
+/* DM List Item Overhaul */
+.dm-items .dm-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    margin: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dm-items .dm-item:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.dm-item-avatar {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.dm-item-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.dm-item-name {
+    color: var(--text-muted);
+    font-weight: 500;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-items .dm-item:hover .dm-item-name {
+    color: var(--text-color);
+}
+
+.dm-item-avatar .status-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #747f8d;
+    /* Offline status color */
+    border: 3px solid var(--background-secondary);
+}
+
+.dm-item-avatar .status-dot.online {
+    background-color: #23a55a;
+    /* Online status color */
+}

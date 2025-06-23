@@ -387,18 +387,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         renderDirectMessagesList() {
-            const { friends } = state;
+            const { friends, onlineFriends } = state;
             const { dmList } = ui;
-            dmList.innerHTML = '';
+            dmList.innerHTML = ''; // Clear previous list
 
-            const friendsHTML = friends.map(friend => `
-                <li class="dm-item" data-user-id="${friend.id}">
-                    <div class="dm-item-avatar">
-                        <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
-                    </div>
-                    <span class="dm-item-name">${friend.username}</span>
-                </li>
-            `).join('');
+            if (friends.length === 0) {
+                dmList.innerHTML = '<li class="dm-item-empty" style="padding: 10px 15px; color: var(--text-muted);">Sohbet edecek kimse yok.</li>';
+                return;
+            }
+
+            const friendsHTML = friends.map(friend => {
+                const isOnline = onlineFriends.has(friend.id);
+                return `
+                    <li class="dm-item" data-user-id="${friend.id}" title="${friend.username}">
+                        <div class="dm-item-avatar">
+                            <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
+                            <div class="status-dot ${isOnline ? 'online' : ''}"></div>
+                        </div>
+                        <span class="dm-item-name">${friend.username}</span>
+                    </li>
+                `;
+            }).join('');
 
             dmList.innerHTML = friendsHTML;
         },
@@ -524,22 +533,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         // `friendships` tablosundaki tüm değişiklikleri dinle
         supabase.channel('public:friendships')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
-                console.log('Friendship table change detected:', payload);
-                // Değişiklik kiminle ilgili olursa olsun, mevcut kullanıcının listelerini yeniden çek ve render et.
-                // Bu, hem istek gönderenin hem de alanın UI'ını günceller.
+                console.log('Friendship table change detected, refetching all data.', payload);
                 fetchAndRenderAll();
             })
-            .subscribe(status => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('Successfully subscribed to real-time friendship changes!');
-                }
-            });
+            .subscribe();
 
-        // Mevcut online/offline ve broadcast kanallarını kaldırıyoruz.
-        // Onların yerine daha basit ve merkezi bir yapı kurduk.
+        // Real-time presence channel
+        const presenceChannel = supabase.channel('global-presence', {
+            config: {
+                presence: {
+                    key: state.currentUser.id,
+                },
+            },
+        });
 
+        presenceChannel.on('presence', { event: 'sync' }, () => {
+            const newState = presenceChannel.presenceState();
+            const onlineUserIds = Object.keys(newState);
+            state.onlineFriends = new Set(onlineUserIds);
+            console.log('Online users synced:', Array.from(state.onlineFriends));
+            renderer.render();
+            renderer.renderDirectMessagesList();
+        });
+
+        presenceChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('Subscribed to presence channel!');
+                await presenceChannel.track({ online_at: new Date().toISOString() });
+            }
+        });
+
+        // Event Listeners
         ui.tabsContainer.addEventListener('click', handleTabClick);
-        ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction); // Moved listener
+        ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction);
         ui.dmList.addEventListener('click', handleDmItemClick);
     };
 
