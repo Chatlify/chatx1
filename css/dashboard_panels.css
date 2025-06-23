@@ -701,31 +701,26 @@
    Profil Modalı (Yatay Tasarım)
    ================================= */
 .profile-modal-overlay {
-    display: flex;
-    /* İçeriği ortalamak için flex kalmalı */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    /* Arka planı biraz daha koyu yaptım */
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
     justify-content: center;
-    z-index: 1001;
-    backdrop-filter: blur(4px);
+    align-items: center;
+    z-index: 1000;
     opacity: 0;
-    /* Başlangıçta görünmez */
-    pointer-events: none;
-    /* Tıklanamaz */
-    transition: opacity 0.25s ease-in-out;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
 }
 
 .profile-modal-overlay.is-visible {
     opacity: 1;
-    /* Görünür yap */
-    pointer-events: auto;
-    /* Tıklanabilir yap */
+    visibility: visible;
+    pointer-events: all;
 }
 
 .profile-modal-content.horizontal {
@@ -1005,11 +1000,15 @@
     background: linear-gradient(90deg, rgba(88, 101, 242, 0.3), rgba(88, 101, 242, 0.1));
     z-index: 1;
     transition: all 0.3s ease;
+    display: none;
+    /* Banner'ı gizliyoruz */
 }
 
 .friend-card:hover .card-banner {
     height: 40px;
     background: linear-gradient(90deg, rgba(88, 101, 242, 0.4), rgba(88, 101, 242, 0.2));
+    display: none;
+    /* Hover durumunda da gizli kalması için */
 }
 
 .friend-card:hover {
@@ -1178,7 +1177,7 @@
     /* Yeşilimsi renk */
 }
 
-.friend-card .card-action-btn.more-btn:hover {
+.friend-card .card-action-btn.profile-btn:hover {
     background-color: #9b59b6;
     /* Mor renk */
 }

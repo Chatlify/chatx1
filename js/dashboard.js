@@ -488,8 +488,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <button class="card-action-btn call-btn" title="Sesli Arama">
                                 <i class="fas fa-phone-alt"></i>
                             </button>
-                            <button class="card-action-btn more-btn" title="Daha Fazla">
-                                <i class="fas fa-ellipsis-v"></i>
+                            <button class="card-action-btn profile-btn" title="Profil">
+                                <i class="fas fa-user"></i>
                             </button>
                         </div>
                     </div>
@@ -761,21 +761,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     // This function needs to be created to handle clicks on friend cards
     function handleFriendCardAction(e) {
         const messageBtn = e.target.closest('.card-action-btn[title="Mesaj Gönder"]');
+        const callBtn = e.target.closest('.card-action-btn[title="Sesli Arama"]');
+        const profileBtn = e.target.closest('.card-action-btn[title="Profil"]');
+
+        if (!messageBtn && !callBtn && !profileBtn) return;
+
+        const card = e.target.closest('.friend-card');
+        if (!card) return;
+
+        const userId = card.dataset.userId;
+        const friend = state.friends.find(f => f.id === userId);
+        if (!friend) return;
+
         if (messageBtn) {
-            const card = e.target.closest('.friend-card');
-            const userId = card.dataset.userId;
-            // This is a simplified version of handleDmItemClick's logic
-            const friend = state.friends.find(f => f.id === userId);
-            if (friend) {
-                supabaseService.getOrCreateConversation(state.currentUser.id, userId)
-                    .then(conversationId => {
-                        if (conversationId) {
-                            renderer.showChatPanel(friend, conversationId);
-                        }
-                    });
-            }
+            // Mesaj gönderme işlevi
+            supabaseService.getOrCreateConversation(state.currentUser.id, userId)
+                .then(conversationId => {
+                    if (conversationId) {
+                        renderer.showChatPanel(friend, conversationId);
+                    }
+                });
         }
-        // Add logic for the "More" button here if needed
+        else if (profileBtn) {
+            // Profil modalını aç
+            showProfileModal(friend);
+        }
+        else if (callBtn) {
+            // Sesli arama işlevi (gelecekte eklenebilir)
+            alert('Sesli arama özelliği yakında eklenecek!');
+        }
+    }
+
+    // Profil modal'ını gösterir
+    function showProfileModal(user) {
+        // UI elementlerini seç
+        const modal = document.getElementById('profile-modal-container');
+        const closeBtn = modal.querySelector('.profile-modal-close-btn');
+        const avatar = modal.querySelector('.profile-modal-avatar img');
+        const username = modal.querySelector('.username');
+        const statusText = modal.querySelector('.status-text');
+        const statusDot = modal.querySelector('.status-dot-modal');
+        const bio = modal.querySelector('.bio');
+        const memberSince = modal.querySelector('.member-since');
+        const messageBtn = modal.querySelector('.btn-primary');
+
+        // Kullanıcı bilgilerini doldur
+        avatar.src = user.avatar_url || 'images/defaultavatar.png';
+        username.textContent = user.username;
+
+        const isOnline = state.onlineFriends.has(user.id);
+        statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+
+        // Online/offline durum sınıfını güncelle
+        statusDot.className = 'status-dot-modal';
+        if (isOnline) statusDot.classList.add('online');
+        else statusDot.classList.add('offline');
+
+        // Modalı göster
+        modal.classList.add('is-visible');
+
+        // Mesaj gönder butonuna tıklama işlevi ekle
+        messageBtn.onclick = () => {
+            modal.classList.remove('is-visible');
+            supabaseService.getOrCreateConversation(state.currentUser.id, user.id)
+                .then(conversationId => {
+                    if (conversationId) {
+                        renderer.showChatPanel(user, conversationId);
+                    }
+                });
+        };
+
+        // Kapat butonuna tıklama işlevi ekle
+        closeBtn.onclick = () => {
+            modal.classList.remove('is-visible');
+        };
+
+        // Modal dışına tıklandığında modalı kapat
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('is-visible');
+            }
+        };
     }
 
     // --- DYNAMIC COMPONENT LOADER ---
