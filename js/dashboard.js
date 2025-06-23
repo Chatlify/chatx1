@@ -631,6 +631,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
+        // Arkadaş ekle butonu için olay dinleyicisi ekle
+        const addFriendButton = document.getElementById('add-friend-button');
+        if (addFriendButton) {
+            addFriendButton.addEventListener('click', () => {
+                // Arkadaş ekleme modalını aç
+                const modalContainer = document.getElementById('add-friend-modal');
+                if (modalContainer) {
+                    document.body.style.overflow = 'hidden';
+                    modalContainer.style.display = 'flex';
+                    setTimeout(() => {
+                        modalContainer.classList.add('active');
+                    }, 10);
+                } else {
+                    console.error('Arkadaş ekleme modalı bulunamadı.');
+                }
+            });
+        }
+
         // `friendships` tablosundaki tüm değişiklikleri dinle
         supabase.channel('public:friendships')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
