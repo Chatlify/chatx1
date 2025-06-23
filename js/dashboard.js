@@ -625,14 +625,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Realtime mesajlaşma için subscription oluştur
         setupMessageSubscription(conversationId) {
-            // Önceki aboneliği (varsa) güvenli bir şekilde sonlandır
-            if (state.messageSubscription) {
-                console.log(`[Sub] Unsubscribing from previous channel: ${state.messageSubscription.topic}`);
-                state.messageSubscription.unsubscribe();
-                state.messageSubscription = null;
-            }
-
-            console.log(`[Sub] Setting up new message subscription for conversation: ${conversationId}`);
+            // BU FONKSİYON ARTIK TEMİZLİK YAPMIYOR. Sadece yeni abonelik oluşturmaktan sorumlu.
+            console.log(`[Sub] Setting up NEW message subscription for conversation: ${conversationId}`);
 
             const channel = supabase.channel(`realtime:messages:${conversationId}`);
 
@@ -932,7 +926,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         showChatPanel(friend, conversationId) {
-            console.log(`[CHAT] Showing chat panel for friend: ${friend.username}, conversation: ${conversationId}`);
+            console.log(`[CHAT] Showing chat panel for friend: ${friend.username}`);
+
+            // YENİ VE ÖNEMLİ: Yeni bir sohbet göstermeden önce, eskisini tamamen temizle.
+            cleanupChatState();
 
             const { chatPanel, chatHeaderUser, dashboardContainer } = ui;
 
@@ -1040,42 +1037,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         hideChatPanel() {
-            console.log('[UI] Closing chat panel and resetting state.');
+            console.log('[UI] Hiding chat panel.');
             const { dashboardContainer, chatMessages, chatHeaderUser } = ui;
 
-            // 1. Paneli gizle
             if (dashboardContainer) {
                 dashboardContainer.classList.remove('chat-active');
             }
 
-            // 2. Realtime aboneliğini sonlandır
-            if (state.messageSubscription) {
-                state.messageSubscription.unsubscribe();
-                state.messageSubscription = null;
-            }
+            // Merkezi temizlik fonksiyonunu çağır.
+            cleanupChatState();
 
-            // 3. Sohbetle ilgili tüm state'i temizle
-            state.currentConversationId = null;
-            state.messages = [];
-            state.participants = {};
-
-            // 4. Panel içeriğini bir sonraki açılış için temizle
+            // Panel içeriğini temizle
             if (chatMessages) {
                 chatMessages.innerHTML = '';
             }
             if (chatHeaderUser) {
-                // Başlığı varsayılan durumuna getir
                 chatHeaderUser.innerHTML = `
-                    <div class="chat-avatar">
-                        <img src="images/defaultavatar.png" alt="default">
-                    </div>
+                    <div class="chat-avatar"><img src="images/defaultavatar.png" alt="default"></div>
                     <div class="chat-user-info">
                         <div class="chat-username">Sohbet Seçin</div>
-                        <div class="chat-status"></div>
-                    </div>
-                `;
+                    </div>`;
             }
-            console.log('[UI] Chat panel state has been fully reset.');
         },
 
         // --- HELPER FUNCTIONS ---
@@ -1088,6 +1070,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         },
     };
+
+    /**
+     * Sohbetle ilgili tüm state'i ve realtime kanalını temizler.
+     * Bu, sohbet kapatıldığında veya yeni bir sohbete geçildiğinde çağrılır.
+     */
+    function cleanupChatState() {
+        console.log('[CLEANUP] Cleaning up chat state and channel.');
+        if (state.messageSubscription) {
+            console.log(`[CLEANUP] Removing channel: ${state.messageSubscription.topic}`);
+            // Kanaldan sadece çıkmak yetmez, Supabase client'tan tamamen kaldırmak en güvenlisidir.
+            supabase.removeChannel(state.messageSubscription)
+                .then(status => console.log(`[CLEANUP] Channel removal status: ${status}`));
+            state.messageSubscription = null;
+        }
+
+        // State'i sıfırla
+        state.currentConversationId = null;
+        state.messages = [];
+        state.participants = {};
+        console.log('[CLEANUP] State has been reset.');
+    }
 
     // --- 5. EVENT HANDLERS ---
     const handleTabClick = (e) => {
