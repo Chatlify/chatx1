@@ -279,6 +279,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             return { success: true };
         },
 
+        async getOrCreateConversation(userId1, userId2) {
+            const { data, error } = await supabase.rpc('get_or_create_conversation', {
+                user_id_1: userId1,
+                user_id_2: userId2
+            });
+            if (error) {
+                console.error('Error getting or creating conversation:', error);
+                return null;
+            }
+            return data;
+        },
+
         async sendFriendRequestByUsername(username) {
             // ... (code for sending friend request)
         },
@@ -372,7 +384,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             userFooterName.textContent = profile.username || 'Kullanıcı';
             userFooterAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
-        }
+        },
+
+        renderDirectMessagesList() {
+            const { friends } = state;
+            const { dmList } = ui;
+            dmList.innerHTML = '';
+
+            const friendsHTML = friends.map(friend => `
+                <li class="dm-item" data-user-id="${friend.id}">
+                    <div class="dm-item-avatar">
+                        <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
+                    </div>
+                    <span class="dm-item-name">${friend.username}</span>
+                </li>
+            `).join('');
+
+            dmList.innerHTML = friendsHTML;
+        },
+
+        showChatPanel(friend, conversationId) {
+            const { chatPanel, friendsPanelContainer, chatHeaderUser, chatMessages } = ui;
+
+            // Update header
+            chatHeaderUser.querySelector('.chat-username').textContent = friend.username;
+            chatHeaderUser.querySelector('.chat-avatar img').src = friend.avatar_url || 'images/defaultavatar.png';
+
+            // Store state
+            state.currentConversationId = conversationId;
+
+            // Clear messages and show prompt
+            chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
+
+            // Toggle panels
+            friendsPanelContainer.style.display = 'none';
+            chatPanel.classList.remove('hidden');
+            chatPanel.style.display = 'flex';
+        },
     };
 
     // --- 5. EVENT HANDLERS ---
@@ -383,6 +431,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.activeFriendsTab = tab.dataset.tab;
         renderer.render();
     };
+
+    async function handleDmItemClick(e) {
+        const dmItem = e.target.closest('.dm-item');
+        if (!dmItem) return;
+
+        const targetUserId = dmItem.dataset.userId;
+        if (!targetUserId || targetUserId === state.currentUser.id) return;
+
+        const friend = state.friends.find(f => f.id === targetUserId);
+        if (!friend) return;
+
+        const conversationId = await supabaseService.getOrCreateConversation(state.currentUser.id, targetUserId);
+
+        if (conversationId) {
+            renderer.showChatPanel(friend, conversationId);
+        } else {
+            alert('Sohbet başlatılırken bir hata oluştu.');
+        }
+    }
 
     const handlePendingRequestAction = async (e) => {
         const acceptBtn = e.target.closest('.accept-btn');
@@ -440,6 +507,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.pendingRequests = pendingRequests;
 
         renderer.render(); // Call the main render function
+        renderer.renderDirectMessagesList(); // Render the DMs list in the left sidebar
     }
 
     const init = async () => {
@@ -472,6 +540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         ui.tabsContainer.addEventListener('click', handleTabClick);
         ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction); // Moved listener
+        ui.dmList.addEventListener('click', handleDmItemClick);
     };
 
     init();
