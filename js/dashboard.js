@@ -248,7 +248,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         offlineFriendsList: document.querySelector('.offline-friends'),
         onlineCount: document.querySelector('.online-count'),
         offlineCount: document.querySelector('.offline-count'),
-        chatPanel: document.querySelector('.chat-panel-container'), // Chat panel container
+
+        // Main Content & Chat Panel
+        mainContent: document.querySelector('.main-content'),
+        chatPanel: document.querySelector('.main-content .chat-panel'),
+
         onlineSectionTitle: document.querySelector('.online-section-title'),
         offlineSectionTitle: document.querySelector('.offline-section-title'),
         pendingRequestsList: document.querySelector('.pending-requests-list'),
@@ -268,7 +272,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         addServerButton: document.querySelector('.sidebar-item.add-server'),
 
         // Chat Panel
-        chatPanel: document.querySelector('.chat-panel'),
         chatActionBtn: document.querySelector('.chat-action-btn'),
         chatProfileBtn: document.querySelector('.chat-action-btn.profile-btn'),
         chatHeaderUser: document.querySelector('.chat-panel .chat-header-user'),
