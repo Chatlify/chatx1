@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         offlineFriendsList: document.querySelector('.offline-friends'),
         onlineCount: document.querySelector('.online-count'),
         offlineCount: document.querySelector('.offline-count'),
+        chatPanel: document.querySelector('.chat-panel-container'), // Chat panel container
         onlineSectionTitle: document.querySelector('.online-section-title'),
         offlineSectionTitle: document.querySelector('.offline-section-title'),
         pendingRequestsList: document.querySelector('.pending-requests-list'),
@@ -262,8 +263,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         dmSidebar: document.querySelector('.direct-messages'),
 
         // Sidebar Butonları
-        settingsButton: document.querySelector('.sidebar-item.settings'),
-        shopButton: document.querySelector('.sidebar-item.shop'),
+        settingsButton: document.querySelector('.sidebar-item[aria-label="Settings"]'),
+        shopButton: document.querySelector('.sidebar-item[aria-label="Shop"]'),
         addServerButton: document.querySelector('.sidebar-item.add-server'),
 
         // Chat Panel
@@ -541,22 +542,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         showChatPanel(friend, conversationId) {
-            const { chatPanel, friendsPanelContainer, chatHeaderUser, chatMessages } = ui;
+            if (!ui.chatPanel) {
+                console.error("Chat panel container not found!");
+                return;
+            }
+            state.currentConversationId = conversationId; // Store the conversation ID
 
-            // Update header
-            chatHeaderUser.querySelector('.chat-username').textContent = friend.username;
-            chatHeaderUser.querySelector('.chat-avatar img').src = friend.avatar_url || 'images/defaultavatar.png';
+            // TODO: Render the chat panel content with friend's info
+            console.log(`Showing chat for ${friend.username} (Conv ID: ${conversationId})`);
 
-            // Store state
-            state.currentConversationId = conversationId;
-
-            // Clear messages and show prompt
-            chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
-
-            // Toggle panels
-            friendsPanelContainer.style.display = 'none';
-            chatPanel.classList.remove('hidden');
-            chatPanel.style.display = 'flex';
+            ui.friendsPanel.style.display = 'none'; // Hide friends list
+            ui.sponsorServersContainer.style.display = 'none';
+            ui.chatPanel.style.display = 'flex'; // Show chat panel
         },
     };
 
@@ -648,64 +645,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const init = async () => {
-        state.currentUser = await supabaseService.getUserSession();
-        if (!state.currentUser) return;
+        try {
+            await fetchAndRenderAll();
 
-        // Mevcut kullanıcının profilini çek ve footer'ı render et
-        const userProfile = await supabaseService.getUserProfile(state.currentUser.id);
-        renderer.renderUserFooter(userProfile);
+            // Setup Event Listeners
+            ui.friendsListContainer.addEventListener('click', handleDmItemClick);
+            document.querySelector('.friends-tabs').addEventListener('click', handleTabClick);
+            document.querySelector('.pending-requests-container').addEventListener('click', handlePendingRequestAction);
+            document.getElementById('add-friend-btn').addEventListener('click', () => actions.loadComponent('add-friend'));
 
-        // Sayfa ilk yüklendiğinde tüm verileri çek ve render et
-        await fetchAndRenderAll();
-
-        // Sidebar toggle butonu için olay dinleyicisi ekle
-        if (ui.sidebarToggleButton) {
-            ui.sidebarToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('sidebar-closed');
-                ui.serverSidebar.classList.toggle('sidebar-collapsed');
-            });
-        }
-
-        // Arkadaş ekle butonu için olay dinleyicisi add-friend.js dosyasında tanımlanacak
-        // Bu nedenle burada özel bir şey yapmamıza gerek yok
-
-        // `friendships` tablosundaki tüm değişiklikleri dinle
-        supabase.channel('public:friendships')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
-                console.log('Friendship table change detected, refetching all data.', payload);
-                fetchAndRenderAll();
-            })
-            .subscribe();
-
-        // Real-time presence channel
-        const presenceChannel = supabase.channel('global-presence', {
-            config: {
-                presence: {
-                    key: state.currentUser.id,
-                },
-            },
-        });
-
-        presenceChannel.on('presence', { event: 'sync' }, () => {
-            const newState = presenceChannel.presenceState();
-            const onlineUserIds = Object.keys(newState);
-            state.onlineFriends = new Set(onlineUserIds);
-            console.log('Online users synced:', Array.from(state.onlineFriends));
-            renderer.render();
-            renderer.renderDirectMessagesList();
-        });
-
-        presenceChannel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                console.log('Subscribed to presence channel!');
-                await presenceChannel.track({ online_at: new Date().toISOString() });
+            // Add navigation for sidebar buttons
+            if (ui.settingsButton) {
+                ui.settingsButton.addEventListener('click', () => {
+                    window.location.href = '/settings.html';
+                });
             }
-        });
+            if (ui.shopButton) {
+                ui.shopButton.addEventListener('click', () => {
+                    window.location.href = '/shop.html';
+                });
+            }
 
-        // Event Listeners
-        ui.tabsContainer.addEventListener('click', handleTabClick);
-        ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction);
-        ui.dmList.addEventListener('click', handleDmItemClick);
+            // Sidebar toggle butonu için olay dinleyicisi ekle
+            if (ui.sidebarToggleButton) {
+                ui.sidebarToggleButton.addEventListener('click', () => {
+                    document.body.classList.toggle('sidebar-closed');
+                    ui.serverSidebar.classList.toggle('sidebar-collapsed');
+                });
+            }
+
+            // Real-time presence tracking
+            if (state.currentUser) {
+                const presenceChannel = supabase.channel(`user-presence:${state.currentUser.id}`, {
+                    config: {
+                        presence: {
+                            key: state.currentUser.id,
+                        },
+                    },
+                });
+
+                presenceChannel.on('presence', { event: 'sync' }, () => {
+                    const newState = presenceChannel.presenceState();
+                    const onlineUserIds = Object.keys(newState);
+                    state.onlineFriends = new Set(onlineUserIds);
+                    console.log('Online users synced:', Array.from(state.onlineFriends));
+                    renderer.render();
+                    renderer.renderDirectMessagesList();
+                });
+
+                presenceChannel.subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('Subscribed to presence channel!');
+                        await presenceChannel.track({ online_at: new Date().toISOString() });
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Initialization error:', error);
+        }
     };
 
     // --- DYNAMIC COMPONENT LOADER ---
