@@ -1040,17 +1040,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         hideChatPanel() {
-            const { dashboardContainer } = ui;
+            console.log('[UI] Closing chat panel and resetting state.');
+            const { dashboardContainer, chatMessages, chatHeaderUser } = ui;
+
+            // 1. Paneli gizle
             if (dashboardContainer) {
                 dashboardContainer.classList.remove('chat-active');
             }
-            state.currentConversationId = null;
 
-            // Unsubscribe from the message channel
+            // 2. Realtime aboneliğini sonlandır
             if (state.messageSubscription) {
-                state.messageSubscription();
+                state.messageSubscription.unsubscribe();
                 state.messageSubscription = null;
             }
+
+            // 3. Sohbetle ilgili tüm state'i temizle
+            state.currentConversationId = null;
+            state.messages = [];
+            state.participants = {};
+
+            // 4. Panel içeriğini bir sonraki açılış için temizle
+            if (chatMessages) {
+                chatMessages.innerHTML = '';
+            }
+            if (chatHeaderUser) {
+                // Başlığı varsayılan durumuna getir
+                chatHeaderUser.innerHTML = `
+                    <div class="chat-avatar">
+                        <img src="images/defaultavatar.png" alt="default">
+                    </div>
+                    <div class="chat-user-info">
+                        <div class="chat-username">Sohbet Seçin</div>
+                        <div class="chat-status"></div>
+                    </div>
+                `;
+            }
+            console.log('[UI] Chat panel state has been fully reset.');
         },
 
         // --- HELPER FUNCTIONS ---
