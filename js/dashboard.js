@@ -284,10 +284,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 4. UI RENDERER ---
     const renderer = {
         renderFriendsList() {
-            // ...
+            const { friends, onlineFriends } = state;
+            const { onlineFriendsList, offlineFriendsList, onlineCount, offlineCount } = ui;
+
+            onlineFriendsList.innerHTML = '';
+            offlineFriendsList.innerHTML = '';
+
+            const online = friends.filter(f => onlineFriends.has(f.id));
+            const offline = friends.filter(f => !onlineFriends.has(f.id));
+
+            onlineCount.textContent = online.length;
+            offlineCount.textContent = offline.length;
+
+            const createFriendHTML = (friend) => `
+                <li class="dm-item" data-user-id="${friend.id}">
+                    <div class="dm-item-avatar">
+                        <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
+                        <div class="status-dot online"></div>
+                    </div>
+                    <span class="dm-item-name">${friend.username}</span>
+                </li>`;
+
+            online.forEach(friend => onlineFriendsList.innerHTML += createFriendHTML(friend));
+            offline.forEach(friend => offlineFriendsList.innerHTML += createFriendHTML(friend));
         },
         renderPendingRequests() {
-            // ...
+            const { pendingRequests } = state;
+            const { pendingRequestsList, pendingCount, pendingSectionTitle } = ui;
+
+            pendingRequestsList.innerHTML = '';
+            pendingCount.textContent = pendingRequests.length;
+
+            if (pendingRequests.length > 0) {
+                pendingSectionTitle.style.display = 'block';
+            } else {
+                pendingSectionTitle.style.display = 'none';
+            }
+
+            const createRequestHTML = (request) => `
+                <div class="friend-request-item" data-request-id="${request.id}">
+                    <div class="request-info">
+                        <img src="${request.avatarUrl || 'images/defaultavatar.png'}" alt="${request.username}'s avatar">
+                        <span>${request.username}</span>
+                    </div>
+                    <div class="request-actions">
+                        <button class="accept-btn"><i class="fas fa-check"></i></button>
+                        <button class="reject-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>`;
+
+            pendingRequests.forEach(req => pendingRequestsList.innerHTML += createRequestHTML(req));
         },
     };
 
