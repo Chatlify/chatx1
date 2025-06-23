@@ -184,10 +184,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log("Arkadaşlık isteği verileri:", request);
 
                 // İsteği kabul et
-                const { error: updateError } = await supabase
+                const { data: updatedRequest, error: updateError } = await supabase
                     .from('friendships')
-                    .update({ status: 'accepted', updated_at: new Date().toISOString() })
-                    .eq('id', requestId);
+                    .update({
+                        status: 'accepted',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', requestId)
+                    .select()
+                    .single();
 
                 if (updateError) {
                     console.error('Error accepting friend request:', updateError);
@@ -209,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return {
                     success: true,
                     message: 'Arkadaşlık isteği kabul edildi!',
-                    requestData: request
+                    requestData: updatedRequest || request
                 };
             } catch (error) {
                 console.error('Unexpected error accepting friend request:', error);
@@ -228,18 +233,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const receiverChannel = `friendship_updates_${data.user_id_2}`;
 
                 // Her iki kanala da güncelleme gönder
-                await supabase.channel('any').send({
+                await supabase.channel(senderChannel).send({
                     type: 'broadcast',
                     event: 'friendship_update',
                     payload: data,
-                    channel: senderChannel
                 });
 
-                await supabase.channel('any').send({
+                await supabase.channel(receiverChannel).send({
                     type: 'broadcast',
                     event: 'friendship_update',
                     payload: data,
-                    channel: receiverChannel
                 });
 
                 console.log("Arkadaşlık güncellemesi yayınlandı");
@@ -376,92 +379,127 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderFriendsList() {
             console.log("Arkadaş listesi render ediliyor...", state.friends);
 
-            if (!ui.onlineFriendsList || !ui.offlineFriendsList || !ui.dmList) {
-                console.error("Arkadaş listesi UI elemanları bulunamadı!");
-                return;
-            }
-
-            ui.onlineFriendsList.innerHTML = '';
-            ui.offlineFriendsList.innerHTML = '';
-            ui.dmList.innerHTML = '';
-
-            let onlineCount = 0;
-            let offlineCount = 0;
-
+            // Arkadaş listesi boşsa
             if (!state.friends || state.friends.length === 0) {
-                console.log("Arkadaş listesi boş!");
-                ui.onlineSectionTitle.style.display = 'none';
-                ui.offlineSectionTitle.style.display = 'none';
+                if (ui.onlineFriendsList) ui.onlineFriendsList.innerHTML = '';
+                if (ui.offlineFriendsList) ui.offlineFriendsList.innerHTML = '';
+                if (ui.onlineCount) ui.onlineCount.textContent = '0';
+                if (ui.offlineCount) ui.offlineCount.textContent = '0';
+                if (ui.onlineSectionTitle) ui.onlineSectionTitle.style.display = 'none';
+                if (ui.offlineSectionTitle) ui.offlineSectionTitle.style.display = 'none';
+
+                // DM listesini de temizle
+                if (ui.dmList) ui.dmList.innerHTML = '';
                 return;
             }
 
-            state.friends.forEach(friend => {
-                if (!friend || !friend.id) {
-                    console.error("Geçersiz arkadaş verisi:", friend);
-                    return;
-                }
+            // Çevrimiçi ve çevrimdışı arkadaşları ayır
+            const onlineFriends = state.friends.filter(friend => state.onlineFriends.has(friend.id));
+            const offlineFriends = state.friends.filter(friend => !state.onlineFriends.has(friend.id));
 
-                console.log("Arkadaş render ediliyor:", friend);
-                const isOnline = state.onlineFriends.has(friend.id);
-                const friendRow = this.createFriendRow(friend, isOnline);
-                const dmRow = this.createDMRow(friend, isOnline);
+            // Çevrimiçi arkadaşlar bölümünü güncelle
+            if (ui.onlineFriendsList) {
+                ui.onlineFriendsList.innerHTML = '';
+                onlineFriends.forEach(friend => {
+                    console.log("Arkadaş render ediliyor:", friend);
+                    const friendEl = document.createElement('div');
+                    friendEl.className = 'friend-item';
+                    friendEl.dataset.userId = friend.id;
+                    friendEl.innerHTML = `
+                        <div class="friend-info">
+                            <div class="friend-avatar">
+                                <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}" onerror="this.src='images/defaultavatar.png';">
+                                <div class="friend-status online"></div>
+                            </div>
+                            <div class="friend-details">
+                                <div class="friend-name">${friend.username}</div>
+                                <div class="friend-status-text">Çevrimiçi</div>
+                            </div>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="btn message-btn" title="Mesaj Gönder"><i class="fas fa-comment"></i></button>
+                            <button class="btn profile-btn" title="Profili Görüntüle"><i class="fas fa-user"></i></button>
+                        </div>`;
+                    ui.onlineFriendsList.appendChild(friendEl);
+                });
+            }
 
-                if (isOnline) {
-                    ui.onlineFriendsList.appendChild(friendRow);
-                    onlineCount++;
-                } else {
-                    ui.offlineFriendsList.appendChild(friendRow);
-                    offlineCount++;
-                }
-                ui.dmList.appendChild(dmRow);
-            });
+            // Çevrimdışı arkadaşlar bölümünü güncelle
+            if (ui.offlineFriendsList) {
+                ui.offlineFriendsList.innerHTML = '';
+                offlineFriends.forEach(friend => {
+                    console.log("Arkadaş render ediliyor:", friend);
+                    const friendEl = document.createElement('div');
+                    friendEl.className = 'friend-item';
+                    friendEl.dataset.userId = friend.id;
+                    friendEl.innerHTML = `
+                        <div class="friend-info">
+                            <div class="friend-avatar">
+                                <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}" onerror="this.src='images/defaultavatar.png';">
+                                <div class="friend-status offline"></div>
+                            </div>
+                            <div class="friend-details">
+                                <div class="friend-name">${friend.username}</div>
+                                <div class="friend-status-text">Çevrimdışı</div>
+                            </div>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="btn message-btn" title="Mesaj Gönder"><i class="fas fa-comment"></i></button>
+                            <button class="btn profile-btn" title="Profili Görüntüle"><i class="fas fa-user"></i></button>
+                        </div>`;
+                    ui.offlineFriendsList.appendChild(friendEl);
+                });
+            }
 
-            ui.onlineCount.textContent = onlineCount;
-            ui.offlineCount.textContent = offlineCount;
-            ui.onlineSectionTitle.style.display = onlineCount > 0 ? 'flex' : 'none';
-            ui.offlineSectionTitle.style.display = offlineCount > 0 ? 'flex' : 'none';
+            // Sayıları güncelle
+            if (ui.onlineCount) ui.onlineCount.textContent = onlineFriends.length;
+            if (ui.offlineCount) ui.offlineCount.textContent = offlineFriends.length;
 
-            console.log(`Arkadaş listesi güncellendi: ${onlineCount} çevrimiçi, ${offlineCount} çevrimdışı`);
+            // Bölüm başlıklarını göster/gizle
+            if (ui.onlineSectionTitle) {
+                ui.onlineSectionTitle.style.display = onlineFriends.length > 0 ? 'flex' : 'none';
+            }
+            if (ui.offlineSectionTitle) {
+                ui.offlineSectionTitle.style.display = offlineFriends.length > 0 ? 'flex' : 'none';
+            }
+
+            // DM listesini güncelle
+            this.updateDMList();
+
+            console.log("Arkadaş listesi güncellendi:", onlineFriends.length, "çevrimiçi,", offlineFriends.length, "çevrimdışı");
         },
 
         async renderPendingRequests() {
-            if (!ui.pendingRequestsList) {
-                console.error('Bekleyen istekler listesi bulunamadı!');
-                return;
-            }
-
             console.log("Bekleyen istekler yenileniyor...");
-            ui.pendingRequestsList.innerHTML = '';
-
             try {
+                if (!state.currentUser) return;
+
+                // Bekleyen istekleri getir
                 const pendingRequests = await supabaseService.getPendingRequests(state.currentUser.id);
-                console.log("Bekleyen istekler:", pendingRequests);
-                state.pendingRequests = pendingRequests;
+                state.pendingRequests = pendingRequests || [];
 
-                if (pendingRequests.length === 0) {
-                    if (ui.pendingSectionTitle) {
-                        ui.pendingSectionTitle.style.display = 'none';
+                // UI'ı güncelle
+                if (ui.pendingRequestsList) {
+                    console.log("Bekleyen istekler:", pendingRequests);
+                    ui.pendingRequestsList.innerHTML = '';
+
+                    pendingRequests.forEach(request => {
+                        const requestEl = this.createPendingRequestRow(request);
+                        ui.pendingRequestsList.appendChild(requestEl);
+                    });
+
+                    // Bekleyen isteklerin sayısını güncelle
+                    if (ui.pendingCount) {
+                        ui.pendingCount.textContent = pendingRequests.length;
                     }
-                    return;
+
+                    // Bekleyen istekler bölümünü göster/gizle
+                    if (ui.pendingSectionTitle) {
+                        ui.pendingSectionTitle.style.display = pendingRequests.length > 0 ? 'block' : 'none';
+                    }
                 }
-
-                if (ui.pendingSectionTitle) {
-                    ui.pendingSectionTitle.style.display = 'flex';
-                }
-
-                if (ui.pendingCount) {
-                    ui.pendingCount.textContent = pendingRequests.length;
-                }
-
-                pendingRequests.forEach(request => {
-                    const requestEl = this.createPendingRequestRow(request);
-                    ui.pendingRequestsList.appendChild(requestEl);
-                });
-
-                // Bekleyen isteklerin görünür olduğundan emin ol
-                ui.pendingRequestsList.style.display = 'block';
             } catch (error) {
-                console.error("Bekleyen istekler yüklenirken hata:", error);
+                console.error("Bekleyen istekler güncellenirken hata:", error);
             }
         },
 
@@ -483,7 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             el.innerHTML = `
                 <div class="friend-info">
                     <div class="friend-avatar">
-                        <img src="${request.avatarUrl || 'images/defaultavatar.png'}" alt="${request.username}">
+                        <img src="${request.avatarUrl || 'images/defaultavatar.png'}" alt="${request.username}" onerror="this.src='images/defaultavatar.png';">
                     </div>
                     <div class="friend-details">
                         <div class="friend-name">${request.username}</div>
@@ -515,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
         </div>
                 <div class="friend-actions">
-                    <button class="btn message-btn" title="Mesaj Gönder"><i class="fas fa-comment-alt"></i></button>
+                    <button class="btn message-btn" title="Mesaj Gönder"><i class="fas fa-comment"></i></button>
                     <button class="btn profile-btn" title="Profili Görüntüle"><i class="fas fa-user"></i></button>
                     <button class="btn more-btn" title="Daha Fazla"><i class="fas fa-ellipsis-v"></i></button>
                 </div>`;
@@ -707,6 +745,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUserFooter(profile) {
             ui.userFooterName.textContent = profile.username;
             ui.userFooterAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
+        },
+        updateDMList() {
+            if (!ui.dmList || !state.friends) return;
+
+            console.log("DM listesi güncelleniyor...");
+            ui.dmList.innerHTML = '';
+
+            state.friends.forEach(friend => {
+                const isOnline = state.onlineFriends.has(friend.id);
+                const dmItem = document.createElement('div');
+                dmItem.className = 'dm-item';
+                dmItem.dataset.userId = friend.id;
+                dmItem.innerHTML = `
+                    <div class="dm-avatar">
+                        <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}" onerror="this.src='images/defaultavatar.png';">
+                        <div class="dm-status ${isOnline ? 'online' : 'offline'}"></div>
+                    </div>
+                    <div class="dm-info">
+                        <div class="dm-name">${friend.username}</div>
+                    </div>`;
+
+                ui.dmList.appendChild(dmItem);
+            });
+
+            console.log("DM listesi güncellendi");
         }
     };
 
@@ -877,26 +940,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Arkadaşı listeye ekle
                         if (!state.friends.some(f => f.id === senderProfile.id)) {
                             state.friends.push(senderProfile);
-                            // Arkadaş listesini yeniden render et
+                            // Arkadaş listesini ve DM listesini yeniden render et
                             renderer.renderFriendsList();
-
-                            // DM listesini güncelle
-                            const dmItem = document.createElement('div');
-                            dmItem.className = 'dm-item';
-                            dmItem.dataset.userId = senderProfile.id;
-                            dmItem.innerHTML = `
-                                <div class="dm-avatar">
-                                    <img src="${senderProfile.avatar_url || 'images/defaultavatar.png'}" alt="${senderProfile.username}">
-                                    <div class="dm-status offline"></div>
-                                </div>
-                                <div class="dm-info">
-                                    <div class="dm-name">${senderProfile.username}</div>
-                                </div>`;
-
-                            if (ui.dmList) {
-                                ui.dmList.appendChild(dmItem);
-                                console.log("DM öğesi eklendi:", dmItem);
-                            }
                         }
                     }
 
@@ -905,7 +950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         requestItem.remove();
 
                         // Bekleyen istekler listesini güncelle
-                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== requestId);
+                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== parseInt(requestId));
 
                         // Bekleyen isteklerin sayısını güncelle
                         if (ui.pendingCount) {
@@ -921,12 +966,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Kabul edilen kullanıcıyla sohbet başlatma seçeneği sun
                         showFriendAcceptedNotification(userId);
                     }, 500);
-
-                    // Sayfayı yenilemeden önce biraz bekle
-                    setTimeout(() => {
-                        // Sayfayı yenile (son çare olarak)
-                        // window.location.reload();
-                    }, 2000);
                 } else {
                     console.error("Arkadaşlık isteği kabul edilemedi:", result);
                     acceptBtn.disabled = false;
@@ -976,61 +1015,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    const showFriendAcceptedNotification = (userId) => {
+    const showFriendAcceptedNotification = async (userId) => {
         console.log("Arkadaşlık isteği kabul bildirimini gösteriliyor, userId:", userId);
+        try {
+            // Kullanıcı profilini al
+            const friendProfile = await supabaseService.getUserProfile(userId);
+            if (!friendProfile) return;
 
-        // Arkadaşlık isteği kabul edildikten sonra sohbet başlatma seçeneği sunma
-        const notification = document.createElement('div');
-        notification.className = 'friend-accepted-notification';
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas fa-user-check"></i>
-                <span>Arkadaşlık isteği kabul edildi!</span>
-            </div>
-            <div class="notification-actions">
-                <button class="start-chat-btn" data-user-id="${userId}">
-                    <i class="fas fa-comment"></i>
-                    <span>Sohbet Başlat</span>
-                </button>
-            </div>
-        `;
+            // Bildirim oluştur
+            const notification = document.createElement('div');
+            notification.className = 'friend-accepted-notification';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-user-check"></i>
+                    <span>${friendProfile.username} arkadaşlık isteğinizi kabul etti!</span>
+                </div>
+                <div class="notification-actions">
+                    <button class="start-chat-btn" data-user-id="${friendProfile.id}">
+                        <i class="fas fa-comment"></i>
+                        <span>Sohbet Başlat</span>
+                    </button>
+                </div>
+            `;
 
-        document.body.appendChild(notification);
-        console.log("Bildirim DOM'a eklendi");
+            // DOM'a ekle
+            document.body.appendChild(notification);
+            console.log("Bildirim DOM'a eklendi");
 
-        // Animasyon için timeout
-        setTimeout(() => {
-            notification.classList.add('show');
-            console.log("Bildirim gösteriliyor");
-        }, 100);
-
-        // Bildirim kapatma
-        setTimeout(() => {
-            notification.classList.remove('show');
+            // Animasyon için timeout
             setTimeout(() => {
-                notification.remove();
-                console.log("Bildirim kaldırıldı");
-            }, 300);
-        }, 8000);
+                notification.classList.add('show');
+                console.log("Bildirim gösteriliyor");
+            }, 100);
 
-        // Sohbet başlatma butonu olayı
-        const startChatBtn = notification.querySelector('.start-chat-btn');
-        startChatBtn.addEventListener('click', async () => {
-            console.log("Sohbet başlatma butonuna tıklandı, userId:", userId);
-            try {
-                // Sohbet panelini aç
-                await renderer.renderChatPanel(userId);
-
-                // Bildirim kapat
+            // Bildirim kapatma
+            setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
                     notification.remove();
-                    console.log("Bildirim kaldırıldı (sohbet başlatıldı)");
+                    console.log("Bildirim kaldırıldı");
                 }, 300);
-            } catch (error) {
-                console.error('Error starting chat:', error);
-            }
-        });
+            }, 8000);
+
+            // Sohbet başlatma butonu olayı
+            const startChatBtn = notification.querySelector('.start-chat-btn');
+            startChatBtn.addEventListener('click', async () => {
+                try {
+                    // Sohbet panelini aç
+                    await renderer.renderChatPanel(friendProfile.id);
+
+                    // Bildirim kapat
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                } catch (error) {
+                    console.error('Error starting chat:', error);
+                }
+            });
+        } catch (error) {
+            console.error("Bildirim gösterilirken hata:", error);
+        }
     };
 
     const handleFriendAction = async (e) => {
@@ -1283,58 +1328,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Karşı tarafın profil bilgilerini al
                         const friendProfile = await supabaseService.getUserProfile(payload.payload.user_id_2);
                         if (friendProfile) {
-                            // Bildirim göster
-                            const notification = document.createElement('div');
-                            notification.className = 'friend-accepted-notification';
-                            notification.innerHTML = `
-                                <div class="notification-content">
-                                    <i class="fas fa-user-check"></i>
-                                    <span>${friendProfile.username} arkadaşlık isteğinizi kabul etti!</span>
-                                </div>
-                                <div class="notification-actions">
-                                    <button class="start-chat-btn" data-user-id="${friendProfile.id}">
-                                        <i class="fas fa-comment"></i>
-                                        <span>Sohbet Başlat</span>
-                                    </button>
-                                </div>
-                            `;
-
-                            document.body.appendChild(notification);
-
-                            // Animasyon için timeout
-                            setTimeout(() => {
-                                notification.classList.add('show');
-                            }, 100);
-
-                            // Bildirim kapatma
-                            setTimeout(() => {
-                                notification.classList.remove('show');
-                                setTimeout(() => {
-                                    notification.remove();
-                                }, 300);
-                            }, 8000);
-
-                            // Sohbet başlatma butonu olayı
-                            const startChatBtn = notification.querySelector('.start-chat-btn');
-                            startChatBtn.addEventListener('click', async () => {
-                                try {
-                                    // Sohbet panelini aç
-                                    await renderer.renderChatPanel(friendProfile.id);
-
-                                    // Bildirim kapat
-                                    notification.classList.remove('show');
-                                    setTimeout(() => {
-                                        notification.remove();
-                                    }, 300);
-                                } catch (error) {
-                                    console.error('Error starting chat:', error);
-                                }
-                            });
+                            showFriendAcceptedNotification(friendProfile.id);
                         }
                     }
                 }
             })
-            .subscribe();
+            .subscribe((status) => {
+                console.log(`Arkadaşlık güncellemeleri abonelik durumu: ${status}`);
+            });
     };
 
     await init();
