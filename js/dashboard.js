@@ -285,28 +285,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderer = {
         renderFriendsList() {
             const { friends, onlineFriends } = state;
-            const { onlineFriendsList, offlineFriendsList, onlineCount, offlineCount } = ui;
+            const { onlineFriendsList, offlineFriendsList, onlineCount, offlineCount, onlineSectionTitle, offlineSectionTitle } = ui;
 
             onlineFriendsList.innerHTML = '';
             offlineFriendsList.innerHTML = '';
 
+            // Henüz anlık online/offline takip sistemi (presence) eklenmediği için
+            // tüm arkadaşlar çevrimdışı görünecektir. Bu, ileride geliştirilebilir.
             const online = friends.filter(f => onlineFriends.has(f.id));
             const offline = friends.filter(f => !onlineFriends.has(f.id));
 
             onlineCount.textContent = online.length;
             offlineCount.textContent = offline.length;
 
-            const createFriendHTML = (friend) => `
+            // Listenin içeriği varsa başlığı ve listeyi görünür yap
+            onlineSectionTitle.style.display = online.length > 0 ? 'flex' : 'none';
+            offlineSectionTitle.style.display = offline.length > 0 ? 'flex' : 'none';
+
+            const createFriendHTML = (friend, isOnline) => `
                 <li class="dm-item" data-user-id="${friend.id}">
                     <div class="dm-item-avatar">
                         <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
-                        <div class="status-dot online"></div>
+                        <div class="status-dot ${isOnline ? 'online' : ''}"></div>
                     </div>
                     <span class="dm-item-name">${friend.username}</span>
                 </li>`;
 
-            online.forEach(friend => onlineFriendsList.innerHTML += createFriendHTML(friend));
-            offline.forEach(friend => offlineFriendsList.innerHTML += createFriendHTML(friend));
+            online.forEach(friend => onlineFriendsList.innerHTML += createFriendHTML(friend, true));
+            offline.forEach(friend => offlineFriendsList.innerHTML += createFriendHTML(friend, false));
         },
         renderPendingRequests() {
             const { pendingRequests } = state;
