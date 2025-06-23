@@ -804,40 +804,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         renderMessages(messages) {
-            if (!ui.chatMessages) return;
+            if (!ui.chatMessages) {
+                console.error('Chat messages container not found!');
+                return;
+            }
 
-            if (messages.length === 0) {
+            console.log('Rendering messages:', messages);
+
+            if (!messages || messages.length === 0) {
                 // Bu kısmı showChatPanel'de hallediyoruz, burası sadece render için
                 ui.chatMessages.innerHTML = '';
                 return;
             }
 
-            const messagesHTML = messages.map(msg => {
-                const isOwnMessage = msg.sender_id === state.currentUser.id;
-                const author = isOwnMessage ? 'Sen' : msg.sender.username;
-                const avatarUrl = msg.sender.avatar_url || 'images/defaultavatar.png';
-                const time = new Date(msg.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            try {
+                const messagesHTML = messages.map(msg => {
+                    if (!msg || !msg.sender_id || !msg.content) {
+                        console.warn('Invalid message object:', msg);
+                        return '';
+                    }
 
-                // Gruplama için basitleştirilmiş mantık. Gerçek bir uygulamada daha karmaşık olabilir.
-                return `
-                    <div class="message-group ${isOwnMessage ? 'own-message' : ''}">
-                         ${!isOwnMessage ? `<div class="message-group-avatar"><img src="${avatarUrl}" alt="${author}"></div>` : ''}
-                        <div class="message-group-content">
-                            <div class="message-group-header">
-                                <span class="message-author">${author}</span>
-                                <span class="message-time">${time}</span>
-                            </div>
-                            <div class="message-content">
-                                <p>${msg.content}</p>
+                    const isOwnMessage = msg.sender_id === state.currentUser.id;
+                    const author = isOwnMessage ? 'Sen' : (msg.sender?.username || 'Kullanıcı');
+                    const avatarUrl = msg.sender?.avatar_url || 'images/defaultavatar.png';
+
+                    let time;
+                    try {
+                        time = new Date(msg.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                        console.warn('Error formatting time:', e);
+                        time = '00:00';
+                    }
+
+                    // Gruplama için basitleştirilmiş mantık. Gerçek bir uygulamada daha karmaşık olabilir.
+                    return `
+                        <div class="message-group ${isOwnMessage ? 'own-message' : ''}">
+                            ${!isOwnMessage ? `<div class="message-group-avatar"><img src="${avatarUrl}" alt="${author}"></div>` : ''}
+                            <div class="message-group-content">
+                                <div class="message-group-header">
+                                    <span class="message-author">${author}</span>
+                                    <span class="message-time">${time}</span>
+                                </div>
+                                <div class="message-content">
+                                    <p>${msg.content}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
 
-            ui.chatMessages.innerHTML = messagesHTML;
-            // Scroll to the bottom
-            ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+                ui.chatMessages.innerHTML = messagesHTML;
+                console.log('Messages rendered successfully, HTML length:', messagesHTML.length);
+
+                // Scroll to the bottom
+                ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+            } catch (error) {
+                console.error('Error rendering messages:', error);
+            }
         },
 
         showChatPanel(friend, conversationId) {
@@ -1229,25 +1252,48 @@ document.addEventListener('DOMContentLoaded', async () => {
                 avatar_url: ui.userFooterAvatar.src,
             }
         };
-        state.messages.push(tempMessage);
+
+        console.log('Adding temporary message to UI:', tempMessage);
+
+        // Mevcut mesajlara ekle ve hemen göster
+        state.messages = [...state.messages, tempMessage];
         renderer.renderMessages(state.messages);
 
         ui.chatInput.value = ''; // Clear input
         ui.chatInput.focus();
 
-        const { error } = await supabaseService.sendMessage(
-            state.currentConversationId,
-            state.currentUser.id,
-            content
-        );
+        try {
+            const { data, error } = await supabaseService.sendMessage(
+                state.currentConversationId,
+                state.currentUser.id,
+                content
+            );
 
-        if (error) {
-            console.error('Failed to send message:', error);
-            // Handle error, maybe show a "failed to send" indicator
-            // For simplicity, we'll just log it. A more robust app would update the UI.
-            state.messages = state.messages.filter(m => m.id !== tempMessage.id); // remove optimistic message
+            if (error) {
+                console.error('Failed to send message:', error);
+                // Geçici mesajı kaldır
+                state.messages = state.messages.filter(m => m.id !== tempMessage.id);
+                renderer.renderMessages(state.messages);
+                ui.chatInput.value = content; // Mesajı geri koy
+                alert('Mesaj gönderilemedi: ' + (error.message || 'Bilinmeyen hata'));
+            } else {
+                console.log('Message sent successfully, server response:', data);
+                // Geçici mesajı gerçek mesajla değiştir
+                if (data && data.length > 0) {
+                    const realMessage = data[0];
+                    state.messages = state.messages.map(m =>
+                        m.id === tempMessage.id ? realMessage : m
+                    );
+                    renderer.renderMessages(state.messages);
+                }
+            }
+        } catch (err) {
+            console.error('Unexpected error sending message:', err);
+            // Geçici mesajı kaldır
+            state.messages = state.messages.filter(m => m.id !== tempMessage.id);
             renderer.renderMessages(state.messages);
-            ui.chatInput.value = content; // a
+            ui.chatInput.value = content; // Mesajı geri koy
+            alert('Mesaj gönderilirken beklenmeyen bir hata oluştu.');
         }
     }
 
