@@ -124,18 +124,6 @@
                     <div class="header-right"><button class="add-friend-btn" id="add-friend-button"><i
                                 class="fas fa-user-plus"></i><span>Arkadaş Ekle</span></button></div>
                 </div>
-
-                <!-- Arkadaş Ekle Paneli (Başlangıçta Gizli) -->
-                <div class="add-friend-panel hidden">
-                    <h3>Arkadaş Ekle</h3>
-                    <p>Arkadaşını kullanıcı adıyla ekleyebilirsin.</p>
-                    <div class="add-friend-input-wrapper">
-                        <input type="text" id="add-friend-username" placeholder="Kullanıcı adını girin...">
-                        <button id="send-friend-request-btn">İstek Gönder</button>
-                    </div>
-                    <div class="request-status-message"></div>
-                </div>
-
                 <div class="friends-content-container">
                     <!-- Bu alan, yeni JavaScript render fonksiyonu tarafından doldurulacak -->
                     <!-- Örnek: Arkadaş kartları, bekleyen istekler, yükleniyor animasyonu vb. -->
@@ -160,11 +148,51 @@
                                 class="fas fa-times"></i></button>
                     </div>
                 </div>
-                <div class="chat-messages" id="chat-messages-container">
-                    <!-- Mesajlar buraya JS tarafından dinamik olarak eklenecek -->
-                    <div class="no-messages-placeholder">
-                        <i class="fas fa-comments"></i>
-                        <p>Henüz mesaj yok. Bir sohbet başlatın!</p>
+                <div class="chat-messages">
+                    <div class="message-date-divider"><span>Bugün</span></div>
+
+                    <div class="message-group">
+                        <div class="message-group-avatar"><img
+                                src="https://via.placeholder.com/100/3498db/ffffff?text=A" alt="Ahmet"></div>
+                        <div class="message-group-content">
+                            <div class="message-group-header"><span class="message-author">Ahmet Yılmaz</span><span
+                                    class="message-time">12:34</span></div>
+                            <div class="message-content">
+                                <p>Merhaba! Nasılsın?</p>
+                            </div>
+                            <div class="message-content">
+                                <p>Yeni projemiz hakkında konuşabilir miyiz?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="message-group own-message">
+                        <div class="message-group-content">
+                            <div class="message-group-header"><span class="message-author">Sen</span><span
+                                    class="message-time">12:35</span></div>
+                            <div class="message-content">
+                                <p>İyiyim teşekkürler, sen nasılsın?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="message-group">
+                        <div class="message-group-avatar"><img
+                                src="https://via.placeholder.com/100/3498db/ffffff?text=A" alt="Ahmet"></div>
+                        <div class="message-group-content">
+                            <div class="message-group-header"><span class="message-author">Ahmet Yılmaz</span><span
+                                    class="message-time">12:40</span></div>
+                            <div class="message-content">
+                                <p>Arayüz tasarımını tamamladım, sana göstermek istiyorum.</p>
+                                <div class="message-attachment">
+                                    <div class="attachment-icon"><i class="fas fa-file-image"></i></div>
+                                    <div class="attachment-details">
+                                        <div class="attachment-name">UI_Design.png</div>
+                                        <div class="attachment-size">1.2 MB</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="chat-input-area">
