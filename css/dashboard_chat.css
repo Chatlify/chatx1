@@ -4,17 +4,14 @@
 /* Genel Mesaj Grubu Stilleri (Gelen Mesajlar) */
 .message-group {
     display: flex;
-    align-items: flex-start;
-    margin-bottom: 15px;
-    max-width: 85%;
-    width: fit-content;
+    gap: 16px;
+    align-items: flex-end;
 }
 
 .message-group-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    margin-right: 15px;
     flex-shrink: 0;
 }
 
@@ -28,48 +25,44 @@
 .message-group-content {
     display: flex;
     flex-direction: column;
+    gap: 4px;
+    max-width: 75%;
 }
 
 .message-group-header {
     display: flex;
     align-items: baseline;
-    margin-bottom: 5px;
+    gap: 8px;
 }
 
 .message-author {
     font-weight: 600;
-    font-size: 0.95em;
-    margin-right: 10px;
-    color: #ffffff;
+    font-size: 1rem;
+    color: var(--text-normal);
 }
 
 .message-time {
-    font-size: 0.75em;
-    color: #a0a8b4;
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
 .message-content {
-    background-color: #2f3136;
-    /* Discord's dark theme color */
-    padding: 10px 15px;
+    background-color: var(--background-secondary);
+    padding: 10px 14px;
     border-radius: 12px;
     border-top-left-radius: 0;
-    color: #dcddde;
-    font-size: 0.9em;
     line-height: 1.4;
+    word-wrap: break-word;
 }
 
 .message-content p {
     margin: 0;
+    color: var(--text-normal);
 }
-
 
 /* KULLANICININ KENDİ MESAJLARI (SAĞA HİZALI) */
 .message-group.own-message {
-    margin-left: auto;
-    /* Sağa hizalamak için */
     flex-direction: row-reverse;
-    /* Avatarı sağa almak için */
 }
 
 .message-group.own-message .message-group-avatar {
@@ -79,31 +72,23 @@
 
 .message-group.own-message .message-group-content {
     align-items: flex-end;
-    /* İçeriği (zaman, isim) sağa hizala */
 }
 
 .message-group.own-message .message-content {
-    background-color: #3498db;
-    /* Mavi bir arka plan */
-    color: #ffffff;
-    /* Beyaz metin */
+    background-color: var(--primary-color);
     border-top-left-radius: 12px;
     border-top-right-radius: 0;
-    /* Sağ üst köşeyi sivri yap */
 }
 
-.message-group.own-message .message-author {
-    /* Kendi mesajında yazar adını gizlemek daha temiz bir görünüm sağlar */
-    display: none;
+.message-group.own-message .message-content p {
+    color: #fff;
 }
 
 .chat-panel {
-    display: none;
-    /* Varsayılan olarak gizli, .dashboard-container.chat-active ile açılır */
+    display: flex;
     flex-direction: column;
     height: 100%;
-    width: 100%;
-    background-color: var(--background-secondary-alt);
+    background-color: var(--background-primary);
 }
 
 .chat-header {
@@ -113,15 +98,15 @@
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
-    /* Küçülmesini engelle */
 }
 
 .chat-messages {
     flex: 1 1 auto;
-    /* Esne, büyü, küçül */
     overflow-y: auto;
-    /* Taşan mesajlar için kaydırma çubuğu */
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 .chat-input-area {
@@ -129,13 +114,54 @@
     background-color: var(--background-primary);
     border-top: 1px solid var(--divider-color);
     flex-shrink: 0;
-    /* Küçülmesini engelle */
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-
 .chat-header-user {
     display: flex;
+}
+
+/* Kaydırma çubuğu stilleri (isteğe bağlı, daha modern bir görünüm için) */
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: var(--background-secondary-alt);
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: var(--background-tertiary);
+    border-radius: 4px;
+    border: 2px solid var(--background-secondary-alt);
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background-color: var(--item-hover);
+}
+
+/* Yükleniyor Spinner'ı */
+.loading-messages {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
