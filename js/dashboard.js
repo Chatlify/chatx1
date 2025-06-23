@@ -3,13 +3,14 @@ import { supabase } from './auth_config.js';
 document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 1. STATE MANAGEMENT ---
-        const state = {
+    const state = {
         currentUser: null,
         currentConversationId: null,
         messageSubscription: null, // Holds the current real-time subscription
         friends: [],
         onlineFriends: new Set(),
         presenceChannel: null,
+        pendingRequests: [],
     };
 
     // --- 2. UI ELEMENTS ---
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Chat Panel
         chatPanel: document.querySelector('.chat-panel'),
         chatActionBtn: document.querySelector('.chat-action-btn'),
-        chatProfileBtn: document.querySelector('.chat-action-btn.profile-btn'), 
+        chatProfileBtn: document.querySelector('.chat-action-btn.profile-btn'),
         chatHeaderUser: document.querySelector('.chat-panel .chat-header-user'),
         chatMessages: document.querySelector('.chat-panel .chat-messages'),
         chatInput: document.querySelector('.chat-panel .chat-textbox textarea'),
@@ -81,7 +82,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             input: null,
             statusMessage: null,
             closeBtn: null,
-        }
+        },
+        pendingRequestsList: document.querySelector('.pending-requests-list'),
+        pendingSectionTitle: document.querySelector('.pending-requests-section-title'),
+        pendingCount: document.querySelector('.pending-requests-count'),
     };
 
     // --- 3. SUPABASE SERVICE ---
@@ -111,6 +115,53 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return [];
             }
             return data.map(f => f.user_id_1 === userId ? f.profiles_2 : f.profiles_1);
+        },
+        async getPendingRequests(userId) {
+            // Kullanıcıya gelen arkadaşlık isteklerini getir
+            const { data, error } = await supabase
+                .from('friendships')
+                .select('id, user_id_1, created_at, profiles:user_id_1(id, username, avatar_url)')
+                .eq('user_id_2', userId)
+                .eq('status', 'pending');
+
+            if (error) {
+                console.error('Error fetching pending requests:', error);
+                return [];
+            }
+
+            return data.map(request => ({
+                id: request.id,
+                userId: request.user_id_1,
+                username: request.profiles.username,
+                avatarUrl: request.profiles.avatar_url,
+                createdAt: request.created_at
+            }));
+        },
+        async acceptFriendRequest(requestId) {
+            const { error } = await supabase
+                .from('friendships')
+                .update({ status: 'accepted' })
+                .eq('id', requestId);
+
+            if (error) {
+                console.error('Error accepting friend request:', error);
+                return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+            }
+
+            return { success: true, message: 'Arkadaşlık isteği kabul edildi!' };
+        },
+        async rejectFriendRequest(requestId) {
+            const { error } = await supabase
+                .from('friendships')
+                .delete()
+                .eq('id', requestId);
+
+            if (error) {
+                console.error('Error rejecting friend request:', error);
+                return { success: false, message: 'Arkadaşlık isteği reddedilirken bir hata oluştu.' };
+            }
+
+            return { success: true, message: 'Arkadaşlık isteği reddedildi.' };
         },
         async findOrCreateConversation(userId1, userId2) {
             // Logic from old file to find or create a DM
@@ -251,6 +302,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             ui.onlineSectionTitle.style.display = onlineCount > 0 ? 'flex' : 'none';
             ui.offlineSectionTitle.style.display = offlineCount > 0 ? 'flex' : 'none';
         },
+
+        async renderPendingRequests() {
+            if (!ui.pendingRequestsList) return;
+
+            ui.pendingRequestsList.innerHTML = '';
+
+            const pendingRequests = await supabaseService.getPendingRequests(state.currentUser.id);
+            state.pendingRequests = pendingRequests;
+
+            if (pendingRequests.length === 0) {
+                ui.pendingSectionTitle.style.display = 'none';
+                return;
+            }
+
+            ui.pendingSectionTitle.style.display = 'flex';
+            ui.pendingCount.textContent = pendingRequests.length;
+
+            pendingRequests.forEach(request => {
+                const requestEl = this.createPendingRequestRow(request);
+                ui.pendingRequestsList.appendChild(requestEl);
+            });
+        },
+
+        createPendingRequestRow(request) {
+            const el = document.createElement('div');
+            el.className = 'friend-request-item';
+            el.dataset.requestId = request.id;
+            el.dataset.userId = request.userId;
+
+            // Tarih formatını ayarla
+            const requestDate = new Date(request.createdAt);
+            const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                day: 'numeric',
+                month: 'short'
+            }).format(requestDate);
+
+            el.innerHTML = `
+                <div class="friend-info">
+                    <div class="friend-avatar">
+                        <img src="${request.avatarUrl || 'images/defaultavatar.png'}" alt="${request.username}">
+                    </div>
+                    <div class="friend-details">
+                        <div class="friend-name">${request.username}</div>
+                        <div class="friend-status-text">${formattedDate} tarihinde istek gönderdi</div>
+                    </div>
+                </div>
+                <div class="friend-request-actions">
+                    <button class="btn accept-btn" title="Kabul Et"><i class="fas fa-check"></i></button>
+                    <button class="btn reject-btn" title="Reddet"><i class="fas fa-times"></i></button>
+                </div>`;
+            return el;
+        },
+
         createFriendRow(friend, isOnline) {
             const el = document.createElement('div');
             el.className = `friend-item ${isOnline ? 'online' : ''}`;
@@ -319,7 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Subscribe to new messages for this conversation
             state.messageSubscription = supabaseService.subscribeToMessages(conversationId, async (payload) => {
                 const newMessage = payload.new;
-                
+
                 // Optimistic UI handles the sender's own messages, so we only need to render messages from others.
                 if (newMessage.sender_id === state.currentUser.id) {
                     return;
@@ -349,7 +453,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const el = document.createElement('div');
             el.className = `message-group ${isOwn ? 'own-message' : ''}`;
-            
+
             // Use created_at for DB records, and createdAt for optimistic local messages
             const messageTime = new Date(msg.created_at || msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -366,7 +470,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // For own messages, hide avatar and name for a cleaner look
             if (isOwn) {
                 const authorSpan = el.querySelector('.message-author');
-                if(authorSpan) authorSpan.style.display = 'none';
+                if (authorSpan) authorSpan.style.display = 'none';
             }
 
             ui.chatMessages.appendChild(el);
@@ -402,8 +506,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             ui.profileModal.memberSince.textContent = joinDate || 'Bilinmiyor';
 
-            ui.profileModal.badgesContainer.innerHTML = ''; 
-            if (profile.is_nitro) { 
+            ui.profileModal.badgesContainer.innerHTML = '';
+            if (profile.is_nitro) {
                 const nitroBadge = document.createElement('i');
                 nitroBadge.className = 'fas fa-gem';
                 nitroBadge.title = 'Chatlify Nitro';
@@ -438,6 +542,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             ui.friendsListContainer.addEventListener('click', handleFriendAction);
         }
 
+        // Tab değiştirme olayını dinle
+        const tabsContainer = document.querySelector('.tabs-container');
+        if (tabsContainer) {
+            tabsContainer.addEventListener('click', handleTabChange);
+        }
+
+        // Bekleyen istekleri işleme
+        if (ui.pendingRequestsList) {
+            ui.pendingRequestsList.addEventListener('click', handlePendingRequestAction);
+        }
+
         ui.dmList?.addEventListener('click', (e) => {
             const target = e.target.closest('.dm-item');
             if (target) {
@@ -463,7 +578,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 handleSendMessage();
             }
         });
-        
+
         ui.chatInput?.addEventListener('input', () => {
             ui.chatInput.style.height = 'auto';
             ui.chatInput.style.height = `${ui.chatInput.scrollHeight}px`;
@@ -498,6 +613,139 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     };
 
+    const handleTabChange = (e) => {
+        const tabButton = e.target.closest('.tab');
+        if (!tabButton) return;
+
+        // Tüm tabları pasif yap
+        const allTabs = document.querySelectorAll('.tabs-container .tab');
+        allTabs.forEach(tab => tab.classList.remove('active'));
+
+        // Tıklanan tabı aktif yap
+        tabButton.classList.add('active');
+
+        // Tab içeriğini göster/gizle
+        const tabText = tabButton.textContent.trim().toLowerCase();
+
+        // Arkadaş listesi panellerini gizle
+        ui.onlineSectionTitle.style.display = 'none';
+        ui.offlineSectionTitle.style.display = 'none';
+        ui.pendingSectionTitle.style.display = 'none';
+        ui.onlineFriendsList.style.display = 'none';
+        ui.offlineFriendsList.style.display = 'none';
+        ui.pendingRequestsList.style.display = 'none';
+
+        if (tabText === 'tüm arkadaşlar') {
+            // Tüm arkadaşları göster
+            if (state.friends.some(f => state.onlineFriends.has(f.id))) {
+                ui.onlineSectionTitle.style.display = 'flex';
+                ui.onlineFriendsList.style.display = 'block';
+            }
+            if (state.friends.some(f => !state.onlineFriends.has(f.id))) {
+                ui.offlineSectionTitle.style.display = 'flex';
+                ui.offlineFriendsList.style.display = 'block';
+            }
+        } else if (tabText === 'çevrimiçi') {
+            // Sadece çevrimiçi arkadaşları göster
+            if (state.friends.some(f => state.onlineFriends.has(f.id))) {
+                ui.onlineSectionTitle.style.display = 'flex';
+                ui.onlineFriendsList.style.display = 'block';
+            }
+        } else if (tabText === 'bekleyen') {
+            // Bekleyen istekleri göster ve yenile
+            renderer.renderPendingRequests();
+            ui.pendingRequestsList.style.display = 'block';
+        }
+    };
+
+    const handlePendingRequestAction = async (e) => {
+        const acceptBtn = e.target.closest('.accept-btn');
+        const rejectBtn = e.target.closest('.reject-btn');
+
+        if (!acceptBtn && !rejectBtn) return;
+
+        const requestItem = e.target.closest('.friend-request-item');
+        if (!requestItem) return;
+
+        const requestId = requestItem.dataset.requestId;
+        const userId = requestItem.dataset.userId;
+
+        try {
+            if (acceptBtn) {
+                // İsteği kabul et
+                const result = await supabaseService.acceptFriendRequest(requestId);
+                if (result.success) {
+                    // Başarıyla kabul edildi, UI'ı güncelle
+                    requestItem.classList.add('accepted');
+                    setTimeout(() => {
+                        requestItem.remove();
+                        // Arkadaş listesini yenile
+                        fetchAndRenderFriends();
+                        // Bekleyen istekleri yenile
+                        renderer.renderPendingRequests();
+
+                        // Kabul edilen kullanıcıyla sohbet başlatma seçeneği sun
+                        showFriendAcceptedNotification(userId);
+                    }, 500);
+                }
+            } else if (rejectBtn) {
+                // İsteği reddet
+                const result = await supabaseService.rejectFriendRequest(requestId);
+                if (result.success) {
+                    // Başarıyla reddedildi, UI'ı güncelle
+                    requestItem.classList.add('rejected');
+                    setTimeout(() => {
+                        requestItem.remove();
+                        // Bekleyen istekleri yenile
+                        renderer.renderPendingRequests();
+                    }, 500);
+                }
+            }
+        } catch (error) {
+            console.error('Error handling friend request action:', error);
+        }
+    };
+
+    const showFriendAcceptedNotification = (userId) => {
+        // Arkadaşlık isteği kabul edildikten sonra sohbet başlatma seçeneği sunma
+        const notification = document.createElement('div');
+        notification.className = 'friend-accepted-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-user-check"></i>
+                <span>Arkadaşlık isteği kabul edildi!</span>
+            </div>
+            <div class="notification-actions">
+                <button class="start-chat-btn" data-user-id="${userId}">
+                    <i class="fas fa-comment"></i>
+                    <span>Sohbet Başlat</span>
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Animasyon için timeout
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        // Bildirim kapatma
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+
+        // Sohbet başlatma butonu olayı
+        const startChatBtn = notification.querySelector('.start-chat-btn');
+        startChatBtn.addEventListener('click', () => {
+            renderer.renderChatPanel(userId);
+            notification.remove();
+        });
+    };
+
     const handleFriendAction = async (e) => {
         const button = e.target.closest('.btn');
         if (!button) return;
@@ -528,9 +776,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 content: content,
                 createdAt: new Date().toISOString(), // Use createdAt for local optimistic message
             };
-            
+
             renderer.appendMessage(tempMessage);
-            
+
             ui.chatInput.value = '';
             ui.chatInput.style.height = 'auto'; // Reset height after sending
 
@@ -567,13 +815,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             .then(response => response.ok ? response.text() : Promise.reject(response.statusText))
             .then(html => {
                 ui.addFriendModal.container.innerHTML = html;
-                
+
                 ui.addFriendModal.overlay = document.getElementById('add-friend-modal');
                 ui.addFriendModal.form = document.getElementById('add-friend-form');
                 ui.addFriendModal.input = document.getElementById('add-friend-username-input');
                 ui.addFriendModal.statusMessage = document.getElementById('friend-request-status');
                 ui.addFriendModal.closeBtn = document.querySelector('#add-friend-modal .close-modal-btn');
-                
+
                 ui.addFriendModal.button.addEventListener('click', openAddFriendModal);
                 ui.addFriendModal.closeBtn.addEventListener('click', closeAddFriendModal);
                 ui.addFriendModal.overlay.addEventListener('click', (e) => {
@@ -628,7 +876,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const result = await supabaseService.sendFriendRequestByUsername(username);
             statusEl.textContent = result.message;
             statusEl.className = `status-message ${result.success ? 'success' : 'error'}`;
-            
+
             if (result.success) {
                 ui.addFriendModal.input.value = '';
             }
@@ -663,6 +911,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         initAddFriendModal(); // Arkadaş ekle modalını başlat
         await fetchAndRenderFriends();
 
+        // Bekleyen arkadaşlık isteklerini yükle
+        await renderer.renderPendingRequests();
+
         state.presenceChannel = supabaseService.subscribeToPresence(() => {
             state.onlineFriends.clear();
             const presenceState = state.presenceChannel.state;
@@ -673,6 +924,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             renderer.renderFriendsList();
         });
+
+        // Arkadaşlık isteklerini gerçek zamanlı izle
+        supabase.channel('friendships-changes')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'friendships',
+                filter: `user_id_2=eq.${state.currentUser.id}`
+            }, () => {
+                // Değişiklik olduğunda bekleyen istekleri yenile
+                renderer.renderPendingRequests();
+            })
+            .subscribe();
     };
 
     await init();

@@ -4,6 +4,17 @@
     - .chat-panel (Sohbet Penceresi)
 */
 
+:root {
+    /* Mevcut değişkenlere ek olarak */
+    --success-color: #43b581;
+    --success-color-hover: #3ca374;
+    --success-color-rgb: 67, 181, 129;
+    --danger-color: #f04747;
+    --danger-color-hover: #d84040;
+    --danger-color-rgb: 240, 71, 71;
+    --primary-color-hover: #5865f0;
+}
+
 /* 1. Arkadaşlar Paneli (Friends Panel) */
 
 .friends-panel-container {
@@ -115,7 +126,7 @@
 
 .friends-section-title .online-count,
 .friends-section-title .offline-count,
-.friends-section-title .pending-count {
+.friends-section-title .pending-requests-count {
     margin-left: 8px;
     background-color: rgba(255, 255, 255, 0.1);
     padding: 1px 6px;
@@ -123,6 +134,7 @@
     font-size: 12px;
 }
 
+/* Arkadaş Öğesi */
 .friend-item {
     display: flex;
     align-items: center;
@@ -196,6 +208,141 @@
 .friend-actions .btn:hover {
     background-color: var(--brand-color);
     color: #fff;
+}
+
+/* Bekleyen Arkadaşlık İstekleri Stili */
+.friend-request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.friend-request-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.friend-request-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.friend-request-actions .btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.friend-request-actions .accept-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.friend-request-actions .accept-btn:hover {
+    background-color: var(--success-color-hover);
+    transform: scale(1.1);
+}
+
+.friend-request-actions .reject-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.friend-request-actions .reject-btn:hover {
+    background-color: var(--danger-color-hover);
+    transform: scale(1.1);
+}
+
+/* Kabul edildi/reddedildi animasyonları */
+.friend-request-item.accepted {
+    background-color: rgba(var(--success-color-rgb), 0.1);
+    border-color: var(--success-color);
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.friend-request-item.rejected {
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+    border-color: var(--danger-color);
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+/* Arkadaşlık isteği kabul edildi bildirimi */
+.friend-accepted-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 300px;
+}
+
+.friend-accepted-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-content i {
+    color: var(--success-color);
+    font-size: 18px;
+}
+
+.notification-content span {
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.notification-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.notification-actions .start-chat-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.notification-actions .start-chat-btn:hover {
+    background-color: var(--primary-color-hover);
 }
 
 /* 2. Sohbet Paneli (Chat Panel) - YENİ MODERN TASARIM */
