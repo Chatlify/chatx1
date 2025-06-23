@@ -207,8 +207,8 @@ window.sendFriendRequest = async function (username) {
                     user_id_1: session.user.id,
                     user_id_2: targetUser.id,
                     status: 'pending',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
                 }
             ]);
 
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         async getPendingRequests(userId) {
             const { data, error } = await supabase
                 .from('friendships')
-                .select('id, created_at, profiles:user_id_1(id, username, avatar_url)')
+                .select('id, createdAt, profiles:user_id_1(id, username, avatar_url)')
                 .eq('user_id_2', userId)
                 .eq('status', 'pending');
 
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 userId: req.profiles.id,
                 username: req.profiles.username,
                 avatarUrl: req.profiles.avatar_url,
-                createdAt: req.created_at,
+                createdAt: req.createdAt,
             }));
         },
 
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .from('friendships')
                 .update({
                     status: 'accepted',
-                    updated_at: new Date().toISOString()
+                    updatedAt: new Date().toISOString()
                 })
                 .eq('id', requestId);
 
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .select('conversation_id')
                     .or(`sender_id.eq.${userId1},sender_id.eq.${userId2}`)
                     .or(`receiverId.eq.${userId1},receiverId.eq.${userId2}`)
-                    .order('created_at', { ascending: false })
+                    .order('createdAt', { ascending: false })
                     .limit(1);
 
                 if (dmError) {
@@ -442,8 +442,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .from('conversations')
                     .insert([{
                         is_group_chat: false,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
                     }])
                     .select();
 
@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             receiverId: userId2,
                             content: "Merhaba! Sohbet başlatıldı.",
                             contentType: 'text',
-                            created_at: new Date().toISOString()
+                            createdAt: new Date().toISOString()
                         }]);
 
                     if (msgError) {
@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .select(`
                     id,
                     content,
-                    created_at,
+                    createdAt,
                     sender_id,
                     sender:sender_id (
                         username,
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     )
                 `)
                 .eq('conversation_id', conversationId)
-                .order('created_at', { ascending: true });
+                .order('createdAt', { ascending: true });
 
             if (error) {
                 console.error(`Error fetching messages for conversation ${conversationId}:`, error);
@@ -671,7 +671,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isOwnMessage = msg.sender_id === state.currentUser.id;
                 const author = isOwnMessage ? 'Sen' : msg.sender.username;
                 const avatarUrl = msg.sender.avatar_url || 'images/defaultavatar.png';
-                const time = new Date(msg.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                const time = new Date(msg.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
                 // Gruplama için basitleştirilmiş mantık. Gerçek bir uygulamada daha karmaşık olabilir.
                 return `
@@ -1085,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tempMessage = {
             id: `temp-${Date.now()}`,
             content: content.trim(),
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             sender_id: state.currentUser.id,
             sender: {
                 username: 'Sen',
