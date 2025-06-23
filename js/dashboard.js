@@ -1,4 +1,14 @@
-import { supabase } from './auth_config.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// import { supabase } from './auth_config.js'; // Bu satırı kaldırıyoruz veya yorumluyoruz.
+
+// Supabase istemcisini doğru anahtarlarla doğrudan burada oluşturalım.
+// Not: Bu anahtarları normalde güvenli bir yerde saklamanız gerekir.
+// Projenizin gerçek anahtarlarını buraya yapıştırın.
+const SUPABASE_URL = 'https://krrfgdoqlsytuspawqse.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtycmZnZG9xbHN5dHVzcGF3cXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzNjQyOTIsImV4cCI6MjAzMzk0MDI5Mn0.yC02tC7I0kM1s3s2I2J1-2hREmR2O-d4TSt4_z_cU9Q';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Toast stilleri
 const toastStyles = `
