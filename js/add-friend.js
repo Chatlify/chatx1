@@ -1,5 +1,7 @@
+console.log('Arkadaş ekleme modülü yükleniyor...');
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Arkadaş ekleme modülü yükleniyor...');
+    console.log('Arkadaş ekleme modülü başlatılıyor...');
 
     // Gerekli elementleri bul
     const modalContainer = document.getElementById('add-friend-modal-container');
@@ -12,79 +14,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('Arkadaş ekleme butonuna olay dinleyicisi ekleniyor...');
 
-    // Modal HTML'ini yükle
-    fetch('add-friend.html')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
-            return response.text();
-        })
-        .then(html => {
-            console.log('Arkadaş ekleme modalı HTML içeriği yüklendi.');
-            modalContainer.innerHTML = html;
-
-            // HTML yüklendikten sonra olay dinleyicilerini kur
-            setupModalEventListeners();
-
-            // Butona tıklandığında modalı açacak olay dinleyicisini ekle
-            addFriendButton.addEventListener('click', () => {
-                const modalOverlay = document.getElementById('add-friend-modal');
-                if (modalOverlay) {
-                    openModal(modalOverlay);
-                } else {
-                    console.error('Arkadaş ekleme modalı (#add-friend-modal) bulunamadı.');
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Arkadaş ekleme modal HTML yüklenirken hata:', error);
-            // Hata durumunda basit bir modal oluştur
-            createSimpleModal();
-        });
-
-    // Basit bir modal oluştur (yedek plan)
-    function createSimpleModal() {
-        modalContainer.innerHTML = `
-            <div id="add-friend-modal" class="modal-overlay">
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <div class="modal-icon"><i class="fas fa-user-plus"></i></div>
-                        <h3>Arkadaş Ekle</h3>
-                        <button class="close-modal-btn" title="Kapat"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="modal-info">Arkadaş eklemek için Chatlify kullanıcı adını girin.</p>
-                        <form id="add-friend-form" class="input-wrapper">
-                            <div class="add-friend-input-container">
-                                <input type="text" id="add-friend-username-input" placeholder="Kullanıcı adını yazın..." autocomplete="off" required>
-                                <i class="fas fa-at"></i>
-                            </div>
-                            <button type="submit" class="send-request-btn">
-                                <span>Arkadaşlık İsteği Gönder</span>
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </form>
-                        <div id="friend-request-status" class="status-message"></div>
-                    </div>
+    // Modalı doğrudan HTML'e ekle
+    modalContainer.innerHTML = `
+        <div id="add-friend-modal" class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <div class="modal-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>Arkadaş Ekle</h3>
+                    <button class="close-modal-btn" title="Kapat"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-info">Arkadaş eklemek için Chatlify kullanıcı adını girin.</p>
+                    <form id="add-friend-form" class="input-wrapper">
+                        <div class="add-friend-input-container">
+                            <input type="text" id="add-friend-username-input" placeholder="Kullanıcı adını yazın..." autocomplete="off" required>
+                            <i class="fas fa-at"></i>
+                        </div>
+                        <button type="submit" class="send-request-btn">
+                            <span>Arkadaşlık İsteği Gönder</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                    <div id="friend-request-status" class="status-message"></div>
                 </div>
             </div>
-        `;
-        setupModalEventListeners();
+        </div>
+    `;
 
-        // Butona tıklandığında modalı açacak olay dinleyicisini ekle
-        addFriendButton.addEventListener('click', () => {
-            const modalOverlay = document.getElementById('add-friend-modal');
-            if (modalOverlay) {
-                openModal(modalOverlay);
-            } else {
-                console.error('Arkadaş ekleme modalı (#add-friend-modal) bulunamadı.');
-            }
-        });
-    }
+    // Butona tıklandığında modalı açacak olay dinleyicisini ekle
+    addFriendButton.addEventListener('click', () => {
+        console.log('Arkadaş ekle butonuna tıklandı');
+        const modalOverlay = document.getElementById('add-friend-modal');
+        if (modalOverlay) {
+            openModal(modalOverlay);
+        } else {
+            console.error('Arkadaş ekleme modalı (#add-friend-modal) bulunamadı.');
+        }
+    });
 
     // Modalı açma fonksiyonu
     function openModal(modalOverlay) {
+        console.log('Modal açılıyor...');
         document.body.style.overflow = 'hidden'; // Arka planın kaydırılmasını engelle
         modalOverlay.style.display = 'flex';
 
@@ -100,7 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     }
 
+    // Olay dinleyicilerini kur
+    setupModalEventListeners();
+
     function setupModalEventListeners() {
+        console.log('Modal olay dinleyicileri kuruluyor...');
         // Elementleri, global document yerine modal konteynerı içinde arıyoruz.
         const modalOverlay = document.getElementById('add-friend-modal');
         if (!modalOverlay) {
@@ -127,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const closeModal = () => {
+            console.log('Modal kapatılıyor...');
             modalOverlay.classList.remove('active');
 
             // Animasyon süresi kadar bekleyip modalı gizle

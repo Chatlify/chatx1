@@ -671,21 +671,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.tabsContainer.addEventListener('click', handleTabClick);
         ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction);
         ui.dmList.addEventListener('click', handleDmItemClick);
-
-        // Arkadaş ekleme modalı için script dosyasını yükle
-        loadScript('js/add-friend.js');
     };
-
-    // Script dosyası yükleme fonksiyonu
-    function loadScript(src) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error(`Script yüklenemedi: ${src}`));
-            document.body.appendChild(script);
-        });
-    }
 
     init();
 });
