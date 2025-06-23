@@ -587,7 +587,9 @@
 
 .chat-attachments {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    padding: 0 10px;
+    z-index: 2;
 }
 
 .chat-attachments .chat-attachment-btn {
@@ -608,7 +610,9 @@
 }
 
 .chat-textbox {
-    flex: 1;
+    flex-grow: 1;
+    position: relative;
+    z-index: 1;
     background-color: #2a314e;
     border-radius: 20px;
     padding: 0 10px;
