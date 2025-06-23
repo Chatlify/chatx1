@@ -58,9 +58,20 @@
 .dashboard-container {
     display: flex;
     height: 100vh;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
+    width: 100vw;
+    background-color: var(--background-secondary);
+    transition: padding-left 0.3s ease;
+}
+
+/* Chat Active State */
+.dashboard-container.chat-active .main-content {
+    flex-grow: 1;
+    /* Take up available space */
+}
+
+.dashboard-container.chat-active .right-sidebar-container {
+    display: none;
+    /* Hide sponsor bar */
 }
 
 /* Ana İçerik Alanı */

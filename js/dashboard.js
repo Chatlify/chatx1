@@ -317,6 +317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         friendsContentContainer: document.querySelector('.friends-content-container'),
         tabsContainer: document.querySelector('.tabs-container'),
+        dashboardContainer: document.querySelector('.dashboard-container'),
     };
 
     // --- 3. SUPABASE SERVICE ---
@@ -545,9 +546,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         showChatPanel(friend, conversationId) {
-            const { chatPanel, chatHeaderUser, chatMessages, mainContent } = ui;
+            const { chatPanel, chatHeaderUser, chatMessages, dashboardContainer } = ui;
 
-            if (!mainContent || !chatPanel) {
+            if (!dashboardContainer || !chatPanel) {
                 console.error("Critical UI element not found! Cannot display chat panel.");
                 return;
             }
@@ -566,14 +567,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
             }
 
-            // Add 'chat-active' class to the main content area to show the chat panel via CSS
-            mainContent.classList.add('chat-active');
+            // Add 'chat-active' class to the main dashboard container to trigger all CSS changes
+            dashboardContainer.classList.add('chat-active');
         },
 
         hideChatPanel() {
-            const { mainContent } = ui;
-            if (mainContent) {
-                mainContent.classList.remove('chat-active');
+            const { dashboardContainer, friendsPanel } = ui;
+            if (dashboardContainer) {
+                dashboardContainer.classList.remove('chat-active');
+            }
+            // Ensure the friends panel is visible again when chat is closed.
+            if (friendsPanel) {
+                friendsPanel.style.display = 'flex';
             }
             state.currentConversationId = null;
         }
