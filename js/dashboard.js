@@ -414,75 +414,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getOrCreateConversation(userId1, userId2) {
             try {
-                // NOT: Bu bir geçici çözümdür. Supabase'in salt okunur modundan çıktığında,
-                // aşağıdaki RLS politikalarını uygulamanız gerekir:
-                /*
-                -- Drop the problematic policy that's causing infinite recursion
-                DROP POLICY IF EXISTS "Allow participants to view other participants in the same conve" ON public.conversation_participants;
-                
-                -- Drop the policy that's causing infinite recursion
-                DROP POLICY IF EXISTS "Participants: Select own" ON public.conversation_participants;
-                
-                -- Create a simpler policy that doesn't cause recursion
-                CREATE POLICY "Allow participants to view conversations they're in" 
-                ON public.conversation_participants
-                FOR SELECT 
-                TO authenticated
-                USING (user_id = auth.uid());
-                
-                -- Update conversations table RLS
-                ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
-                
-                -- Create policies for conversations table
-                DROP POLICY IF EXISTS "Users can view conversations they participate in" ON public.conversations;
-                CREATE POLICY "Users can view conversations they participate in" 
-                ON public.conversations
-                FOR SELECT 
-                TO authenticated
-                USING (
-                  id IN (
-                    SELECT conversation_id 
-                    FROM public.conversation_participants 
-                    WHERE user_id = auth.uid()
-                  )
-                );
-                
-                -- Update messages table RLS
-                DROP POLICY IF EXISTS "Users can view messages in their conversations" ON public.messages;
-                CREATE POLICY "Users can view messages in their conversations" 
-                ON public.messages
-                FOR SELECT 
-                TO authenticated
-                USING (
-                  conversation_id IN (
-                    SELECT conversation_id 
-                    FROM public.conversation_participants 
-                    WHERE user_id = auth.uid()
-                  )
-                );
-                
-                DROP POLICY IF EXISTS "Users can insert messages in their conversations" ON public.messages;
-                CREATE POLICY "Users can insert messages in their conversations" 
-                ON public.messages
-                FOR INSERT 
-                TO authenticated
-                WITH CHECK (
-                  sender_id = auth.uid() AND
-                  conversation_id IN (
-                    SELECT conversation_id 
-                    FROM public.conversation_participants 
-                    WHERE user_id = auth.uid()
-                  )
-                );
-                */
+                // Önce mevcut bir konuşma var mı kontrol et
+                const { data: existingConversations, error: selectError } = await supabase
+                    .from('conversation_participants')
+                    .select('conversation_id')
+                    .in('user_id', [userId1, userId2])
+                    .order('conversation_id');
 
-                // Sonsuz döngü hatasını tamamen bypass etmek için basit bir yaklaşım kullanıyoruz
-                // Benzersiz bir konuşma ID'si oluşturalım
-                const conversationId = `dm_${[userId1, userId2].sort().join('_')}`;
+                if (selectError) {
+                    console.error('Error checking existing conversations:', selectError);
+                    throw selectError;
+                }
 
-                console.log('Using direct conversation ID:', conversationId);
+                // Konuşma ID'lerini grupla ve her iki kullanıcının da olduğu konuşmaları bul
+                const conversationCounts = {};
+                existingConversations.forEach(participant => {
+                    const convId = participant.conversation_id;
+                    conversationCounts[convId] = (conversationCounts[convId] || 0) + 1;
+                });
 
-                // Bu ID'yi doğrudan kullanarak mesaj göndermeyi deneyebiliriz
+                // Her iki kullanıcının da olduğu bir konuşma var mı kontrol et
+                for (const [convId, count] of Object.entries(conversationCounts)) {
+                    if (count >= 2) {
+                        console.log('Found existing conversation:', convId);
+                        return convId;
+                    }
+                }
+
+                // Mevcut konuşma yoksa yeni bir konuşma oluştur
+                const { data: newConversation, error: insertError } = await supabase
+                    .from('conversations')
+                    .insert([{ createdAt: new Date().toISOString() }])
+                    .select();
+
+                if (insertError) {
+                    console.error('Error creating conversation:', insertError);
+                    throw insertError;
+                }
+
+                const conversationId = newConversation[0].id;
+
+                // İlk kullanıcıyı konuşmaya ekle
+                const { error: participant1Error } = await supabase
+                    .from('conversation_participants')
+                    .insert([{
+                        conversation_id: conversationId,
+                        user_id: userId1,
+                        joined_at: new Date().toISOString()
+                    }]);
+
+                if (participant1Error) {
+                    console.error('Error adding first participant:', participant1Error);
+                    throw participant1Error;
+                }
+
+                // İkinci kullanıcıyı konuşmaya ekle
+                const { error: participant2Error } = await supabase
+                    .from('conversation_participants')
+                    .insert([{
+                        conversation_id: conversationId,
+                        user_id: userId2,
+                        joined_at: new Date().toISOString()
+                    }]);
+
+                if (participant2Error) {
+                    console.error('Error adding second participant:', participant2Error);
+                    throw participant2Error;
+                }
+
+                console.log('Created new conversation:', conversationId);
                 return conversationId;
             } catch (error) {
                 console.error('Unexpected error in getOrCreateConversation:', error);
@@ -493,65 +493,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         async sendMessage(conversationId, senderId, content) {
             if (!content.trim()) return { error: { message: "Mesaj boş olamaz." } };
 
-            // Mesajları localStorage'da saklayalım (RLS politikalarını bypass etmek için)
             try {
-                const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-                const timestamp = new Date().toISOString();
+                // Mesajı veritabanına ekle
+                const { data, error } = await supabase
+                    .from('messages')
+                    .insert([{
+                        conversation_id: conversationId,
+                        sender_id: senderId,
+                        content: content.trim(),
+                        contentType: 'text',
+                        createdAt: new Date().toISOString()
+                    }])
+                    .select(`
+                        id, 
+                        conversation_id, 
+                        sender_id, 
+                        content, 
+                        contentType, 
+                        createdAt,
+                        profiles:sender_id (
+                            username,
+                            avatar_url
+                        )
+                    `);
 
-                // Kullanıcı bilgilerini alalım
-                const { data: senderProfile } = await supabase
-                    .from('profiles')
-                    .select('username, avatar_url')
-                    .eq('id', senderId)
-                    .single();
+                if (error) {
+                    console.error('Error sending message:', error);
+                    return { data: null, error };
+                }
 
-                const newMessage = {
-                    id: messageId,
-                    conversation_id: conversationId,
-                    sender_id: senderId,
-                    content: content.trim(),
-                    contentType: 'text',
-                    createdAt: timestamp,
+                // Dönen veriyi UI için uygun formata dönüştür
+                const formattedMessages = data.map(msg => ({
+                    id: msg.id,
+                    conversation_id: msg.conversation_id,
+                    sender_id: msg.sender_id,
+                    content: msg.content,
+                    contentType: msg.contentType,
+                    createdAt: msg.createdAt,
                     sender: {
-                        username: senderProfile?.username || 'Kullanıcı',
-                        avatar_url: senderProfile?.avatar_url || 'images/defaultavatar.png'
+                        username: msg.profiles?.username || 'Kullanıcı',
+                        avatar_url: msg.profiles?.avatar_url || 'images/defaultavatar.png'
                     }
-                };
+                }));
 
-                // localStorage'dan mevcut mesajları alalım
-                let storedMessages = JSON.parse(localStorage.getItem('chatlify_messages') || '{}');
-
-                // Bu konuşma için mesajlar dizisini oluşturalım veya güncelleyelim
-                if (!storedMessages[conversationId]) {
-                    storedMessages[conversationId] = [];
-                }
-
-                // Yeni mesajı ekleyelim
-                storedMessages[conversationId].push(newMessage);
-
-                // localStorage'a kaydedelim
-                localStorage.setItem('chatlify_messages', JSON.stringify(storedMessages));
-
-                console.log('Message saved locally:', newMessage);
-
-                // WebSocket ile diğer sekmelere/pencerelere mesajı gönderelim
-                // Bu, aynı tarayıcıda farklı sekmelerde oturum açmış kullanıcılar için çalışır
-                try {
-                    const broadcastChannel = new BroadcastChannel('chatlify_messages_channel');
-                    broadcastChannel.postMessage({
-                        conversationId,
-                        message: newMessage
-                    });
-                    broadcastChannel.close();
-                } catch (e) {
-                    console.warn('BroadcastChannel not supported in this browser, falling back to localStorage only');
-                }
-
-                // Başarılı bir yanıt döndürelim
-                return {
-                    data: [newMessage],
-                    error: null
-                };
+                return { data: formattedMessages, error: null };
             } catch (error) {
                 console.error('Error sending message:', error);
                 return { data: null, error };
@@ -560,18 +545,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getMessages(conversationId) {
             try {
-                // localStorage'dan mesajları alalım
-                const storedMessages = JSON.parse(localStorage.getItem('chatlify_messages') || '{}');
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select(`
+                        id, 
+                        conversation_id, 
+                        sender_id, 
+                        content, 
+                        contentType, 
+                        createdAt,
+                        profiles:sender_id (
+                            username,
+                            avatar_url
+                        )
+                    `)
+                    .eq('conversation_id', conversationId)
+                    .order('createdAt', { ascending: true });
 
-                // Bu konuşma için mesajları döndürelim
-                const messages = storedMessages[conversationId] || [];
+                if (error) {
+                    console.error(`Error fetching messages for conversation ${conversationId}:`, error);
+                    return [];
+                }
 
-                // Mesajları tarihe göre sıralayalım
-                messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                // Dönen veriyi UI için uygun formata dönüştür
+                const formattedMessages = data.map(msg => ({
+                    id: msg.id,
+                    conversation_id: msg.conversation_id,
+                    sender_id: msg.sender_id,
+                    content: msg.content,
+                    contentType: msg.contentType,
+                    createdAt: msg.createdAt,
+                    sender: {
+                        username: msg.profiles?.username || 'Kullanıcı',
+                        avatar_url: msg.profiles?.avatar_url || 'images/defaultavatar.png'
+                    }
+                }));
 
-                console.log('Retrieved local messages:', messages);
-
-                return messages;
+                return formattedMessages;
             } catch (error) {
                 console.error(`Error fetching messages for conversation ${conversationId}:`, error);
                 return [];
@@ -589,55 +599,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 this.messageSubscription();
             }
 
-            // BroadcastChannel API kullanarak gerçek zamanlı mesajlaşma sağlayalım
-            let broadcastChannel;
-            try {
-                broadcastChannel = new BroadcastChannel('chatlify_messages_channel');
+            // Supabase realtime subscription oluştur
+            const channel = supabase.channel(`messages:${conversationId}`)
+                .on('postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'messages',
+                        filter: `conversation_id=eq.${conversationId}`
+                    },
+                    async (payload) => {
+                        console.log('New message received:', payload);
 
-                const messageHandler = (event) => {
-                    // Sadece bu konuşmaya ait mesajları işleyelim
-                    if (event.data && event.data.conversationId === conversationId) {
-                        // Mevcut mesajları güncelleyelim
-                        const storedMessages = JSON.parse(localStorage.getItem('chatlify_messages') || '{}');
-                        const messages = storedMessages[conversationId] || [];
-
-                        // UI'ı güncelleyelim
+                        // Yeni mesaj geldiğinde tüm mesajları yeniden yükle
+                        const messages = await this.getMessages(conversationId);
                         state.messages = messages;
                         renderer.renderMessages(state.messages);
                     }
-                };
+                )
+                .subscribe();
 
-                // Mesaj dinleyicisini ekleyelim
-                broadcastChannel.addEventListener('message', messageHandler);
-
-                // Aboneliği temizlemek için bir fonksiyon döndürelim
-                this.messageSubscription = () => {
-                    broadcastChannel.removeEventListener('message', messageHandler);
-                    broadcastChannel.close();
-                };
-            } catch (e) {
-                console.warn('BroadcastChannel not supported in this browser, falling back to localStorage only');
-
-                // localStorage'daki değişiklikleri dinlemek için bir event listener ekleyelim
-                const storageListener = (event) => {
-                    if (event.key === 'chatlify_messages') {
-                        const messages = JSON.parse(event.newValue || '{}')[conversationId] || [];
-                        if (messages.length > 0) {
-                            // Yeni mesajlar varsa, UI'ı güncelleyelim
-                            state.messages = messages;
-                            renderer.renderMessages(state.messages);
-                        }
-                    }
-                };
-
-                // Event listener'ı ekleyelim
-                window.addEventListener('storage', storageListener);
-
-                // Aboneliği temizlemek için bir fonksiyon döndürelim
-                this.messageSubscription = () => {
-                    window.removeEventListener('storage', storageListener);
-                };
-            }
+            // Aboneliği temizlemek için bir fonksiyon döndür
+            this.messageSubscription = () => {
+                channel.unsubscribe();
+            };
 
             return this.messageSubscription;
         },
