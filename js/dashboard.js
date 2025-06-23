@@ -491,6 +491,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!content.trim()) return { error: { message: "Mesaj boş olamaz." } };
 
             try {
+                console.log('Sending message to conversation:', conversationId, 'from sender:', senderId);
+
                 // Mesajı veritabanına ekle
                 const { data, error } = await supabase
                     .from('messages')
@@ -608,14 +610,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     {
                         event: 'INSERT',
                         schema: 'public',
-                        table: 'messages',
-                        filter: `conversation_id=eq.${conversationId}`
+                        table: 'messages'
+                        // Filtreyi kaldırıyoruz çünkü bu, mesajların karşılıklı görünmemesine neden olabilir
+                        // filter: `conversation_id=eq.${conversationId}`
                     },
                     async (payload) => {
                         console.log('New message received:', payload);
 
-                        // Yeni mesajı doğrudan ekleyelim
-                        if (payload.new) {
+                        // Sadece bu konuşmaya ait mesajları işleyelim
+                        if (payload.new && payload.new.conversation_id === conversationId) {
                             const newMessage = payload.new;
 
                             // Gönderen bilgilerini alalım
@@ -631,7 +634,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 conversation_id: newMessage.conversation_id,
                                 sender_id: newMessage.sender_id,
                                 content: newMessage.content,
-                                contentType: newMessage.contentType,
+                                contentType: newMessage.contentType || 'text',
                                 createdAt: newMessage.createdAt,
                                 sender: {
                                     username: senderData?.username || 'Kullanıcı',
@@ -639,9 +642,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 }
                             };
 
-                            // Mevcut mesajlara ekleyelim
-                            state.messages = [...state.messages, formattedMessage];
-                            renderer.renderMessages(state.messages);
+                            console.log('Formatted message for UI:', formattedMessage);
+
+                            // Mesaj zaten mevcut mesajlar arasında var mı kontrol edelim
+                            const messageExists = state.messages.some(m => m.id === formattedMessage.id);
+
+                            if (!messageExists) {
+                                // Mevcut mesajlara ekleyelim
+                                state.messages = [...state.messages, formattedMessage];
+                                renderer.renderMessages(state.messages);
+                                console.log('Message added to UI, current messages:', state.messages);
+                            }
                         } else {
                             // Alternatif olarak tüm mesajları yeniden yükleyelim
                             const messages = await this.getMessages(conversationId);
@@ -650,7 +661,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    console.log(`Subscription status for conversation ${conversationId}:`, status);
+                });
 
             // Aboneliği temizlemek için bir fonksiyon döndür
             this.messageSubscription = () => {
