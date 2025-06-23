@@ -569,12 +569,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Add 'chat-active' class to the main dashboard container to trigger all CSS changes
             dashboardContainer.classList.add('chat-active');
+            // Also, explicitly remove the 'hidden' class from the chat panel itself
+            chatPanel.classList.remove('hidden');
         },
 
         hideChatPanel() {
-            const { dashboardContainer, friendsPanel } = ui;
+            const { dashboardContainer, chatPanel, friendsPanel } = ui;
             if (dashboardContainer) {
                 dashboardContainer.classList.remove('chat-active');
+            }
+            // Add the 'hidden' class back to the chat panel
+            if (chatPanel) {
+                chatPanel.classList.add('hidden');
             }
             // Ensure the friends panel is visible again when chat is closed.
             if (friendsPanel) {
