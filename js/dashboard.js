@@ -708,5 +708,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.dmList.addEventListener('click', handleDmItemClick);
     };
 
+    // --- DYNAMIC COMPONENT LOADER ---
+    async function loadComponent(componentName) {
+        if (document.getElementById(`${componentName}-panel`)) {
+            console.log(`${componentName} component is already loaded.`);
+            return;
+        }
+
+        const basePath = `components/${componentName}`;
+        const htmlPath = `${basePath}/${componentName}.html`;
+        const cssPath = `${basePath}/${componentName}.css`;
+        const jsPath = `${basePath}/${componentName}.js`;
+
+        try {
+            // 1. Fetch and inject HTML
+            const htmlResponse = await fetch(htmlPath);
+            if (!htmlResponse.ok) throw new Error(`Failed to load ${htmlPath}`);
+            const htmlContent = await htmlResponse.text();
+            document.body.insertAdjacentHTML('beforeend', htmlContent);
+
+            // 2. Load CSS
+            if (!document.querySelector(`link[href="${cssPath}"]`)) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = cssPath;
+                document.head.appendChild(link);
+            }
+
+            // 3. Load and execute JS
+            const script = document.createElement('script');
+            script.src = jsPath;
+            script.onload = () => {
+                const initializerName = `initialize${componentName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Panel`;
+                if (window[initializerName] && typeof window[initializerName] === 'function') {
+                    window[initializerName](supabase, () => {
+                        script.remove(); // Clean up script tag
+                    });
+                } else {
+                    console.error(`${initializerName} function not found on window object.`);
+                }
+            };
+            document.body.appendChild(script);
+
+        } catch (error) {
+            console.error(`Error loading component ${componentName}:`, error);
+            const panel = document.getElementById(`${componentName}-panel`);
+            if (panel) panel.remove();
+        }
+    }
+
+    // Attach listener to the Add Friend button
+    if (ui.addFriendModal.button) {
+        ui.addFriendModal.button.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadComponent('add-friend');
+        });
+    }
+
     init();
 });
