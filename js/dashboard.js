@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { supabase } from './auth_config.js';
 
 // import { supabase } from './auth_config.js'; // Bu satırı kaldırıyoruz veya yorumluyoruz.
 
