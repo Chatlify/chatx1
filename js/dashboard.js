@@ -542,18 +542,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         showChatPanel(friend, conversationId) {
-            if (!ui.chatPanel) {
-                console.error("Chat panel container not found!");
+            const { chatPanel, friendsPanel, sponsorServersContainer, chatHeaderUser, chatMessages } = ui;
+
+            if (!chatPanel || !friendsPanel) {
+                console.error("Critical panel element not found!");
                 return;
             }
-            state.currentConversationId = conversationId; // Store the conversation ID
 
-            // TODO: Render the chat panel content with friend's info
-            console.log(`Showing chat for ${friend.username} (Conv ID: ${conversationId})`);
+            // Update header with friend's info
+            const usernameEl = chatHeaderUser.querySelector('.chat-username');
+            const avatarEl = chatHeaderUser.querySelector('.chat-avatar img');
+            if (usernameEl) usernameEl.textContent = friend.username;
+            if (avatarEl) avatarEl.src = friend.avatar_url || 'images/defaultavatar.png';
 
-            ui.friendsPanel.style.display = 'none'; // Hide friends list
-            ui.sponsorServersContainer.style.display = 'none';
-            ui.chatPanel.style.display = 'flex'; // Show chat panel
+            // Store state
+            state.currentConversationId = conversationId;
+
+            // Clear previous messages and show a prompt
+            if (chatMessages) {
+                chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
+            }
+
+            // Toggle panel visibility
+            friendsPanel.style.display = 'none';
+            if (sponsorServersContainer) {
+                sponsorServersContainer.style.display = 'none';
+            }
+            chatPanel.classList.remove('hidden');
+            chatPanel.style.display = 'flex';
         },
     };
 
