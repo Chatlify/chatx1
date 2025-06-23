@@ -1,8 +1,14 @@
 import { supabase } from './auth_config.js';
 
-// Cloudinary Ayarları (Bu değerleri kendi Cloudinary hesabınızla değiştirin)
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/chatlify/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'chatlify_users';
+// Cloudinary Ayarları
+// Bu değerleri kendi Cloudinary hesabınızdan almanız gerekiyor:
+// 1. https://cloudinary.com adresine gidin ve ücretsiz hesap oluşturun
+// 2. Dashboard'a girin ve Cloud name değerini alın (örn: "your_cloud_name")
+// 3. Settings > Upload > Upload presets bölümüne gidin ve "unsigned" bir preset oluşturun
+// 4. Oluşturduğunuz preset'in adını aşağıya yazın (örn: "your_upload_preset")
+const CLOUDINARY_CLOUD_NAME = 'dxr8bxvbp'; // Buraya kendi cloud name değerinizi yazın
+const CLOUDINARY_UPLOAD_PRESET = 'your_upload_preset'; // Buraya kendi upload preset değerinizi yazın
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
@@ -158,6 +164,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Adım: Eğer avatar seçildiyse Cloudinary'ye yükle
             if (avatarFile) {
                 try {
+                    // Cloudinary API bilgilerinin doğru ayarlanıp ayarlanmadığını kontrol et
+                    if (CLOUDINARY_CLOUD_NAME === 'your_cloud_name' || CLOUDINARY_UPLOAD_PRESET === 'your_upload_preset') {
+                        console.warn('Cloudinary API bilgileri ayarlanmamış. Avatar yükleme atlanıyor ve varsayılan avatar kullanılacak.');
+                        throw new Error('Cloudinary API bilgileri ayarlanmamış');
+                    }
+
                     const formData = new FormData();
                     formData.append('file', avatarFile);
                     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -176,14 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Avatar yüklendi:', finalAvatarUrl);
                 } catch (uploadError) {
                     console.error('Avatar yükleme hatası:', uploadError);
-                    showError('avatar', 'Avatar yüklenemedi. Lütfen daha sonra tekrar deneyin.');
-                    submitBtn.disabled = false;
-                    submitBtn.querySelector('.btn-text').textContent = 'Hesap Oluştur';
-                    return;
+                    // Hata mesajını göster ama kayıt işlemini durdurma
+                    showError('avatar', 'Avatar yüklenemedi. Varsayılan avatar kullanılacak.');
+                    // Avatar yüklenemediğinde varsayılan avatar kullanılacak, finalAvatarUrl null kalacak
                 }
             }
 
-            // 2. Adım: Eğer avatar yoksa varsayılan bir avatar seç
+            // 2. Adım: Eğer avatar yoksa veya yüklenemediyse varsayılan bir avatar seç
             if (!finalAvatarUrl) {
                 const randomIndex = Math.floor(Math.random() * defaultAvatarFiles.length);
                 const randomAvatarPath = defaultAvatarFiles[randomIndex];
