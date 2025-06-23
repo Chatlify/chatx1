@@ -294,9 +294,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // İsteği kabul et - DOĞRUDAN RPC KULLAN
                 const { data: rpcResult, error: rpcError } = await supabase
-                    .rpc('accept_friendship_request', {
-                        request_id: requestId,
-                        update_time: currentTime
+                    .rpc('accept_friendship_request_v2', {
+                        request_id: requestId
                     });
 
                 if (rpcError) {
@@ -313,7 +312,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     if (updateError) {
                         console.error('Error accepting friend request (fallback):', updateError);
-                        return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+
+                        // Son çare olarak doğrudan SQL çalıştır
+                        const { error: sqlError } = await supabase.rpc('execute_sql', {
+                            sql_query: `UPDATE friendships SET status = 'accepted', updated_at = NOW() WHERE id = ${requestId}`
+                        });
+
+                        if (sqlError) {
+                            console.error('Error accepting friend request (SQL fallback):', sqlError);
+                            return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+                        }
                     }
                 }
 
