@@ -244,16 +244,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. Adım: Supabase'e kayıt ol
+        formMessage.textContent = 'Hesap oluşturuluyor...';
         try {
             // Eğer hala bir avatar URL'si yoksa (kullanıcı seçmediyse), varsayılanı ata
             if (!finalAvatarUrl) {
                 const randomIndex = Math.floor(Math.random() * defaultAvatarFiles.length);
-                const randomAvatarName = defaultAvatarFiles[randomIndex];
-                finalAvatarUrl = new URL(randomAvatarName, window.location.origin).href;
+                finalAvatarUrl = defaultAvatarFiles[randomIndex]; // Varsayılan URL'yi ata
                 console.log('Varsayılan avatar atandı:', finalAvatarUrl);
             }
 
-            formMessage.textContent = 'Hesap oluşturuluyor...';
             const { data, error } = await supabase.auth.signUp({
                 email: email,
                 password: password,
@@ -266,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (error) {
-                // Supabase'den gelen hatayı yakala ve fırlat
+                // Supabase'den gelen hatayı işle
                 throw error;
             }
 
