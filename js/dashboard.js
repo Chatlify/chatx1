@@ -707,8 +707,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'messages',
-                    // Filtre, RLS sorunları nedeniyle güvenilmez olabileceğinden, istemci tarafında filtreleme yapacağız.
-                    // filter: `conversation_id=eq.${conversationId}`
                 },
                 async (payload) => {
                     console.log('[Sub] Received payload:', JSON.stringify(payload, null, 2));
@@ -721,32 +719,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return;
                     }
 
-                    // Gelen mesajın ID'sini ve mevcut sohbetin ID'sini karşılaştır
                     if (newMessage.conversation_id.toString() !== currentConversationId.toString()) {
                         console.log(`[Sub] Message for another conversation. Ours: ${currentConversationId}, Theirs: ${newMessage.conversation_id}. Skipping.`);
                         return;
                     }
 
-                    console.log('[Sub] Conversation ID matches. Processing message...');
-
-                    // Mesajın UI'da zaten olup olmadığını kontrol et (optimistik güncellemeler için)
-                    const messageExists = state.messages.some(m => m.id === newMessage.id);
-                    if (messageExists) {
-                        console.warn(`[Sub] Message with ID ${newMessage.id} already exists. Skipping.`);
-                        return;
-                    }
-
-                    console.log(`[Sub] Fetching profile for sender_id: ${newMessage.sender_id}`);
-                    const { data: senderData, error: senderError } = await supabase
+                    const { data: senderData } = await supabase
                         .from('profiles')
                         .select('username, avatar_url')
                         .eq('id', newMessage.sender_id)
                         .single();
-
-                    if (senderError) {
-                        console.error('[Sub] Error fetching sender profile:', senderError);
-                        // Profil olmasa bile mesajı göstermeye devam et
-                    }
 
                     const formattedMessage = {
                         id: newMessage.id,
@@ -761,11 +743,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     };
 
-                    console.log('[Sub] Formatted Message:', JSON.stringify(formattedMessage, null, 2));
-
-                    // Mesajı state'e ekle ve UI'yı yeniden render et
-                    state.messages.push(formattedMessage);
-                    renderer.renderMessages(state.messages);
+                    // Use the new centralized function to add the message
+                    renderer.addMessageToState(formattedMessage, false);
                 }
             ).subscribe((status) => {
                 console.log(`[Sub] Subscription status for conversation ${conversationId}: ${status}`);
@@ -786,6 +765,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 4. UI RENDERER ---
     const renderer = {
+        /**
+         * The single source of truth for adding/updating messages in the state
+         * and triggering a re-render.
+         * @param {object} message - The message object to add.
+         * @param {boolean} [isOptimistic=false] - If the message is a temporary one.
+         */
+        addMessageToState(message, isOptimistic = false) {
+            // Check for duplicates by ID, unless it's a temporary optimistic message
+            const messageExists = !isOptimistic && state.messages.some(m => m.id === message.id);
+            if (messageExists) {
+                console.warn(`[State] Message with ID ${message.id} already exists. Skipping.`);
+                return;
+            }
+
+            // If it's a real message from the server, remove the corresponding optimistic message
+            if (!isOptimistic && message.tempId) {
+                state.messages = state.messages.filter(m => m.id !== message.tempId);
+            }
+
+            // Add the new message
+            state.messages.push(message);
+
+            // Sort messages by creation time to ensure order
+            state.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+            // Re-render the chat
+            this.renderMessages(state.messages);
+        },
+
         render() {
             // Update active tab UI
             ui.tabsContainer.querySelectorAll('.tab').forEach(tab => {
@@ -1016,16 +1024,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Store state
             state.currentConversationId = conversationId;
 
-            // Clear previous messages and show a loading/prompt
+            // Clear previous messages and state
+            state.messages = [];
             if (chatMessages) {
                 chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><i class="fas fa-spinner fa-spin"></i><p>Mesajlar yükleniyor...</p></div>`;
             }
 
             // Fetch and render existing messages
             supabaseService.getMessages(conversationId).then(messages => {
-                state.messages = messages; // Store messages in state
                 if (messages.length > 0) {
-                    renderer.renderMessages(messages);
+                    state.messages = messages; // Replace state with historical messages
+                    this.renderMessages(messages);
                 } else {
                     chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
                 }
@@ -1371,9 +1380,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const content = ui.chatInput.value;
         if (!content.trim()) return;
 
+        const tempId = `temp-${Date.now()}`;
+
         // Optimistic UI update
         const tempMessage = {
-            id: `temp-${Date.now()}`,
+            id: tempId, // Temporary ID
             content: content.trim(),
             createdAt: new Date().toISOString(),
             sender_id: state.currentUser.id,
@@ -1383,11 +1394,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        console.log('Adding temporary message to UI:', tempMessage);
-
-        // Mevcut mesajlara ekle ve hemen göster
-        state.messages = [...state.messages, tempMessage];
-        renderer.renderMessages(state.messages);
+        // Use the new centralized function to add the message
+        renderer.addMessageToState(tempMessage, true);
 
         ui.chatInput.value = ''; // Clear input
         ui.chatInput.focus();
@@ -1401,28 +1409,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (error) {
                 console.error('Failed to send message:', error);
-                // Geçici mesajı kaldır
-                state.messages = state.messages.filter(m => m.id !== tempMessage.id);
+                // Remove the optimistic message on failure
+                state.messages = state.messages.filter(m => m.id !== tempId);
                 renderer.renderMessages(state.messages);
-                ui.chatInput.value = content; // Mesajı geri koy
+                ui.chatInput.value = content; // Restore the input
                 alert('Mesaj gönderilemedi: ' + (error.message || 'Bilinmeyen hata'));
             } else {
                 console.log('Message sent successfully, server response:', data);
-                // Geçici mesajı gerçek mesajla değiştir
+                // Replace the temporary message with the real one from the server
                 if (data && data.length > 0) {
                     const realMessage = data[0];
-                    state.messages = state.messages.map(m =>
-                        m.id === tempMessage.id ? realMessage : m
-                    );
-                    renderer.renderMessages(state.messages);
+                    realMessage.tempId = tempId; // Pass the tempId to find and replace it
+                    renderer.addMessageToState(realMessage, false);
                 }
             }
         } catch (err) {
             console.error('Unexpected error sending message:', err);
-            // Geçici mesajı kaldır
-            state.messages = state.messages.filter(m => m.id !== tempMessage.id);
+            // Remove the optimistic message
+            state.messages = state.messages.filter(m => m.id !== tempId);
             renderer.renderMessages(state.messages);
-            ui.chatInput.value = content; // Mesajı geri koy
+            ui.chatInput.value = content; // Restore the input
             alert('Mesaj gönderilirken beklenmeyen bir hata oluştu.');
         }
     }
