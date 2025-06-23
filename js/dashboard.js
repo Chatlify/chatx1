@@ -335,6 +335,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             pendingRequests.forEach(req => pendingRequestsList.innerHTML += createRequestHTML(req));
         },
+        renderUserFooter(profile) {
+            const { userFooterName, userFooterAvatar } = ui;
+            if (!profile) return;
+
+            userFooterName.textContent = profile.username || 'Kullanıcı';
+            userFooterAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
+        }
     };
 
     // --- 5. EVENT HANDLERS ---
@@ -388,6 +395,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const init = async () => {
         state.currentUser = await supabaseService.getUserSession();
         if (!state.currentUser) return;
+
+        // Mevcut kullanıcının profilini çek ve footer'ı render et
+        const userProfile = await supabaseService.getUserProfile(state.currentUser.id);
+        renderer.renderUserFooter(userProfile);
 
         // Sayfa ilk yüklendiğinde tüm verileri çek ve render et
         await fetchAndRenderAll();
