@@ -546,6 +546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getMessages(conversationId) {
             try {
+                // Önce doğrudan conversation_id ile sorgulayalım
                 const { data, error } = await supabase
                     .from('messages')
                     .select(`
@@ -569,6 +570,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 console.log('Retrieved messages from database:', data);
+
+                // Eğer hiç mesaj yoksa, RPC kullanarak deneyelim
+                if (!data || data.length === 0) {
+                    console.log('No messages found with direct query, trying RPC');
+
+                    // RPC kullanarak mesajları alalım
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
+                        conv_id: conversationId
+                    });
+
+                    if (rpcError) {
+                        console.error(`Error fetching messages with RPC for conversation ${conversationId}:`, rpcError);
+                        return [];
+                    }
+
+                    console.log('Retrieved messages via RPC:', rpcData);
+
+                    if (rpcData && rpcData.length > 0) {
+                        // RPC'den gelen verileri formatlayalım
+                        const formattedMessages = rpcData.map(msg => ({
+                            id: msg.id,
+                            conversation_id: msg.conversation_id,
+                            sender_id: msg.sender_id,
+                            content: msg.content,
+                            contentType: msg.contentType || 'text',
+                            createdAt: msg.createdAt,
+                            sender: {
+                                username: msg.sender_username || 'Kullanıcı',
+                                avatar_url: msg.sender_avatar_url || 'images/defaultavatar.png'
+                            }
+                        }));
+
+                        return formattedMessages;
+                    }
+                }
 
                 // Dönen veriyi UI için uygun formata dönüştür
                 const formattedMessages = data.map(msg => ({
@@ -653,11 +689,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 renderer.renderMessages(state.messages);
                                 console.log('Message added to UI, current messages:', state.messages);
                             }
-                        } else {
-                            // Alternatif olarak tüm mesajları yeniden yükleyelim
-                            const messages = await this.getMessages(conversationId);
-                            state.messages = messages;
-                            renderer.renderMessages(state.messages);
+                        } else if (payload.new) {
+                            // Farklı bir konuşmaya ait mesaj, ancak yine de kontrol edelim
+                            console.log('Message for different conversation received, checking if relevant');
+
+                            // Konuşma ID'sini kontrol et
+                            const msgConversationId = payload.new.conversation_id;
+                            if (msgConversationId === conversationId) {
+                                console.log('Message is actually for this conversation, processing');
+
+                                // Gönderen bilgilerini alalım
+                                const { data: senderData } = await supabase
+                                    .from('profiles')
+                                    .select('username, avatar_url')
+                                    .eq('id', payload.new.sender_id)
+                                    .single();
+
+                                // Mesajı UI için formatlayalım
+                                const formattedMessage = {
+                                    id: payload.new.id,
+                                    conversation_id: payload.new.conversation_id,
+                                    sender_id: payload.new.sender_id,
+                                    content: payload.new.content,
+                                    contentType: payload.new.contentType || 'text',
+                                    createdAt: payload.new.createdAt,
+                                    sender: {
+                                        username: senderData?.username || 'Kullanıcı',
+                                        avatar_url: senderData?.avatar_url || 'images/defaultavatar.png'
+                                    }
+                                };
+
+                                // Mesaj zaten mevcut mesajlar arasında var mı kontrol edelim
+                                const messageExists = state.messages.some(m => m.id === formattedMessage.id);
+
+                                if (!messageExists) {
+                                    // Mevcut mesajlara ekleyelim
+                                    state.messages = [...state.messages, formattedMessage];
+                                    renderer.renderMessages(state.messages);
+                                    console.log('Message added to UI, current messages:', state.messages);
+                                }
+                            }
                         }
                     }
                 )
