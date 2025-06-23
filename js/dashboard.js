@@ -292,40 +292,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Şu anki zamanı al
                 const currentTime = new Date().toISOString();
 
-                // İsteği kabul et - DOĞRUDAN RPC KULLAN
-                const { data: rpcResult, error: rpcError } = await supabase
-                    .rpc('accept_friendship_request_v2', {
-                        request_id: requestId
-                    });
+                let updateSuccess = false;
 
-                if (rpcError) {
-                    console.error('Error accepting friend request (RPC):', rpcError);
+                // Yöntem 1: Doğrudan güncelleme
+                const { error: updateError } = await supabase
+                    .from('friendships')
+                    .update({
+                        status: 'accepted',
+                        updated_at: currentTime
+                    })
+                    .eq('id', requestId);
 
-                    // RPC başarısız olursa normal güncellemeyi dene
-                    const { error: updateError } = await supabase
-                        .from('friendships')
-                        .update({
-                            status: 'accepted',
-                            updated_at: currentTime
-                        })
-                        .eq('id', requestId);
+                if (!updateError) {
+                    updateSuccess = true;
+                    console.log("Arkadaşlık isteği başarıyla güncellendi (doğrudan güncelleme)");
+                } else {
+                    console.error('Error accepting friend request (direct update):', updateError);
 
-                    if (updateError) {
-                        console.error('Error accepting friend request (fallback):', updateError);
+                    // Yöntem 2: RPC kullanmayı dene
+                    try {
+                        const { data: rpcResult, error: rpcError } = await supabase
+                            .rpc('accept_friendship_request', {
+                                request_id: requestId
+                            });
 
-                        // Son çare olarak doğrudan SQL çalıştır
-                        const { error: sqlError } = await supabase.rpc('execute_sql', {
-                            sql_query: `UPDATE friendships SET status = 'accepted', updated_at = NOW() WHERE id = ${requestId}`
-                        });
-
-                        if (sqlError) {
-                            console.error('Error accepting friend request (SQL fallback):', sqlError);
-                            return { success: false, message: 'Arkadaşlık isteği kabul edilirken bir hata oluştu.' };
+                        if (!rpcError) {
+                            updateSuccess = true;
+                            console.log("Arkadaşlık isteği başarıyla güncellendi (RPC):", rpcResult);
+                        } else {
+                            console.error('Error accepting friend request (RPC):', rpcError);
                         }
+                    } catch (rpcError) {
+                        console.error('Exception in RPC call:', rpcError);
                     }
                 }
-
-                console.log("RPC sonucu:", rpcResult);
 
                 // İstek gönderen kullanıcıya bildirim gönder
                 await this.broadcastFriendshipUpdate({
@@ -364,22 +364,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const receiverChannel = `friendship_updates_${data.user_id_2}`;
 
                 // Sender kanalına gönder
-                const senderResult = await supabase.channel(senderChannel).send({
-                    type: 'broadcast',
-                    event: 'friendship_update',
-                    payload: data
-                });
+                try {
+                    const senderResult = await supabase.channel(senderChannel).send({
+                        type: 'broadcast',
+                        event: 'friendship_update',
+                        payload: data
+                    });
 
-                console.log("Gönderen kullanıcı kanalına mesaj gönderildi:", senderResult);
+                    console.log("Gönderen kullanıcı kanalına mesaj gönderildi:", senderResult);
+                } catch (senderError) {
+                    console.error("Gönderen kanalına mesaj gönderilirken hata:", senderError);
+                }
 
                 // Receiver kanalına gönder
-                const receiverResult = await supabase.channel(receiverChannel).send({
-                    type: 'broadcast',
-                    event: 'friendship_update',
-                    payload: data
-                });
+                try {
+                    const receiverResult = await supabase.channel(receiverChannel).send({
+                        type: 'broadcast',
+                        event: 'friendship_update',
+                        payload: data
+                    });
 
-                console.log("Alan kullanıcı kanalına mesaj gönderildi:", receiverResult);
+                    console.log("Alan kullanıcı kanalına mesaj gönderildi:", receiverResult);
+                } catch (receiverError) {
+                    console.error("Alan kanalına mesaj gönderilirken hata:", receiverError);
+                }
 
                 // Veritabanı değişikliklerini manuel olarak tetikle
                 try {
