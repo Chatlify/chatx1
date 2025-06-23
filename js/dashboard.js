@@ -415,12 +415,58 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async getOrCreateConversation(userId1, userId2) {
             try {
-                // Önce mevcut bir konuşma var mı diye kontrol et
+                // Önce tablo yapısını anlamak için basit bir sorgu yapalım
+                const { data: sampleData, error: sampleError } = await supabase
+                    .from('conversations')
+                    .select('*')
+                    .limit(1);
+
+                if (sampleError) {
+                    console.error('Error fetching sample data:', sampleError);
+                    return null;
+                }
+
+                // Tablo yapısını konsola yazdıralım
+                console.log('Conversations table structure:', sampleData);
+
+                // Sütun adlarını belirleyelim
+                let user1Field = 'user_id_1'; // Varsayılan olarak bu adları kullanalım
+                let user2Field = 'user_id_2';
+
+                // Örnek veri varsa, gerçek sütun adlarını belirle
+                if (sampleData && sampleData.length > 0) {
+                    const sampleRow = sampleData[0];
+                    const keys = Object.keys(sampleRow);
+
+                    // Muhtemel sütun adlarını kontrol et
+                    const possibleUser1Fields = ['user_id_1', 'user1_id', 'user1', 'participant1', 'participant_1'];
+                    const possibleUser2Fields = ['user_id_2', 'user2_id', 'user2', 'participant2', 'participant_2'];
+
+                    // İlk kullanıcı ID'si için sütun adını bul
+                    for (const field of possibleUser1Fields) {
+                        if (keys.includes(field)) {
+                            user1Field = field;
+                            break;
+                        }
+                    }
+
+                    // İkinci kullanıcı ID'si için sütun adını bul
+                    for (const field of possibleUser2Fields) {
+                        if (keys.includes(field)) {
+                            user2Field = field;
+                            break;
+                        }
+                    }
+
+                    console.log(`Detected column names: ${user1Field} and ${user2Field}`);
+                }
+
+                // Şimdi doğru sütun adlarıyla sorgu yapalım
                 const { data: existingConversations, error: queryError } = await supabase
                     .from('conversations')
                     .select('id')
-                    .or(`user1_id.eq.${userId1},user2_id.eq.${userId2}`)
-                    .or(`user1_id.eq.${userId2},user2_id.eq.${userId1}`);
+                    .or(`${user1Field}.eq.${userId1},${user2Field}.eq.${userId2}`)
+                    .or(`${user1Field}.eq.${userId2},${user2Field}.eq.${userId1}`);
 
                 if (queryError) {
                     console.error('Error checking for existing conversation:', queryError);
@@ -434,15 +480,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 // Konuşma yoksa, yeni bir konuşma oluştur
+                const insertObj = {};
+                insertObj[user1Field] = userId1;
+                insertObj[user2Field] = userId2;
+                insertObj['created_at'] = new Date().toISOString();
+
                 const { data: newConversation, error: insertError } = await supabase
                     .from('conversations')
-                    .insert([
-                        {
-                            user1_id: userId1,
-                            user2_id: userId2,
-                            created_at: new Date().toISOString()
-                        }
-                    ])
+                    .insert([insertObj])
                     .select();
 
                 if (insertError) {
