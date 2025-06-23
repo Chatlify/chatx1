@@ -328,6 +328,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 4. UI RENDERER ---
     const renderer = {
         renderFriendsList() {
+            console.log("Arkadaş listesi render ediliyor...", state.friends);
+
+            if (!ui.onlineFriendsList || !ui.offlineFriendsList || !ui.dmList) {
+                console.error("Arkadaş listesi UI elemanları bulunamadı!");
+                return;
+            }
+
             ui.onlineFriendsList.innerHTML = '';
             ui.offlineFriendsList.innerHTML = '';
             ui.dmList.innerHTML = '';
@@ -335,7 +342,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             let onlineCount = 0;
             let offlineCount = 0;
 
+            if (!state.friends || state.friends.length === 0) {
+                console.log("Arkadaş listesi boş!");
+                ui.onlineSectionTitle.style.display = 'none';
+                ui.offlineSectionTitle.style.display = 'none';
+                return;
+            }
+
             state.friends.forEach(friend => {
+                if (!friend || !friend.id) {
+                    console.error("Geçersiz arkadaş verisi:", friend);
+                    return;
+                }
+
+                console.log("Arkadaş render ediliyor:", friend);
                 const isOnline = state.onlineFriends.has(friend.id);
                 const friendRow = this.createFriendRow(friend, isOnline);
                 const dmRow = this.createDMRow(friend, isOnline);
@@ -354,6 +374,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             ui.offlineCount.textContent = offlineCount;
             ui.onlineSectionTitle.style.display = onlineCount > 0 ? 'flex' : 'none';
             ui.offlineSectionTitle.style.display = offlineCount > 0 ? 'flex' : 'none';
+
+            console.log(`Arkadaş listesi güncellendi: ${onlineCount} çevrimiçi, ${offlineCount} çevrimdışı`);
         },
 
         async renderPendingRequests() {
@@ -398,6 +420,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         createPendingRequestRow(request) {
+            console.log("Bekleyen istek satırı oluşturuluyor:", request);
+
             const el = document.createElement('div');
             el.className = 'friend-request-item';
             el.dataset.requestId = request.id;
@@ -424,6 +448,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button class="btn accept-btn" title="Kabul Et"><i class="fas fa-check"></i></button>
                     <button class="btn reject-btn" title="Reddet"><i class="fas fa-times"></i></button>
                 </div>`;
+
+            console.log("Oluşturulan bekleyen istek satırı:", el.outerHTML);
             return el;
         },
 
@@ -464,6 +490,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return el;
         },
         async renderChatPanel(friendId) {
+            console.log("Sohbet paneli açılıyor, friendId:", friendId);
+
             // Önce arkadaş listesinden arkadaşı bul
             let friend = state.friends.find(f => f.id === friendId);
 
@@ -477,20 +505,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
+                console.log("Arkadaş profili alındı:", friend);
+
                 // Arkadaş listesine ekle (eğer yeni kabul edildiyse)
                 if (!state.friends.some(f => f.id === friendId)) {
                     state.friends.push(friend);
+                    // Arkadaş listesini güncelle
+                    renderer.renderFriendsList();
                 }
             }
 
             // Update header
-            ui.chatHeaderUser.querySelector('.chat-username').textContent = friend.username;
-            ui.chatHeaderUser.querySelector('.chat-avatar img').src = friend.avatar_url || 'images/defaultavatar.png';
+            ui.chatHeaderUser.querySelector('.chat-username').textContent = friend.username || "İsimsiz Kullanıcı";
+            const avatarImg = ui.chatHeaderUser.querySelector('.chat-avatar img');
+            avatarImg.src = friend.avatar_url || 'images/defaultavatar.png';
+            avatarImg.onerror = function () {
+                this.src = 'images/defaultavatar.png';
+            };
+
+            console.log("Sohbet paneli başlığı güncellendi");
 
             // Show/Hide panels
             ui.friendsPanel.classList.add('hidden');
             if (ui.sponsorServersContainer) ui.sponsorServersContainer.classList.add('hidden');
             ui.chatPanel.classList.remove('hidden');
+
+            console.log("Paneller güncellendi");
 
             // Unsubscribe from any previous chat channel to prevent multiple listeners
             if (state.messageSubscription) {
@@ -498,26 +538,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.messageSubscription = null;
             }
 
-            // Find conversation, fetch messages, and subscribe to new ones
-            const conversationId = await supabaseService.findOrCreateConversation(state.currentUser.id, friendId);
-            state.currentConversationId = conversationId;
+            try {
+                // Find conversation, fetch messages, and subscribe to new ones
+                console.log("Konuşma oluşturuluyor/bulunuyor...");
+                const conversationId = await supabaseService.findOrCreateConversation(state.currentUser.id, friendId);
+                console.log("Konuşma ID:", conversationId);
+                state.currentConversationId = conversationId;
 
-            const messages = await supabaseService.getMessages(conversationId);
-            renderer.renderMessages(messages);
+                console.log("Mesajlar getiriliyor...");
+                const messages = await supabaseService.getMessages(conversationId);
+                console.log("Mesajlar:", messages);
+                renderer.renderMessages(messages);
 
-            // Subscribe to new messages for this conversation
-            state.messageSubscription = supabaseService.subscribeToMessages(conversationId, async (payload) => {
-                const newMessage = payload.new;
+                // Subscribe to new messages for this conversation
+                console.log("Mesaj aboneliği oluşturuluyor...");
+                state.messageSubscription = supabaseService.subscribeToMessages(conversationId, async (payload) => {
+                    console.log("Yeni mesaj alındı:", payload);
+                    const newMessage = payload.new;
 
-                // Optimistic UI handles the sender's own messages, so we only need to render messages from others.
-                if (newMessage.sender_id === state.currentUser.id) {
-                    return;
-                }
+                    // Optimistic UI handles the sender's own messages, so we only need to render messages from others.
+                    if (newMessage.sender_id === state.currentUser.id) {
+                        return;
+                    }
 
-                // Since it's not our message, the sender must be the friend we're chatting with.
-                const senderProfile = friend;
-                renderer.appendMessage({ ...newMessage, sender: senderProfile });
-            });
+                    // Since it's not our message, the sender must be the friend we're chatting with.
+                    const senderProfile = friend;
+                    renderer.appendMessage({ ...newMessage, sender: senderProfile });
+                });
+
+                console.log("Sohbet paneli başarıyla açıldı");
+            } catch (error) {
+                console.error("Sohbet paneli açılırken hata:", error);
+            }
         },
 
         renderMessages(messages) {
@@ -757,9 +809,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             if (acceptBtn) {
+                console.log("Arkadaşlık isteği kabul ediliyor, requestId:", requestId, "userId:", userId);
+
+                // Önce butonu devre dışı bırak
+                acceptBtn.disabled = true;
+                acceptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
                 // İsteği kabul et
                 const result = await supabaseService.acceptFriendRequest(requestId);
                 if (result.success) {
+                    console.log("Arkadaşlık isteği başarıyla kabul edildi:", result);
+
                     // Başarıyla kabul edildi, UI'ı güncelle
                     requestItem.classList.add('accepted');
 
@@ -773,6 +833,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                             state.friends.push(senderProfile);
                             // Arkadaş listesini yeniden render et
                             renderer.renderFriendsList();
+
+                            // DM listesini güncelle
+                            const dmItem = document.createElement('div');
+                            dmItem.className = 'dm-item';
+                            dmItem.dataset.userId = senderProfile.id;
+                            dmItem.innerHTML = `
+                                <div class="dm-avatar">
+                                    <img src="${senderProfile.avatar_url || 'images/defaultavatar.png'}" alt="${senderProfile.username}">
+                                    <div class="dm-status offline"></div>
+                                </div>
+                                <div class="dm-info">
+                                    <div class="dm-name">${senderProfile.username}</div>
+                                </div>`;
+
+                            if (ui.dmList) {
+                                ui.dmList.appendChild(dmItem);
+                                console.log("DM öğesi eklendi:", dmItem);
+                            }
                         }
                     }
 
@@ -803,9 +881,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Sayfayı yenile (son çare olarak)
                         // window.location.reload();
                     }, 2000);
+                } else {
+                    console.error("Arkadaşlık isteği kabul edilemedi:", result);
+                    acceptBtn.disabled = false;
+                    acceptBtn.innerHTML = '<i class="fas fa-check"></i>';
                 }
             } else if (rejectBtn) {
                 // İsteği reddet
+                rejectBtn.disabled = true;
+                rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
                 const result = await supabaseService.rejectFriendRequest(requestId);
                 if (result.success) {
                     // Başarıyla reddedildi, UI'ı güncelle
@@ -827,14 +912,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     }, 500);
+                } else {
+                    rejectBtn.disabled = false;
+                    rejectBtn.innerHTML = '<i class="fas fa-times"></i>';
                 }
             }
         } catch (error) {
             console.error('Error handling friend request action:', error);
+            if (acceptBtn) {
+                acceptBtn.disabled = false;
+                acceptBtn.innerHTML = '<i class="fas fa-check"></i>';
+            }
+            if (rejectBtn) {
+                rejectBtn.disabled = false;
+                rejectBtn.innerHTML = '<i class="fas fa-times"></i>';
+            }
         }
     };
 
     const showFriendAcceptedNotification = (userId) => {
+        console.log("Arkadaşlık isteği kabul bildirimini gösteriliyor, userId:", userId);
+
         // Arkadaşlık isteği kabul edildikten sonra sohbet başlatma seçeneği sunma
         const notification = document.createElement('div');
         notification.className = 'friend-accepted-notification';
@@ -852,10 +950,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         document.body.appendChild(notification);
+        console.log("Bildirim DOM'a eklendi");
 
         // Animasyon için timeout
         setTimeout(() => {
             notification.classList.add('show');
+            console.log("Bildirim gösteriliyor");
         }, 100);
 
         // Bildirim kapatma
@@ -863,12 +963,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             notification.classList.remove('show');
             setTimeout(() => {
                 notification.remove();
+                console.log("Bildirim kaldırıldı");
             }, 300);
         }, 8000);
 
         // Sohbet başlatma butonu olayı
         const startChatBtn = notification.querySelector('.start-chat-btn');
         startChatBtn.addEventListener('click', async () => {
+            console.log("Sohbet başlatma butonuna tıklandı, userId:", userId);
             try {
                 // Sohbet panelini aç
                 await renderer.renderChatPanel(userId);
@@ -877,6 +979,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 notification.classList.remove('show');
                 setTimeout(() => {
                     notification.remove();
+                    console.log("Bildirim kaldırıldı (sohbet başlatıldı)");
                 }, 300);
             } catch (error) {
                 console.error('Error starting chat:', error);
