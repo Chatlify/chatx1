@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         offlineCount: document.querySelector('.offline-count'),
         onlineSectionTitle: document.querySelector('.online-section-title'),
         offlineSectionTitle: document.querySelector('.offline-section-title'),
+        pendingRequestsList: document.querySelector('.pending-requests-list'),
+        pendingSectionTitle: document.querySelector('.pending-requests-section-title'),
+        pendingCount: document.querySelector('.pending-requests-count'),
         dmList: document.querySelector('#friends-group .dm-items'),
         friendList: document.querySelector('.friend-list'),
 
@@ -83,9 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             statusMessage: null,
             closeBtn: null,
         },
-        pendingRequestsList: document.querySelector('.pending-requests-list'),
-        pendingSectionTitle: document.querySelector('.pending-requests-section-title'),
-        pendingCount: document.querySelector('.pending-requests-count'),
     };
 
     // --- 3. SUPABASE SERVICE ---
@@ -304,7 +304,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         async renderPendingRequests() {
-            if (!ui.pendingRequestsList) return;
+            if (!ui.pendingRequestsList) {
+                console.error('Bekleyen istekler listesi bulunamadı!');
+                return;
+            }
 
             ui.pendingRequestsList.innerHTML = '';
 
@@ -312,17 +315,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.pendingRequests = pendingRequests;
 
             if (pendingRequests.length === 0) {
-                ui.pendingSectionTitle.style.display = 'none';
+                if (ui.pendingSectionTitle) {
+                    ui.pendingSectionTitle.style.display = 'none';
+                }
                 return;
             }
 
-            ui.pendingSectionTitle.style.display = 'flex';
-            ui.pendingCount.textContent = pendingRequests.length;
+            if (ui.pendingSectionTitle) {
+                ui.pendingSectionTitle.style.display = 'flex';
+            }
+
+            if (ui.pendingCount) {
+                ui.pendingCount.textContent = pendingRequests.length;
+            }
 
             pendingRequests.forEach(request => {
                 const requestEl = this.createPendingRequestRow(request);
                 ui.pendingRequestsList.appendChild(requestEl);
             });
+
+            // Bekleyen isteklerin görünür olduğundan emin ol
+            ui.pendingRequestsList.style.display = 'block';
         },
 
         createPendingRequestRow(request) {
@@ -392,10 +405,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             return el;
         },
         async renderChatPanel(friendId) {
-            const friend = state.friends.find(f => f.id === friendId);
+            // Önce arkadaş listesinden arkadaşı bul
+            let friend = state.friends.find(f => f.id === friendId);
+
+            // Eğer arkadaş listesinde yoksa, profili getir
             if (!friend) {
-                console.error("Sohbet edilecek arkadaş bulunamadı:", friendId);
-                return;
+                console.log("Arkadaş listesinde bulunamadı, profil getiriliyor:", friendId);
+                friend = await supabaseService.getUserProfile(friendId);
+
+                if (!friend) {
+                    console.error("Sohbet edilecek arkadaş bulunamadı:", friendId);
+                    return;
+                }
+
+                // Arkadaş listesine ekle (eğer yeni kabul edildiyse)
+                if (!state.friends.some(f => f.id === friendId)) {
+                    state.friends.push(friend);
+                }
             }
 
             // Update header
@@ -677,12 +703,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (result.success) {
                     // Başarıyla kabul edildi, UI'ı güncelle
                     requestItem.classList.add('accepted');
+
+                    // Hemen arkadaş listesini güncelle
+                    const friendProfile = await supabaseService.getUserProfile(userId);
+                    if (friendProfile) {
+                        // Arkadaşı listeye ekle
+                        state.friends.push(friendProfile);
+                        // Arkadaş listesini yeniden render et
+                        renderer.renderFriendsList();
+                    }
+
+                    // Bekleyen istekleri listeden kaldır ve yenile
                     setTimeout(() => {
                         requestItem.remove();
-                        // Arkadaş listesini yenile
-                        fetchAndRenderFriends();
-                        // Bekleyen istekleri yenile
-                        renderer.renderPendingRequests();
+
+                        // Bekleyen istekler listesini güncelle
+                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== requestId);
+
+                        // Bekleyen isteklerin sayısını güncelle
+                        if (ui.pendingCount) {
+                            const newCount = parseInt(ui.pendingCount.textContent) - 1;
+                            ui.pendingCount.textContent = newCount;
+
+                            // Eğer bekleyen istek kalmadıysa başlığı gizle
+                            if (newCount <= 0 && ui.pendingSectionTitle) {
+                                ui.pendingSectionTitle.style.display = 'none';
+                            }
+                        }
 
                         // Kabul edilen kullanıcıyla sohbet başlatma seçeneği sun
                         showFriendAcceptedNotification(userId);
@@ -696,8 +743,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     requestItem.classList.add('rejected');
                     setTimeout(() => {
                         requestItem.remove();
-                        // Bekleyen istekleri yenile
-                        renderer.renderPendingRequests();
+
+                        // Bekleyen istekler listesini güncelle
+                        state.pendingRequests = state.pendingRequests.filter(req => req.id !== requestId);
+
+                        // Bekleyen isteklerin sayısını güncelle
+                        if (ui.pendingCount) {
+                            const newCount = parseInt(ui.pendingCount.textContent) - 1;
+                            ui.pendingCount.textContent = newCount;
+
+                            // Eğer bekleyen istek kalmadıysa başlığı gizle
+                            if (newCount <= 0 && ui.pendingSectionTitle) {
+                                ui.pendingSectionTitle.style.display = 'none';
+                            }
+                        }
                     }, 500);
                 }
             }
@@ -736,13 +795,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 notification.remove();
             }, 300);
-        }, 5000);
+        }, 8000);
 
         // Sohbet başlatma butonu olayı
         const startChatBtn = notification.querySelector('.start-chat-btn');
-        startChatBtn.addEventListener('click', () => {
-            renderer.renderChatPanel(userId);
-            notification.remove();
+        startChatBtn.addEventListener('click', async () => {
+            try {
+                // Sohbet panelini aç
+                await renderer.renderChatPanel(userId);
+
+                // Bildirim kapat
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            } catch (error) {
+                console.error('Error starting chat:', error);
+            }
         });
     };
 
