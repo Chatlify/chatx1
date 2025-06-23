@@ -16,20 +16,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modal HTML'ini oluştur
     const addFriendModalHTML = `
-        <div id="addFriendModal" class="modal">
-            <div class="modal-content">
+        <div id="addFriendModal" class="modal-overlay">
+            <div class="modal-container">
                 <div class="modal-header">
-                    <h2>Arkadaş Ekle</h2>
-                    <span class="close">&times;</span>
+                    <div class="modal-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>Arkadaş Ekle</h3>
+                    <button class="close-modal-btn" title="Kapat"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addFriendForm">
-                        <div class="form-group">
-                            <label for="friendUsername">Kullanıcı Adı</label>
-                            <input type="text" id="friendUsername" name="friendUsername" placeholder="Kullanıcı adını girin" required>
+                    <p class="modal-info">Arkadaş eklemek için Chatlify kullanıcı adını girin.</p>
+                    <form id="addFriendForm" class="input-wrapper">
+                        <div class="add-friend-input-container">
+                            <input type="text" id="friendUsername" placeholder="Kullanıcı adını yazın..." autocomplete="off" required>
+                            <i class="fas fa-user"></i>
                         </div>
                         <div id="addFriendStatus" class="status-message"></div>
-                        <button type="submit" id="addFriendSubmit">Arkadaşlık İsteği Gönder</button>
+                        <button type="submit" class="send-request-btn">
+                            <span>Arkadaşlık İsteği Gönder</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </form>
                 </div>
             </div>
@@ -45,17 +50,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modal elementlerini seç
     const addFriendModal = document.getElementById('addFriendModal');
-    const closeAddFriendBtn = addFriendModal.querySelector('.close');
+    const closeAddFriendBtn = addFriendModal.querySelector('.close-modal-btn');
     const addFriendForm = document.getElementById('addFriendForm');
     const addFriendStatus = document.getElementById('addFriendStatus');
+    const friendUsernameInput = document.getElementById('friendUsername');
 
-    if (!addFriendModal || !addFriendBtn || !closeAddFriendBtn || !addFriendForm || !addFriendStatus) {
+    if (!addFriendModal || !addFriendBtn || !closeAddFriendBtn || !addFriendForm || !addFriendStatus || !friendUsernameInput) {
         console.error('Arkadaş ekleme modülü için gerekli HTML elementleri bulunamadı.', {
             addFriendModal,
             addFriendBtn,
             closeAddFriendBtn,
             addFriendForm,
-            addFriendStatus
+            addFriendStatus,
+            friendUsernameInput
         });
         return;
     }
@@ -65,18 +72,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal açma fonksiyonu
     function openAddFriendModal() {
         console.log('Modal açılıyor...');
-        addFriendModal.style.display = 'block';
+        addFriendModal.style.display = 'flex';
+
+        // Kısa bir gecikme sonrası active sınıfını ekle (CSS geçişi için)
+        setTimeout(() => {
+            addFriendModal.classList.add('active');
+            // Panel açıldığında input alanına odaklan
+            if (friendUsernameInput) {
+                friendUsernameInput.focus();
+            }
+        }, 10);
+
         document.body.style.overflow = 'hidden'; // Scroll'u engelle
     }
 
     // Modal kapatma fonksiyonu
     function closeAddFriendModal() {
         console.log('Modal kapatılıyor...');
-        addFriendModal.style.display = 'none';
-        document.body.style.overflow = ''; // Scroll'u serbest bırak
-        addFriendForm.reset(); // Formu sıfırla
-        addFriendStatus.textContent = ''; // Durum mesajını temizle
-        addFriendStatus.className = 'status-message'; // Sınıfı sıfırla
+        addFriendModal.classList.remove('active');
+
+        // Animasyon süresi kadar bekleyip modalı gizle
+        setTimeout(() => {
+            addFriendModal.style.display = 'none';
+            document.body.style.overflow = ''; // Scroll'u serbest bırak
+            addFriendForm.reset(); // Formu sıfırla
+            addFriendStatus.textContent = ''; // Durum mesajını temizle
+            addFriendStatus.className = 'status-message'; // Sınıfı sıfırla
+        }, 300);
     }
 
     // Arkadaş ekle butonuna tıklandığında modalı aç
@@ -93,9 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Buton bulunamadığında manuel bir buton ekleyelim
         console.log('Manuel arkadaş ekle butonu ekleniyor...');
         const manualButton = document.createElement('button');
-        manualButton.id = 'manualAddFriendButton';
-        manualButton.textContent = 'Arkadaş Ekle';
-        manualButton.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 999; padding: 10px 15px; background-color: #7289da; color: white; border: none; border-radius: 5px; cursor: pointer;';
+        manualButton.id = 'manual-add-friend-btn';
+        manualButton.className = 'add-friend-btn';
+        manualButton.innerHTML = '<i class="fas fa-user-plus"></i><span>Arkadaş Ekle</span>';
+        manualButton.style.position = 'fixed';
+        manualButton.style.bottom = '20px';
+        manualButton.style.right = '20px';
+        manualButton.style.zIndex = '999';
         document.body.appendChild(manualButton);
 
         manualButton.addEventListener('click', openAddFriendModal);
@@ -113,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ESC tuşuna basıldığında modalı kapat
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && addFriendModal.style.display === 'block') {
+        if (event.key === 'Escape' && addFriendModal.classList.contains('active')) {
             closeAddFriendModal();
         }
     });
@@ -126,20 +152,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!friendUsername) {
             showStatus('Lütfen bir kullanıcı adı girin.', 'error');
+            friendUsernameInput.classList.add('error');
+
+            // Input alanını kısa bir süre titret
+            friendUsernameInput.classList.add('shake');
+            setTimeout(() => {
+                friendUsernameInput.classList.remove('shake');
+            }, 500);
+
             return;
         }
 
+        friendUsernameInput.classList.remove('error');
+
         // Butonun durumunu güncelle
-        const submitButton = document.getElementById('addFriendSubmit');
-        const originalText = submitButton.textContent;
-        submitButton.textContent = 'Gönderiliyor...';
+        const submitButton = document.querySelector('.send-request-btn');
+        const originalHTML = submitButton.innerHTML;
         submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
 
         try {
             // Global sendFriendRequest fonksiyonunu çağır
             await window.sendFriendRequest(friendUsername);
 
             showStatus(`${friendUsername} kullanıcısına arkadaşlık isteği gönderildi.`, 'success');
+
+            // Başarılı olduğunda input alanını temizle
+            friendUsernameInput.value = '';
 
             // Kısa bir süre sonra modalı kapat
             setTimeout(() => {
@@ -150,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showStatus(error.message || 'Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
         } finally {
             // Butonun durumunu geri al
-            submitButton.textContent = originalText;
+            submitButton.innerHTML = originalHTML;
             submitButton.disabled = false;
         }
     });
@@ -159,6 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function showStatus(message, type) {
         addFriendStatus.textContent = message;
         addFriendStatus.className = `status-message ${type}`;
+
+        // Bir okuma asistanı için ARIA özniteliklerini ayarla
+        addFriendStatus.setAttribute('role', 'status');
+        addFriendStatus.setAttribute('aria-live', 'polite');
     }
 
     // CSS stillerini ekle
