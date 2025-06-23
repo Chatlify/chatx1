@@ -557,13 +557,13 @@
 }
 
 .message-group.own-message .message-content {
-    background: var(--gradient-primary);
-    border-bottom-left-radius: 18px;
-    border-bottom-right-radius: 4px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-top-right-radius: 4px;
 }
 
 .message-group.own-message .message-group-content .message-content:last-child {
-    border-bottom-right-radius: 18px;
+    border-bottom-right-radius: 20px;
 }
 
 .message-group.own-message .message-group-avatar {
@@ -571,7 +571,7 @@
 }
 
 .message-group.own-message .message-group-header {
-    align-self: flex-end;
+    justify-content: flex-end;
 }
 
 

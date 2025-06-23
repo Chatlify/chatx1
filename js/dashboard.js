@@ -236,6 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         presenceChannel: null,
         pendingRequests: [],
         activeFriendsTab: 'all', // 'all', 'online', 'pending'
+        messages: [], // To hold current chat messages
     };
 
     // --- 2. UI ELEMENTS ---
@@ -424,8 +425,51 @@ document.addEventListener('DOMContentLoaded', async () => {
             return data;
         },
 
+        async sendMessage(conversationId, senderId, content) {
+            if (!content.trim()) return { error: { message: "Mesaj boş olamaz." } };
+
+            const { data, error } = await supabase
+                .from('messages')
+                .insert([
+                    {
+                        conversation_id: conversationId,
+                        sender_id: senderId,
+                        content: content.trim()
+                    }
+                ])
+                .select();
+
+            if (error) {
+                console.error('Error sending message:', error);
+            }
+            return { data, error };
+        },
+
+        async getMessages(conversationId) {
+            const { data, error } = await supabase
+                .from('messages')
+                .select(`
+                    id,
+                    content,
+                    created_at,
+                    sender_id,
+                    sender:sender_id (
+                        username,
+                        avatar_url
+                    )
+                `)
+                .eq('conversation_id', conversationId)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error(`Error fetching messages for conversation ${conversationId}:`, error);
+                return [];
+            }
+            return data;
+        },
+
         async sendFriendRequestByUsername(username) {
-            // ... (code for sending friend request)
+            // ... mevcut kod ...
         },
     };
 
@@ -557,12 +601,55 @@ document.addEventListener('DOMContentLoaded', async () => {
             dmList.innerHTML = friendsHTML;
         },
 
+        renderMessages(messages) {
+            if (!ui.chatMessages) return;
+
+            if (messages.length === 0) {
+                // Bu kısmı showChatPanel'de hallediyoruz, burası sadece render için
+                ui.chatMessages.innerHTML = '';
+                return;
+            }
+
+            const messagesHTML = messages.map(msg => {
+                const isOwnMessage = msg.sender_id === state.currentUser.id;
+                const author = isOwnMessage ? 'Sen' : msg.sender.username;
+                const avatarUrl = msg.sender.avatar_url || 'images/defaultavatar.png';
+                const time = new Date(msg.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+                // Gruplama için basitleştirilmiş mantık. Gerçek bir uygulamada daha karmaşık olabilir.
+                return `
+                    <div class="message-group ${isOwnMessage ? 'own-message' : ''}">
+                         ${!isOwnMessage ? `<div class="message-group-avatar"><img src="${avatarUrl}" alt="${author}"></div>` : ''}
+                        <div class="message-group-content">
+                            <div class="message-group-header">
+                                <span class="message-author">${author}</span>
+                                <span class="message-time">${time}</span>
+                            </div>
+                            <div class="message-content">
+                                <p>${msg.content}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            ui.chatMessages.innerHTML = messagesHTML;
+            // Scroll to the bottom
+            ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+        },
+
         showChatPanel(friend, conversationId) {
-            const { chatPanel, chatHeaderUser, chatMessages, dashboardContainer } = ui;
+            const { chatPanel, chatHeaderUser, chatMessages, dashboardContainer, chatInput } = ui;
 
             if (!dashboardContainer || !chatPanel) {
                 console.error("Critical UI element not found! Cannot display chat panel.");
                 return;
+            }
+
+            // Önceki abonelikten çık
+            if (state.messageSubscription) {
+                supabase.removeChannel(state.messageSubscription);
+                state.messageSubscription = null;
             }
 
             // Update header with friend's info
@@ -574,15 +661,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Store state
             state.currentConversationId = conversationId;
 
-            // Clear previous messages and show a prompt
+            // Clear previous messages and show a loading/prompt
             if (chatMessages) {
-                chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
+                chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><i class="fas fa-spinner fa-spin"></i><p>Mesajlar yükleniyor...</p></div>`;
             }
+
+            // Fetch and render existing messages
+            supabaseService.getMessages(conversationId).then(messages => {
+                state.messages = messages; // Store messages in state
+                if (messages.length > 0) {
+                    renderer.renderMessages(messages);
+                } else {
+                    chatMessages.innerHTML = `<div class="empty-state" style="padding-top: 40px;"><p>${friend.username} ile sohbetinize başlayın!</p></div>`;
+                }
+            });
+
+            // Setup real-time subscription for new messages
+            state.messageSubscription = supabase.channel(`public:messages:conversation_id=eq.${conversationId}`)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+                    // We need to fetch the message with the sender's profile
+                    const newMessage = await supabaseService.getMessages(conversationId);
+                    state.messages = newMessage;
+                    renderer.renderMessages(state.messages);
+                })
+                .subscribe();
+
 
             // Add 'chat-active' class to the main dashboard container to trigger all CSS changes
             dashboardContainer.classList.add('chat-active');
-            // Also, explicitly remove the 'hidden' class from the chat panel itself
-            chatPanel.classList.remove('hidden');
+            chatPanel.classList.remove('hidden'); // Also, explicitly remove the 'hidden' class from the chat panel itself
+            if (chatInput) chatInput.focus();
         },
 
         hideChatPanel() {
@@ -591,6 +699,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dashboardContainer.classList.remove('chat-active');
             }
             state.currentConversationId = null;
+
+            // Unsubscribe from the message channel
+            if (state.messageSubscription) {
+                supabase.removeChannel(state.messageSubscription);
+                state.messageSubscription = null;
+            }
         }
     };
 
@@ -726,7 +840,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ui.serverSidebar.classList.toggle('sidebar-collapsed');
                 });
             }
-            // Add listener for the new close button in the chat panel
+            if (ui.chatSendBtn) {
+                ui.chatSendBtn.addEventListener('click', handleSendMessage);
+            }
+            if (ui.chatInput) {
+                ui.chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault(); // Prevent new line
+                        handleSendMessage();
+                    }
+                });
+            }
             if (ui.chatCloseBtn) {
                 ui.chatCloseBtn.addEventListener('click', renderer.hideChatPanel);
             }
@@ -891,6 +1015,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) {
             console.error(`Error loading component ${componentName}:`, error);
+        }
+    }
+
+    async function handleSendMessage() {
+        if (!ui.chatInput || !state.currentConversationId) return;
+
+        const content = ui.chatInput.value;
+        if (!content.trim()) return;
+
+        // Optimistic UI update
+        const tempMessage = {
+            id: `temp-${Date.now()}`,
+            content: content.trim(),
+            created_at: new Date().toISOString(),
+            sender_id: state.currentUser.id,
+            sender: {
+                username: 'Sen',
+                avatar_url: ui.userFooterAvatar.src,
+            }
+        };
+        state.messages.push(tempMessage);
+        renderer.renderMessages(state.messages);
+
+        ui.chatInput.value = ''; // Clear input
+        ui.chatInput.focus();
+
+        const { error } = await supabaseService.sendMessage(
+            state.currentConversationId,
+            state.currentUser.id,
+            content
+        );
+
+        if (error) {
+            console.error('Failed to send message:', error);
+            // Handle error, maybe show a "failed to send" indicator
+            // For simplicity, we'll just log it. A more robust app would update the UI.
+            state.messages = state.messages.filter(m => m.id !== tempMessage.id); // remove optimistic message
+            renderer.renderMessages(state.messages);
+            ui.chatInput.value = content; // a
         }
     }
 
