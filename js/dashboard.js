@@ -332,6 +332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         friendsContentContainer: document.querySelector('.friends-content-container'),
         tabsContainer: document.querySelector('.tabs-container'),
         dashboardContainer: document.querySelector('.dashboard-container'),
+        friendsPanelContainer: document.querySelector('.friends-panel-container'),
     };
 
     // --- 3. SUPABASE SERVICE ---
@@ -970,12 +971,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             // YENİ VE ÖNEMLİ: Yeni bir sohbet göstermeden önce, eskisini tamamen temizle.
             cleanupChatState();
 
-            const { chatPanel, chatHeaderUser, dashboardContainer } = ui;
+            const { chatPanel, chatHeaderUser, dashboardContainer, friendsPanelContainer } = ui;
 
             if (!dashboardContainer || !chatPanel) {
                 console.error("[CHAT] Critical UI element not found!");
                 return;
             }
+
+            // Friends panelini gizle, chat panelini göster
+            if (friendsPanelContainer) friendsPanelContainer.classList.add('hidden');
+            chatPanel.classList.remove('hidden');
+
 
             // Aşağı kaydırma butonu ekle
             this.setupScrollDownButton();
@@ -1032,14 +1038,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Dashboard'a 'chat-active' sınıfını ekleyerek tüm CSS değişikliklerini tetikle
             dashboardContainer.classList.add('chat-active');
 
-            // 'hidden' sınıfını sohbet panelinden kaldır
-            chatPanel.classList.remove('hidden');
 
             // Metin kutusuna odaklan
             if (ui.chatInput) {
                 setTimeout(() => {
                     ui.chatInput.focus();
-                }, 300);
+                }, 300); // Transition süresiyle uyumlu
             }
         },
 
@@ -1080,11 +1084,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         hideChatPanel() {
             console.log('[UI] Hiding chat panel.');
-            const { dashboardContainer, chatMessages, chatHeaderUser } = ui;
+            const { dashboardContainer, chatMessages, chatHeaderUser, chatPanel, friendsPanelContainer } = ui;
 
             if (dashboardContainer) {
                 dashboardContainer.classList.remove('chat-active');
             }
+
+            // Chat panelini gizle, friends panelini göster
+            if (chatPanel) chatPanel.classList.add('hidden');
+            if (friendsPanelContainer) friendsPanelContainer.classList.remove('hidden');
+
 
             // Merkezi temizlik fonksiyonunu çağır.
             cleanupChatState();
@@ -1159,7 +1168,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Kaydırma olaylarını izle
             if (ui.chatMessages) {
-                // Kaydırma olayını dinle
                 ui.chatMessages.addEventListener('scroll', () => {
                     const { scrollTop, scrollHeight, clientHeight } = ui.chatMessages;
                     // En aşağıdan 200px yukarıdaysak butonu göster
@@ -1171,36 +1179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         scrollDownBtn.classList.remove('visible');
                     }
                 });
-
-                // Mouse tekerleği olayını iyileştir
-                ui.chatMessages.addEventListener('wheel', (event) => {
-                    // Tekerlek olayını yakaladığımızı konsolda gösterelim
-                    console.log("[SCROLL] Mouse wheel event detected:", event.deltaY);
-
-                    // Eğer tarayıcı wheel olayını doğru işlemiyorsa, manuel olarak ele alalım
-                    // Bu, bazı tarayıcılarda kaydırma sorununun çözülmesine yardımcı olabilir
-                    if (Math.abs(event.deltaY) > 0) {
-                        const scrollAmount = event.deltaY * 0.5; // Kaydırma hızını ayarla
-                        ui.chatMessages.scrollTop += scrollAmount;
-
-                        // Olayın varsayılan davranışını engelleyip, manuel kaydırma uyguluyoruz
-                        // event.preventDefault();
-                    }
-                }, { passive: true }); // passive: true performans için önemli
-
-                // Dokunmatik kaydırma için touch olaylarını da dinleyelim
-                let startY = 0;
-                let startScrollTop = 0;
-
-                ui.chatMessages.addEventListener('touchstart', (event) => {
-                    startY = event.touches[0].pageY;
-                    startScrollTop = ui.chatMessages.scrollTop;
-                }, { passive: true });
-
-                ui.chatMessages.addEventListener('touchmove', (event) => {
-                    const deltaY = startY - event.touches[0].pageY;
-                    ui.chatMessages.scrollTop = startScrollTop + deltaY;
-                }, { passive: true });
 
                 // Yeni mesaj geldiğinde kaydırma pozisyonunu kontrol et
                 const checkScroll = () => {
