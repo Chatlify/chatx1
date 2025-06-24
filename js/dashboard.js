@@ -1496,33 +1496,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
         try {
-            // Profil modal bileşenini yükle
+            // Profil modal bileşenini yükle ve hazır olmasını bekle
             await loadComponent('profile-modal');
 
             // Kullanıcının çevrimiçi durumunu kontrol et
             user.is_online = state.onlineFriends.has(user.id);
 
-            // Gecikme ile profil modalını başlatarak DOM'un hazır olmasını bekle
-            setTimeout(() => {
-                window.initializeProfileModal(user, state.currentUser, supabase, (result) => {
-                    if (result && result.action === 'message') {
-                        // Kullanıcı mesaj göndermek isterse
-                        supabaseService.getOrCreateConversation(state.currentUser.id, result.userId)
-                            .then(conversationId => {
-                                if (conversationId) {
-                                    const friend = state.friends.find(f => f.id === result.userId);
-                                    if (friend) {
-                                        renderer.showChatPanel(friend, conversationId);
-                                    }
-                                }
-                            });
-                    } else if (result && result.action === 'removed') {
-                        // Arkadaş listesini yeniden yükle
-                        fetchAndRenderAll();
-                    }
-                });
-            }, 50); // DOM'un güncellenmesi için küçük bir güvenlik payı
-
+            // Fonksiyonun hazır olduğu garanti edildi, doğrudan çağır
+            window.initializeProfileModal(user, state.currentUser, supabase, (result) => {
+                if (result && result.action === 'message') {
+                    supabaseService.getOrCreateConversation(state.currentUser.id, result.userId)
+                        .then(conversationId => {
+                            if (conversationId) {
+                                const friend = state.friends.find(f => f.id === result.userId);
+                                if (friend) renderer.showChatPanel(friend, conversationId);
+                            }
+                        });
+                } else if (result && result.action === 'removed') {
+                    fetchAndRenderAll();
+                }
+            });
         } catch (error) {
             console.error('Profil modalı yüklenirken bir hata oluştu:', error);
         }
@@ -1537,7 +1530,6 @@ document.addEventListener('DOMContentLoaded', async () => {
      */
     async function loadComponent(componentName) {
         try {
-            // Komponentler için farklı yollar tanımla
             const componentPaths = {
                 'add-friend': {
                     html: 'components/add-friend/add-friend.html',
@@ -1557,15 +1549,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     js: 'components/profile-modal/profile-modal.js',
                     initFunction: 'initializeProfileModal'
                 }
-                // Diğer komponentler buraya eklenebilir
             };
 
             const component = componentPaths[componentName];
-            if (!component) {
-                throw new Error(`Bileşen bulunamadı: ${componentName}`);
-            }
+            if (!component) throw new Error(`Bileşen bulunamadı: ${componentName}`);
 
-            // HTML şablonunu yükle (önbellekli)
             let htmlContent;
             if (componentHtmlCache.has(component.html)) {
                 htmlContent = componentHtmlCache.get(component.html);
@@ -1576,59 +1564,61 @@ document.addEventListener('DOMContentLoaded', async () => {
                 componentHtmlCache.set(component.html, htmlContent);
             }
 
-            // CSS dosyasını kontrol et ve yükle
-            const existingCss = document.head.querySelector(`link[href="${component.css}"]`);
-            if (!existingCss) {
+            if (component.css && !document.head.querySelector(`link[href="${component.css}"]`)) {
                 const cssLink = document.createElement('link');
                 cssLink.rel = 'stylesheet';
                 cssLink.href = component.css;
                 document.head.appendChild(cssLink);
             }
 
-            // JS dosyasını kontrol et ve yükle
-            const existingJs = document.head.querySelector(`script[src="${component.js}"]`);
-            if (!existingJs) {
-                const jsScript = document.createElement('script');
-                jsScript.src = component.js;
-                document.head.appendChild(jsScript);
+            // JavaScript'in yüklenmesini ve hazır olmasını bekle
+            if (component.js && component.initFunction) {
+                if (typeof window[component.initFunction] !== 'function') {
+                    const existingJs = document.head.querySelector(`script[src="${component.js}"]`);
+                    if (!existingJs) {
+                        const jsScript = document.createElement('script');
+                        jsScript.src = component.js;
+                        document.head.appendChild(jsScript);
+                    }
 
-                // Script yüklenene kadar bekle
-                await new Promise((resolve, reject) => {
-                    jsScript.onload = resolve;
-                    jsScript.onerror = reject;
-                });
+                    // Fonksiyonun window'a eklenmesini bekle (polling)
+                    await new Promise((resolve, reject) => {
+                        const maxTries = 50; // 5 saniye bekle
+                        let tries = 0;
+                        const interval = setInterval(() => {
+                            if (typeof window[component.initFunction] === 'function') {
+                                clearInterval(interval);
+                                resolve();
+                            } else if (tries++ > maxTries) {
+                                clearInterval(interval);
+                                reject(new Error(`${component.initFunction} fonksiyonu yüklenemedi.`));
+                            }
+                        }, 100);
+                    });
+                }
             }
 
-            // Container oluştur
             let container = document.getElementById(`${componentName}-modal-container`);
             if (!container) {
                 container = document.createElement('div');
                 container.id = `${componentName}-modal-container`;
                 document.body.appendChild(container);
             }
-
-            // HTML içeriğini container'a yerleştir
             container.innerHTML = htmlContent;
 
-            // Bileşenin initialize fonksiyonunu çağır
-            // Küçük bir gecikme ekleyerek DOM'un güncellenmesini bekle
-            setTimeout(() => {
-                // Profil modalı hariç diğer componentlerin initialize fonksiyonunu çağır
-                if (component.initFunction && componentName !== 'profile-modal') {
-                    if (window[component.initFunction]) {
-                        window[component.initFunction](supabase, () => {
-                            console.log(`${componentName} bileşeni kapatıldı`);
-                            fetchAndRenderAll();
-                        });
-                    } else {
-                        console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
-                    }
+            // Otomatik başlatma, yalnızca profile-modal dışındaki bileşenler için
+            if (component.initFunction && componentName !== 'profile-modal') {
+                if (window[component.initFunction]) {
+                    window[component.initFunction](supabase, () => {
+                        console.log(`${componentName} bileşeni kapatıldı`);
+                        fetchAndRenderAll();
+                    });
+                } else {
+                    console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
                 }
-            }, 100);
-
+            }
         } catch (error) {
             console.error(`${componentName} bileşeni yüklenirken hata oluştu:`, error);
-            alert(`Bileşen yüklenemedi: ${error.message}`);
         }
     }
 
