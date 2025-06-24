@@ -1493,6 +1493,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Profil modal'ı için başlatıcıyı tutacak değişken
+    let profileModalInitializer = null;
+
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
         if (!user) {
