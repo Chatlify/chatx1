@@ -688,8 +688,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 4. UI RENDERER ---
     const renderer = {
         render() {
-            // Update active tab class
-            ui.tabsContainer.querySelectorAll('[data-tab]').forEach(tab => {
+            // Update active tab UI
+            ui.tabsContainer.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.tab === state.activeFriendsTab);
             });
 
@@ -1121,6 +1121,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // İlgili içeriği göster (data-tab attribute'una göre)
         const selectedTab = tab.dataset.tab;
         console.log(`Selected tab: ${selectedTab}`);
+        // Update state to reflect active tab
+        state.activeFriendsTab = selectedTab;
 
         // Seçilen tab'a göre içeriği güncelle
         renderer.render();
