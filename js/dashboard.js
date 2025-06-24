@@ -347,17 +347,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         async getFriends(userId) {
-            const { data, error } = await supabase
-                .from('friendships')
-                .select('user_id_1, user_id_2, profiles_1:user_id_1(id, username, avatar_url), profiles_2:user_id_2(id, username, avatar_url)')
-                .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
-                .eq('status', 'accepted');
+            const { data, error } = await supabase.rpc('get_friends_with_details', { user_id_input: userId });
 
             if (error) {
-                console.error('Error fetching friends:', error);
+                console.error('Error fetching friends via RPC:', error);
                 return [];
             }
-            return data.map(f => (f.user_id_1 === userId ? f.profiles_2 : f.profiles_1)).filter(Boolean);
+            return data;
         },
 
         async getPendingRequests(userId) {
@@ -730,21 +726,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 return `
                     <div class="friend-card" data-user-id="${friend.id}">
-                        <div class="card-banner"></div>
-                        <div class="card-avatar">
+                        <div class="card-banner" data-action="profile"></div>
+                        <div class="card-avatar" data-action="profile">
                             <img src="${friend.avatar_url || 'images/defaultavatar.png'}" alt="${friend.username}'s avatar">
                             <div class="status-dot ${statusClass}" title="${statusText}"></div>
                         </div>
-                        <div class="card-username">${friend.username}</div>
-                        <div class="card-status">${statusText}</div>
+                        <div class="card-username" data-action="profile">${friend.username}</div>
+                        <div class="card-status" data-action="profile">${statusText}</div>
                         <div class="card-actions">
-                            <button class="card-action-btn message-btn" title="Mesaj Gönder">
+                            <button class="card-action-btn message-btn" title="Mesaj Gönder" data-action="message">
                                 <i class="fas fa-comment-dots"></i>
                             </button>
-                            <button class="card-action-btn call-btn" title="Sesli Arama">
+                            <button class="card-action-btn call-btn" title="Sesli Arama" data-action="call">
                                 <i class="fas fa-phone-alt"></i>
                             </button>
-                            <button class="card-action-btn profile-btn" title="Profil">
+                            <button class="card-action-btn profile-btn" title="Profil" data-action="profile">
                                 <i class="fas fa-user"></i>
                             </button>
                         </div>
@@ -1473,35 +1469,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // This function needs to be created to handle clicks on friend cards
     function handleFriendCardAction(e) {
-        const messageBtn = e.target.closest('.card-action-btn[title="Mesaj Gönder"]');
-        const callBtn = e.target.closest('.card-action-btn[title="Sesli Arama"]');
-        const profileBtn = e.target.closest('.card-action-btn[title="Profil"]');
+        const target = e.target;
+        const actionTarget = target.closest('[data-action]');
 
-        if (!messageBtn && !callBtn && !profileBtn) return;
+        if (!actionTarget) return;
 
-        const card = e.target.closest('.friend-card');
+        const action = actionTarget.dataset.action;
+        const card = target.closest('.friend-card');
+
         if (!card) return;
 
         const friendId = card.dataset.userId;
         const friend = state.friends.find(f => f.id === friendId);
+
         if (!friend) return;
 
-        debugger; // Kodu burada durdur ve 'friend' nesnesini incele
-        console.log("Arkadaş kartı tıklandı, profil için veri:", friend);
-
-        const action = e.target.closest('[data-action]')?.dataset.action;
-
-        if (action === 'message') {
-            supabaseService.getOrCreateConversation(state.currentUser.id, friendId)
-                .then(conversationId => {
-                    if (conversationId) {
-                        renderer.showChatPanel(friend, conversationId);
-                    }
-                });
-        } else if (action === 'profile') {
-            showProfileModal(friend);
-        } else if (action === 'call') {
-            alert('Sesli arama özelliği yakında eklenecek!');
+        switch (action) {
+            case 'message':
+                supabaseService.getOrCreateConversation(state.currentUser.id, friendId)
+                    .then(conversationId => {
+                        if (conversationId) {
+                            renderer.showChatPanel(friend, conversationId);
+                        }
+                    });
+                break;
+            case 'profile':
+                showProfileModal(friend);
+                break;
+            case 'call':
+                alert('Sesli arama özelliği yakında eklenecek!');
+                break;
         }
     }
 
@@ -1726,7 +1723,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('.gif-btn').classList.toggle('active');
     }
 
-    // Panellerin dışına tıklandığında kapatma
+    // Panellerin dışına tıklanınca kapatma
     function handleClickOutsidePanels(e) {
         const emojiPanel = document.querySelector('.emoji-panel');
         const gifPanel = document.querySelector('.gif-panel');
