@@ -1493,70 +1493,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Profil modal'ı için başlatıcıyı tutacak değişken
-    let profileModalInitializer = null;
-
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
-        if (!user) {
-            console.error("Profil görüntülemek için kullanıcı verisi sağlanmadı.");
-            return;
-        }
-
-        // Kullanıcının çevrimiçi durumunu ekle
-        user.is_online = state.onlineFriends.has(user.id);
-
-        const componentName = 'profile-modal';
-        const componentContainerId = `${componentName}-container`;
-        const componentScriptId = `${componentName}-script`;
-
         try {
-            if (!profileModalInitializer) {
-                console.log("Profil modalı ilk kez yükleniyor...");
-                const existingContainer = document.getElementById(componentContainerId);
-                if (existingContainer) existingContainer.remove();
+            // Profil modal bileşenini yükle
+            await loadComponent('profile-modal');
 
-                const response = await fetch(`components/${componentName}/${componentName}.html`);
-                if (!response.ok) throw new Error('HTML yüklenemedi');
-                const content = await response.text();
+            // Kullanıcının çevrimiçi durumunu kontrol et
+            user.is_online = state.onlineFriends.has(user.id);
 
-                const container = document.createElement('div');
-                container.id = componentContainerId;
-                container.innerHTML = content;
-                document.body.appendChild(container);
-
-                const script = document.createElement('script');
-                script.id = componentScriptId;
-                script.src = `components/${componentName}/${componentName}.js`;
-
-                await new Promise((resolve, reject) => {
-                    script.onload = () => {
-                        if (window.createProfileModalInitializer) {
-                            profileModalInitializer = window.createProfileModalInitializer();
-                            console.log("Profil modalı başlatıcısı oluşturuldu.");
-                            resolve();
-                        } else {
-                            reject(new Error('createProfileModalInitializer bulunamadı.'));
-                        }
-                    };
-                    script.onerror = () => reject(new Error('Script yüklenemedi.'));
-                    document.body.appendChild(script);
-                });
-            }
-
-            if (profileModalInitializer) {
-                profileModalInitializer(user, state.currentUser, supabase, (result) => {
-                    console.log("Profil modalı kapatıldı. Sonuç:", result);
-                    if (result?.action === 'removed') {
-                        fetchAndRenderAll(); // Arkadaş silindiyse listeyi yenile
+            // Gecikme ile profil modalını başlatarak DOM'un hazır olmasını bekle
+            setTimeout(() => {
+                window.initializeProfileModal(user, state.currentUser, supabase, (result) => {
+                    if (result && result.action === 'message') {
+                        // Kullanıcı mesaj göndermek isterse
+                        supabaseService.getOrCreateConversation(state.currentUser.id, result.userId)
+                            .then(conversationId => {
+                                if (conversationId) {
+                                    const friend = state.friends.find(f => f.id === result.userId);
+                                    if (friend) {
+                                        renderer.showChatPanel(friend, conversationId);
+                                    }
+                                }
+                            });
+                    } else if (result && result.action === 'removed') {
+                        // Arkadaş listesini yeniden yükle
+                        fetchAndRenderAll();
                     }
                 });
-            } else {
-                throw new Error("Profil modalı başlatılamadı.");
-            }
+            }, 50); // DOM'un güncellenmesi için küçük bir güvenlik payı
 
         } catch (error) {
-            console.error(`${componentName} yüklenirken veya gösterilirken hata oluştu:`, error);
+            console.error('Profil modalı yüklenirken bir hata oluştu:', error);
         }
     }
 
@@ -1645,14 +1613,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Bileşenin initialize fonksiyonunu çağır
             // Küçük bir gecikme ekleyerek DOM'un güncellenmesini bekle
             setTimeout(() => {
-                if (window[component.initFunction]) {
-                    window[component.initFunction](supabase, () => {
-                        console.log(`${componentName} bileşeni kapatıldı`);
-                        // Burada gerekliyse yenileme işlemi yapılabilir
-                        fetchAndRenderAll();
-                    });
-                } else {
-                    console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
+                // Profil modalı hariç diğer componentlerin initialize fonksiyonunu çağır
+                if (component.initFunction && componentName !== 'profile-modal') {
+                    if (window[component.initFunction]) {
+                        window[component.initFunction](supabase, () => {
+                            console.log(`${componentName} bileşeni kapatıldı`);
+                            fetchAndRenderAll();
+                        });
+                    } else {
+                        console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
+                    }
                 }
             }, 100);
 
