@@ -1,241 +1,298 @@
 /**
- * Initializes the Profile Modal panel's functionality.
- * This function is designed to be called after the panel's HTML is loaded into the DOM.
- * @param {Object} user - The user object whose profile is being displayed.
- * @param {Object} currentUser - The currently logged-in user.
- * @param {SupabaseClient} supabase - The Supabase client instance.
- * @param {function} onComplete - A callback function to run after the panel is closed or an action is completed.
+ * Profil Modal Bileşeni
+ * Başka bir kullanıcının profil bilgilerini görüntülemek için kullanılır.
+ * 
+ * @param {Object} user - Görüntülenecek kullanıcı nesnesi
+ * @param {Object} currentUser - Mevcut oturum açmış kullanıcı
+ * @param {SupabaseClient} supabase - Supabase istemcisi
+ * @param {Function} onComplete - Modal kapatıldığında çalıştırılacak fonksiyon
  */
 window.initializeProfileModal = function (user, currentUser, supabase, onComplete) {
-    console.log("Initializing profile modal with user data:", user);
+    console.log("Profil modalı yükleniyor:", user);
 
-    // Hızlı çıkış, kullanıcı verisi yoksa
-    if (!user || typeof user !== 'object') {
-        console.error('Invalid user data provided for profile modal');
-        if (typeof onComplete === 'function') {
-            onComplete({ error: 'Invalid user data' });
-        }
+    // Panel elementi
+    const modal = document.getElementById('profile-modal');
+    if (!modal) {
+        console.error('Profil modalı DOM\'da bulunamadı!');
         return;
     }
 
-    const panel = document.getElementById('profile-modal');
-    if (!panel) {
-        console.error('Profile Modal not found in the DOM.');
-        return;
-    }
+    // Panel için zamanlayıcı
+    let modalCloseTimer;
 
-    // UI Elements
-    const closeButton = panel.querySelector('.close-modal-btn');
-    const avatar = panel.querySelector('.profile-avatar img');
-    const username = panel.querySelector('.profile-username');
-    const statusDot = panel.querySelector('.status-dot');
-    const statusIndicator = panel.querySelector('.status-indicator');
-    const statusText = panel.querySelector('.status-text');
-    const profileTag = panel.querySelector('.profile-tag');
-    const bio = panel.querySelector('.bio');
-    const memberSince = panel.querySelector('.member-since');
-    const memberDuration = panel.querySelector('.member-duration');
-    const badgesContainer = panel.querySelector('.profile-badges');
-    const messageBtn = panel.querySelector('.message-btn');
-    const callBtn = panel.querySelector('.call-btn');
-    const removeFriendBtn = panel.querySelector('.remove-friend-btn');
-    const blockBtn = panel.querySelector('.block-btn');
+    // Modal UI elementleri
+    const elements = {
+        // Avatar ve durum
+        avatar: modal.querySelector('.profile-avatar img'),
+        statusIndicator: modal.querySelector('.status-indicator'),
+        statusDot: modal.querySelector('.status-dot'),
+        statusText: modal.querySelector('.status-text'),
 
-    // --- Helper Functions ---
+        // Kullanıcı bilgileri
+        username: modal.querySelector('.profile-username'),
+        tag: modal.querySelector('.profile-tag'),
+        bio: modal.querySelector('.bio'),
+        memberSince: modal.querySelector('.member-since'),
+        memberDuration: modal.querySelector('.member-duration'),
+
+        // Rozetler
+        badgesContainer: modal.querySelector('.badges-container'),
+
+        // Butonlar
+        messageButton: modal.querySelector('.message-btn'),
+        callButton: modal.querySelector('.call-btn'),
+        removeFriendButton: modal.querySelector('.remove-friend-btn'),
+        blockButton: modal.querySelector('.block-btn'),
+        closeButton: modal.querySelector('.close-modal-btn')
+    };
 
     /**
-     * Formats a date in a human-readable format
-     * @param {string|Date} dateString - The date to format
-     * @returns {string} - Formatted date string
+     * Modal'ı animasyonlu bir şekilde açar
      */
-    function formatDate(dateString) {
-        if (!dateString) return 'Bilinmiyor';
+    function openModal() {
+        // İlk açılışta kullanıcı verilerini göster
+        renderUserData();
 
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Geçersiz Tarih';
-
-        return date.toLocaleDateString('tr-TR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
+        // Animasyonlu açılış için setTimeout kullanma
+        clearTimeout(modalCloseTimer);
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
         });
+
+        // ESC ile kapatma için event listener ekle
+        document.addEventListener('keydown', handleEscapeKey);
     }
 
     /**
-     * Calculates the time elapsed since a given date
-     * @param {string|Date} dateString - The start date
-     * @returns {string} - Human-readable time elapsed
+     * Modal'ı animasyonlu bir şekilde kapatır
      */
-    function calculateTimeElapsed(dateString) {
-        if (!dateString) return 'Bilinmiyor';
+    function closeModal() {
+        modal.classList.remove('active');
 
-        const startDate = new Date(dateString);
-        if (isNaN(startDate.getTime())) return 'Geçersiz Tarih';
+        // Animasyon tamamlanana kadar bekle
+        modalCloseTimer = setTimeout(() => {
+            // ESC ile kapatma event listener'ını kaldır
+            document.removeEventListener('keydown', handleEscapeKey);
 
-        const now = new Date();
-        const diffTime = Math.abs(now - startDate);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diffMonths = Math.floor(diffDays / 30);
-        const diffYears = Math.floor(diffDays / 365);
-
-        if (diffYears > 0) {
-            return `${diffYears} yıl ${Math.floor((diffDays % 365) / 30)} ay`;
-        } else if (diffMonths > 0) {
-            return `${diffMonths} ay ${diffDays % 30} gün`;
-        } else {
-            return `${diffDays} gün`;
-        }
-    }
-
-    function closePanel() {
-        panel.classList.remove('active');
-        // Give animation time to finish before removing
-        setTimeout(() => {
+            // Tamamlandığında callback'i çağır
             if (typeof onComplete === 'function') {
                 onComplete();
             }
-        }, 400); // Corresponds to the CSS transition duration
+        }, 500); // CSS geçiş süresine uygun
     }
 
     /**
-     * Rozet işleyicisi - Kullanıcının rozetlerini göstermek için
-     * @param {Array} badges - Kullanıcı rozetleri dizisi
+     * ESC tuşu ile modal'ı kapatma
      */
-    function renderBadges(badges) {
-        // Önce mevcut rozetleri temizle
-        badgesContainer.innerHTML = '';
+    function handleEscapeKey(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    }
 
-        // Eğer rozet yoksa veya boş diziyse boş rozet göster
-        if (!badges || !Array.isArray(badges) || badges.length === 0) {
+    /**
+     * Profil için rozet oluşturur
+     */
+    function renderBadges() {
+        // Rozet konteynırını temizle
+        elements.badgesContainer.innerHTML = '';
+
+        // Kullanıcının rozetleri var mı kontrol et
+        const badges = user?.badges || [];
+
+        if (badges.length === 0) {
+            // Rozet yoksa boş durum göster
             const emptyBadge = document.createElement('div');
             emptyBadge.className = 'badge-item empty-badge';
             emptyBadge.innerHTML = `
                 <div class="badge-placeholder"><i class="fas fa-plus"></i></div>
                 <span>Rozet Yok</span>
             `;
-            badgesContainer.appendChild(emptyBadge);
+            elements.badgesContainer.appendChild(emptyBadge);
             return;
         }
 
-        // Rozetleri göster (maksimum 6 adet)
-        const maxBadgesToShow = Math.min(badges.length, 6);
-        for (let i = 0; i < maxBadgesToShow; i++) {
+        // Rozetleri göster (en fazla 4 tane)
+        const maxBadges = Math.min(badges.length, 4);
+        for (let i = 0; i < maxBadges; i++) {
             const badge = badges[i];
-            const badgeItem = document.createElement('div');
-            badgeItem.className = 'badge-item earned';
-            badgeItem.innerHTML = `
+            const badgeElement = document.createElement('div');
+            badgeElement.className = 'badge-item earned';
+            badgeElement.innerHTML = `
                 <div class="badge-icon" title="${badge.name || 'Rozet'}">
                     <i class="${badge.icon || 'fas fa-award'}"></i>
                 </div>
                 <span>${badge.name || 'Rozet'}</span>
             `;
-            badgesContainer.appendChild(badgeItem);
+            elements.badgesContainer.appendChild(badgeElement);
         }
 
-        // Eğer daha fazla rozet varsa "ve daha fazla" göster
-        if (badges.length > maxBadgesToShow) {
-            const moreBadge = document.createElement('div');
-            moreBadge.className = 'badge-item more-badge';
-            moreBadge.innerHTML = `
-                <div class="badge-placeholder">+${badges.length - maxBadgesToShow}</div>
+        // Daha fazla rozet varsa ek bir gösterge ekle
+        if (badges.length > maxBadges) {
+            const moreBadges = document.createElement('div');
+            moreBadges.className = 'badge-item more-badge';
+            moreBadges.innerHTML = `
+                <div class="badge-placeholder">+${badges.length - maxBadges}</div>
                 <span>Daha Fazla</span>
             `;
-            badgesContainer.appendChild(moreBadge);
+            elements.badgesContainer.appendChild(moreBadges);
         }
     }
 
-    // --- Fill User Data ---
-    function populateUserData() {
-        // Set avatar
-        if (user.avatar_url) {
-            avatar.src = user.avatar_url;
-            avatar.onerror = function () {
-                this.src = 'images/defaultavatar.png';
-                console.log('Failed to load avatar, using default');
-            };
-        } else {
-            avatar.src = 'images/defaultavatar.png';
+    /**
+     * Tarih biçimlendirme
+     */
+    function formatDate(dateString) {
+        if (!dateString) return 'Bilinmiyor';
+
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Geçersiz Tarih';
+
+            return date.toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        } catch (error) {
+            console.error('Tarih biçimlendirme hatası:', error);
+            return 'Bilinmiyor';
         }
-
-        // Set username - varsayılan olarak "Kullanıcı" değil, gerçek kullanıcı adını kullanma
-        username.textContent = user.username || user.display_name || user.name || 'İsimsiz Kullanıcı';
-
-        // Set profile tag if available
-        if (user.tag) {
-            profileTag.textContent = `#${user.tag}`;
-            profileTag.style.display = '';
-        } else {
-            profileTag.style.display = 'none';
-        }
-
-        // Set online status
-        const isOnline = user.is_online || false;
-        statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
-
-        // Update status indicators
-        if (isOnline) {
-            statusDot.classList.add('online');
-            statusIndicator.classList.add('online');
-            statusIndicator.classList.remove('offline');
-        } else {
-            statusDot.classList.remove('online');
-            statusIndicator.classList.remove('online');
-            statusIndicator.classList.add('offline');
-        }
-
-        // Set bio
-        if (user.bio) {
-            bio.textContent = user.bio;
-        } else {
-            bio.textContent = 'Bu kullanıcı henüz hakkında bir şey yazmamış.';
-        }
-
-        // Set membership info
-        if (user.created_at) {
-            memberSince.textContent = formatDate(user.created_at);
-            memberDuration.textContent = calculateTimeElapsed(user.created_at);
-        } else {
-            memberSince.textContent = 'Bilinmiyor';
-            memberDuration.textContent = 'Bilinmiyor';
-        }
-
-        // Rozet verisi - gerçek uygulamada burası dinamik olacak
-        const sampleBadges = user.badges || [
-            { name: 'Erken Üye', icon: 'fas fa-star' }
-        ];
-
-        // Rozetleri göster
-        renderBadges(sampleBadges);
     }
 
-    // Kullanıcı verilerini yükle
-    try {
-        populateUserData();
-    } catch (error) {
-        console.error('Error populating user data:', error);
+    /**
+     * Geçen süre hesaplama
+     */
+    function calculateTimeElapsed(dateString) {
+        if (!dateString) return 'Bilinmiyor';
+
+        try {
+            const startDate = new Date(dateString);
+            if (isNaN(startDate.getTime())) return 'Geçersiz Tarih';
+
+            const now = new Date();
+            const diffTime = Math.abs(now - startDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffMonths = Math.floor(diffDays / 30);
+            const diffYears = Math.floor(diffDays / 365);
+
+            if (diffYears > 0) {
+                return `${diffYears} yıl ${Math.floor((diffDays % 365) / 30)} ay`;
+            } else if (diffMonths > 0) {
+                return `${diffMonths} ay ${diffDays % 30} gün`;
+            } else {
+                return `${diffDays} gün`;
+            }
+        } catch (error) {
+            console.error('Süre hesaplama hatası:', error);
+            return 'Bilinmiyor';
+        }
     }
 
-    // --- Event Handlers ---
+    /**
+     * Kullanıcı bilgilerini görüntüler
+     */
+    function renderUserData() {
+        try {
+            // Kullanıcı bilgisi yoksa hata göster
+            if (!user || typeof user !== 'object') {
+                throw new Error('Geçerli kullanıcı verisi bulunamadı');
+            }
 
-    // Message button
-    messageBtn.addEventListener('click', () => {
-        closePanel();
+            // Avatar
+            if (user.avatar_url) {
+                elements.avatar.src = user.avatar_url;
+                elements.avatar.onerror = () => {
+                    elements.avatar.src = 'images/defaultavatar.png';
+                    console.warn('Avatar yüklenemedi, varsayılan avatar kullanılıyor');
+                };
+            } else {
+                elements.avatar.src = 'images/defaultavatar.png';
+            }
+
+            // Kullanıcı adı - birkaç olası alan kontrolü yap
+            const displayName = user.username || user.display_name || user.name || 'İsimsiz Kullanıcı';
+            elements.username.textContent = displayName;
+            document.title = `${displayName} - Profil | Chatlify`;
+
+            // Kullanıcı etiketi
+            if (user.tag) {
+                elements.tag.textContent = `#${user.tag}`;
+                elements.tag.style.display = '';
+            } else {
+                elements.tag.style.display = 'none';
+            }
+
+            // Çevrimiçi durumu
+            const isOnline = user.is_online || false;
+            elements.statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+
+            // Durum göstergeleri
+            if (isOnline) {
+                elements.statusIndicator.classList.add('online');
+                elements.statusIndicator.classList.remove('offline');
+                elements.statusDot.classList.add('online');
+            } else {
+                elements.statusIndicator.classList.remove('online');
+                elements.statusIndicator.classList.add('offline');
+                elements.statusDot.classList.remove('online');
+            }
+
+            // Biyografi
+            elements.bio.textContent = user.bio || 'Bu kullanıcı henüz hakkında bir şey yazmamış.';
+
+            // Üyelik bilgisi
+            if (user.created_at) {
+                elements.memberSince.textContent = formatDate(user.created_at);
+                elements.memberDuration.textContent = calculateTimeElapsed(user.created_at);
+            } else {
+                elements.memberSince.textContent = 'Bilinmiyor';
+                elements.memberDuration.textContent = 'Bilinmiyor';
+            }
+
+            // Rozetleri göster
+            renderBadges();
+
+        } catch (error) {
+            console.error('Kullanıcı verisi yükleme hatası:', error);
+
+            // Hata durumunda varsayılan değerler göster
+            elements.username.textContent = 'Kullanıcı Bilgisi Yüklenemedi';
+            elements.bio.textContent = 'Kullanıcı bilgisi yüklenirken bir hata oluştu.';
+            elements.memberSince.textContent = 'Bilinmiyor';
+            elements.memberDuration.textContent = 'Bilinmiyor';
+
+            // Boş rozet göster
+            elements.badgesContainer.innerHTML = `
+                <div class="badge-item empty-badge">
+                    <div class="badge-placeholder"><i class="fas fa-exclamation-triangle"></i></div>
+                    <span>Hata</span>
+                </div>
+            `;
+        }
+    }
+
+    // ----- Event Listeners -----
+
+    // Mesaj gönderme butonu
+    elements.messageButton.addEventListener('click', () => {
+        closeModal();
         if (typeof onComplete === 'function') {
-            // Pass information that user wants to message
             onComplete({ action: 'message', userId: user.id });
         }
     });
 
-    // Call button
-    callBtn.addEventListener('click', () => {
+    // Arama butonu
+    elements.callButton.addEventListener('click', () => {
         alert('Sesli arama özelliği yakında eklenecek!');
     });
 
-    // Remove friend button
-    removeFriendBtn.addEventListener('click', async () => {
-        if (confirm(`${user.username || 'Bu kullanıcıyı'} arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
+    // Arkadaşlıktan çıkarma butonu
+    elements.removeFriendButton.addEventListener('click', async () => {
+        const username = user.username || user.display_name || 'Bu kullanıcıyı';
+        if (confirm(`${username} arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
             try {
-                // Find the friendship record
+                // Arkadaşlık kaydını bul
                 const { data: friendship, error: findError } = await supabase
                     .from('friendships')
                     .select('id')
@@ -247,7 +304,7 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
                     throw new Error('Arkadaşlık kaydı bulunamadı.');
                 }
 
-                // Delete the friendship
+                // Arkadaşlığı sil
                 const { error: deleteError } = await supabase
                     .from('friendships')
                     .delete()
@@ -257,45 +314,33 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
                     throw deleteError;
                 }
 
-                alert(`${user.username || 'Kullanıcı'} arkadaşlıktan çıkarıldı.`);
-                closePanel();
+                alert(`${username} arkadaşlıktan çıkarıldı.`);
+                closeModal();
                 if (typeof onComplete === 'function') {
                     onComplete({ action: 'removed', userId: user.id });
                 }
             } catch (error) {
-                console.error('Error removing friend:', error);
+                console.error('Arkadaşlıktan çıkarma hatası:', error);
                 alert(`Bir hata oluştu: ${error.message}`);
             }
         }
     });
 
-    // Block button
-    blockBtn.addEventListener('click', () => {
+    // Engelleme butonu
+    elements.blockButton.addEventListener('click', () => {
         alert('Engelleme özelliği yakında eklenecek!');
     });
 
-    // Close button
-    closeButton.addEventListener('click', closePanel);
+    // Kapatma butonu
+    elements.closeButton.addEventListener('click', closeModal);
 
-    // Close panel if user clicks on the overlay (outside the modal content)
-    panel.addEventListener('click', (event) => {
-        if (event.target === panel) {
-            closePanel();
+    // Arkaplan tıklaması ile kapatma
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeModal();
         }
     });
 
-    // Close panel with Escape key
-    function handleEscKey(event) {
-        if (event.key === 'Escape') {
-            closePanel();
-            // Remove listener after closing
-            document.removeEventListener('keydown', handleEscKey);
-        }
-    }
-    document.addEventListener('keydown', handleEscKey);
-
-    // Show the panel with animation
-    requestAnimationFrame(() => {
-        panel.classList.add('active');
-    });
+    // Modal'ı aç
+    openModal();
 }; 

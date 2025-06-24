@@ -1,9 +1,21 @@
 /* 
-  Profile Modal Component Styles
-  - Scoped to #profile-modal to prevent global conflicts.
+  Profil Modal Bileşeni Stilleri
+  - #profile-modal kapsamında global çakışmaları önlemek için.
 */
 
-/* Overlay: The semi-transparent background behind the modal */
+:root {
+    --profile-gradient-1: linear-gradient(135deg, #6a11cb, #2575fc);
+    --profile-gradient-2: linear-gradient(135deg, #00b09b, #96c93d);
+    --profile-gradient-3: linear-gradient(135deg, #f46b45, #eea849);
+    --profile-gradient-4: linear-gradient(135deg, #614385, #516395);
+    --profile-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    --profile-radius: 16px;
+    --profile-section-radius: 12px;
+    --profile-item-radius: 8px;
+    --profile-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Overlay: Modal arkasındaki yarı saydam arkaplan */
 #profile-modal {
     position: fixed;
     top: 0;
@@ -11,13 +23,14 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1050;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 #profile-modal.active {
@@ -25,24 +38,23 @@
     visibility: visible;
 }
 
-/* Modal Content: The actual box */
+/* Modal İçeriği: Asıl kutu */
 #profile-modal .modal-container {
     background-color: var(--main-bg);
     padding: 0;
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--profile-radius);
     border: 1px solid var(--divider-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--profile-shadow);
     width: 100%;
-    max-width: 800px;
-    /* Increased width for horizontal layout */
+    max-width: 900px;
+    /* Yatay düzen için genişletildi */
     position: relative;
     transform: translateY(30px) scale(0.95);
     opacity: 0;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-        opacity 0.3s ease;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.4s ease;
     overflow: hidden;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: 85vh;
 }
 
 #profile-modal.active .modal-container {
@@ -50,85 +62,86 @@
     opacity: 1;
 }
 
-/* Modal Header */
+/* Modal Başlık */
 #profile-modal .modal-header {
     display: flex;
     align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--divider-color);
-    background: linear-gradient(135deg, var(--primary-color-dark), var(--primary-color));
+    padding: 16px 24px;
+    background: var(--profile-gradient-1);
     color: white;
-}
-
-#profile-modal .modal-header .modal-icon {
-    font-size: 18px;
-    margin-right: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #profile-modal .modal-header h3 {
     margin: 0;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 #profile-modal .modal-header .close-modal-btn {
     margin-left: auto;
-    background: none;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    font-size: 20px;
-    color: rgba(255, 255, 255, 0.8);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
     cursor: pointer;
-    transition: color 0.2s ease, transform 0.2s ease;
+    transition: var(--profile-transition);
 }
 
 #profile-modal .modal-header .close-modal-btn:hover {
-    color: white;
+    background: rgba(255, 255, 255, 0.3);
     transform: rotate(90deg);
 }
 
-/* Modal Body */
+/* Modal İçeriği */
 #profile-modal .modal-body {
-    padding: 0;
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(85vh - 70px);
 }
 
-#profile-modal .profile-content {
-    padding: 20px;
-}
-
-/* Horizontal Layout for Profile */
+/* Yatay Düzen */
 #profile-modal .profile-horizontal-layout {
     display: flex;
-    flex-direction: row;
-    gap: 25px;
-    align-items: flex-start;
+    gap: 24px;
 }
 
-/* Left Section - Avatar and Basic Info */
-#profile-modal .profile-left-section {
-    width: 180px;
+/* Sol Sütun */
+#profile-modal .profile-left-column {
+    width: 280px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 20px;
     background-color: var(--background-secondary);
-    border-radius: var(--border-radius-md);
-    border: 1px solid var(--divider-color);
+    border-radius: var(--profile-section-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
 }
 
-#profile-modal .profile-avatar-container {
-    margin-bottom: 15px;
+/* Avatar Bölümü */
+#profile-modal .profile-avatar-wrapper {
+    position: relative;
+    margin-bottom: 20px;
 }
 
 #profile-modal .profile-avatar {
-    position: relative;
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    border: 3px solid var(--primary-color);
+    border: 4px solid #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    background-color: var(--background-tertiary);
+    position: relative;
     margin: 0 auto;
 }
 
@@ -136,21 +149,27 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+#profile-modal .profile-avatar:hover img {
+    transform: scale(1.05);
 }
 
 #profile-modal .status-indicator {
     position: absolute;
     bottom: 5px;
     right: 5px;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    border: 2px solid var(--main-bg);
+    border: 3px solid var(--background-secondary);
     background-color: var(--text-muted);
+    z-index: 2;
 }
 
 #profile-modal .status-indicator.online {
-    background-color: var(--success-color);
+    background-color: #2ecc71;
 }
 
 #profile-modal .status-indicator.offline {
@@ -158,86 +177,183 @@
 }
 
 #profile-modal .status-indicator.idle {
-    background-color: #f0b232;
+    background-color: #f39c12;
 }
 
 #profile-modal .status-indicator.dnd {
-    background-color: var(--danger-color);
+    background-color: #e74c3c;
 }
 
-#profile-modal .profile-info {
-    width: 100%;
+/* Kullanıcı Adı ve Etiket */
+#profile-modal .profile-name-container {
+    margin-bottom: 12px;
 }
 
 #profile-modal .profile-username {
-    margin: 0 0 5px;
-    font-size: 20px;
+    margin: 0 0 4px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--text-color);
+    word-break: break-word;
 }
 
+#profile-modal .profile-tag {
+    font-size: 15px;
+    color: var(--text-muted);
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* Durum */
 #profile-modal .profile-status {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 5px;
+    gap: 8px;
+    margin-bottom: 24px;
+    background-color: var(--background-tertiary);
+    padding: 8px 16px;
+    border-radius: 20px;
 }
 
 #profile-modal .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background-color: var(--text-muted);
 }
 
 #profile-modal .status-dot.online {
-    background-color: var(--success-color);
+    background-color: #2ecc71;
 }
 
 #profile-modal .status-text {
     font-size: 14px;
     color: var(--text-secondary);
-}
-
-#profile-modal .profile-tag {
-    font-size: 14px;
-    color: var(--text-muted);
     font-weight: 500;
 }
 
-/* Right Section - Info Cards and Actions */
-#profile-modal .profile-right-section {
+/* Ana Butonlar */
+#profile-modal .profile-primary-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+#profile-modal .primary-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: var(--profile-item-radius);
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--profile-transition);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+#profile-modal .primary-action-btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+    transform: scale(0);
+    opacity: 0;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+#profile-modal .primary-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+#profile-modal .primary-action-btn:hover:before {
+    transform: scale(2);
+    opacity: 1;
+}
+
+#profile-modal .primary-action-btn:active {
+    transform: translateY(1px);
+}
+
+#profile-modal .primary-action-btn i,
+#profile-modal .primary-action-btn span {
+    position: relative;
+    z-index: 1;
+}
+
+#profile-modal .message-btn {
+    background: var(--profile-gradient-1);
+}
+
+#profile-modal .call-btn {
+    background: var(--profile-gradient-2);
+}
+
+/* Sağ Sütun */
+#profile-modal .profile-right-column {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
+    overflow-y: auto;
 }
 
-/* Profile Cards */
-#profile-modal .profile-card {
+/* Profil Bölümleri */
+#profile-modal .profile-section {
     background-color: var(--background-secondary);
-    border-radius: var(--border-radius-md);
+    border-radius: var(--profile-section-radius);
     overflow: hidden;
     border: 1px solid var(--divider-color);
-    transition: all 0.2s ease;
+    transition: var(--profile-transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-#profile-modal .profile-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+#profile-modal .profile-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-color: var(--primary-color-muted);
 }
 
-/* Badges Card */
-#profile-modal .badges-card .card-content {
-    padding: 15px;
+#profile-modal .section-header {
+    padding: 14px 16px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--divider-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-#profile-modal .profile-badges {
+#profile-modal .section-header i {
+    color: var(--primary-color);
+    font-size: 16px;
+}
+
+#profile-modal .section-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+#profile-modal .section-content {
+    padding: 16px;
+}
+
+/* Rozetler */
+#profile-modal .badges-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    justify-content: flex-start;
+    gap: 16px;
 }
 
 #profile-modal .badge-item {
@@ -248,8 +364,8 @@
 }
 
 #profile-modal .badge-placeholder {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background-color: var(--background-tertiary);
     border: 2px dashed var(--text-muted);
@@ -257,6 +373,7 @@
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
+    font-size: 18px;
 }
 
 #profile-modal .badge-item span {
@@ -265,179 +382,118 @@
 }
 
 #profile-modal .badge-item.earned .badge-icon {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    background: var(--profile-gradient-4);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    font-size: 22px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-#profile-modal .card-header {
-    padding: 12px 15px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid var(--divider-color);
-}
-
-#profile-modal .card-header h4 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#profile-modal .card-header h4 i {
-    color: var(--primary-color);
-}
-
-#profile-modal .card-content {
-    padding: 15px;
-}
-
+/* Hakkında */
 #profile-modal .bio {
     margin: 0;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
-#profile-modal .membership-info {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#profile-modal .info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Üyelik Bilgileri */
+#profile-modal .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
 }
 
 #profile-modal .info-label {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-color);
+    opacity: 0.7;
 }
 
 #profile-modal .info-value {
-    font-size: 14px;
-    color: var(--text-secondary);
+    font-size: 15px;
+    color: var(--text-color);
+    font-weight: 500;
 }
 
-/* Profile Actions */
-#profile-modal .profile-actions {
+/* İkincil Butonlar */
+#profile-modal .secondary-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-top: 5px;
+    margin-top: auto;
 }
 
-#profile-modal .action-btn {
+#profile-modal .secondary-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-radius: var(--border-radius-lg);
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--profile-item-radius);
     border: none;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: var(--profile-transition);
     background-color: var(--background-tertiary);
-    color: var(--text-color);
-    position: relative;
-    overflow: hidden;
+    color: var(--text-secondary);
 }
 
-#profile-modal .action-btn:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
-    transform: scale(0);
-    opacity: 0;
-    transition: transform 0.5s ease, opacity 0.5s ease;
-}
-
-#profile-modal .action-btn:hover {
+#profile-modal .secondary-action-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    color: var(--text-color);
+    background-color: var(--background-tertiary);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-#profile-modal .action-btn:hover:before {
-    transform: scale(2);
-    opacity: 1;
+#profile-modal .remove-friend-btn:hover {
+    color: #e74c3c;
 }
 
-#profile-modal .action-btn:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+#profile-modal .block-btn:hover {
+    color: #e74c3c;
 }
 
-#profile-modal .action-btn i {
-    font-size: 16px;
-    z-index: 1;
+/* Duyarlı Tasarım Ayarlamaları */
+@media (max-width: 900px) {
+    #profile-modal .modal-container {
+        max-width: 95%;
+    }
 }
 
-#profile-modal .action-btn span {
-    z-index: 1;
-}
-
-#profile-modal .message-btn {
-    background: linear-gradient(135deg, var(--primary-color-dark), var(--primary-color));
-    color: white;
-}
-
-#profile-modal .call-btn {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    color: white;
-}
-
-#profile-modal .remove-friend-btn {
-    background: linear-gradient(135deg, #ff7675, #d63031);
-    color: white;
-}
-
-#profile-modal .block-btn {
-    background: linear-gradient(135deg, #2d3436, #636e72);
-    color: white;
-}
-
-/* Responsive Adjustments */
 @media (max-width: 768px) {
     #profile-modal .profile-horizontal-layout {
         flex-direction: column;
     }
 
-    #profile-modal .profile-left-section {
+    #profile-modal .profile-left-column {
         width: 100%;
-        margin-bottom: 15px;
+        margin-bottom: 16px;
     }
 
     #profile-modal .profile-avatar {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
     }
 }
 
 @media (max-width: 576px) {
-    #profile-modal .modal-container {
-        max-width: 95%;
-        max-height: 80vh;
+    #profile-modal .modal-body {
+        padding: 16px;
     }
 
-    #profile-modal .profile-actions {
+    #profile-modal .secondary-actions {
+        grid-template-columns: 1fr;
+    }
+
+    #profile-modal .info-grid {
         grid-template-columns: 1fr;
     }
 }
