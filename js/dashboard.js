@@ -841,7 +841,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (dmUserAvatar) dmUserAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
 
             // Durum bilgisini ayarla - her zaman aktif yerine gerçek durumunu göster
-            const isOnline = state.onlineFriends.has(profile.id);
+            // Ancak eğer mevcut kullanıcıysa, her zaman çevrimiçi göster
+            const isCurrentUser = state.currentUser && profile.id === state.currentUser.id;
+            const isOnline = isCurrentUser || state.onlineFriends.has(profile.id);
+
             if (dmUserStatus) dmUserStatus.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
 
             // Durum noktasını güncelle
@@ -1478,13 +1481,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // Her bir kullanıcıyı döngüye al
                     Object.keys(newState).forEach(userId => {
-                        // Kullanıcı ID'sini temizle (bazen ekstra karakterler olabilir)
-                        const cleanUserId = userId.replace(/^online_users:/, '');
-                        onlineUserIds.add(cleanUserId);
+                        try {
+                            // Her bir presence kaydındaki kullanıcı verilerini al
+                            const presenceData = newState[userId][0]; // İlk kaydı kullan
+
+                            if (presenceData && presenceData.user_id) {
+                                // UUID formatındaki kullanıcı ID'sini ekle
+                                onlineUserIds.add(presenceData.user_id);
+                            } else {
+                                // Eski yöntem: Kullanıcı ID'sini temizle
+                                const cleanUserId = userId.replace(/^online_users:/, '');
+                                onlineUserIds.add(cleanUserId);
+                            }
+                        } catch (error) {
+                            console.error('[Presence] Error parsing presence data:', error);
+                        }
                     });
+
+                    // Mevcut kullanıcıyı her zaman çevrimiçi olarak işaretle
+                    if (state.currentUser && state.currentUser.id) {
+                        onlineUserIds.add(state.currentUser.id);
+                    }
 
                     // State'i güncelle
                     state.onlineFriends = onlineUserIds;
+
+                    console.log('[Presence] Online friends updated:', Array.from(onlineUserIds));
 
                     // UI'ı güncelle - tüm çevrimiçi göstergeleri güncelle
                     renderer.render();
@@ -1963,13 +1985,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!state.currentUser || !state.presenceChannel) return;
 
         try {
-            await state.presenceChannel.track({
+            // İstemci bilgilerini ve kullanıcı verisini track et
+            const presenceData = {
                 user_id: state.currentUser.id,
                 username: state.currentUser.username,
                 avatar_url: state.currentUser.avatar_url,
                 online_at: new Date().toISOString(),
                 client_reference_id: generateClientId()
-            });
+            };
+
+            console.log('[Presence] Tracking presence with data:', presenceData);
+
+            await state.presenceChannel.track(presenceData);
+
+            // Kendimizi onlineFriends'e ekleyelim
+            state.onlineFriends.add(state.currentUser.id);
 
             state.lastHeartbeat = Date.now();
             console.log('[Presence] Heartbeat sent at:', new Date().toLocaleTimeString());
@@ -2020,12 +2050,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const modal = document.getElementById('profile-modal');
         if (!modal || !modal.classList.contains('active')) return;
 
-        const isOnline = state.onlineFriends.has(userId);
+        // Eğer gösterilen profil mevcut kullanıcıya aitse, her zaman çevrimiçi göster
+        const isCurrentUser = state.currentUser && userId === state.currentUser.id;
+
+        // Diğer kullanıcılar için çevrimiçi setinden kontrol et
+        const isOnline = isCurrentUser || state.onlineFriends.has(userId);
 
         // Status elementlerini bul
         const statusText = modal.querySelector('.status-text');
         const statusIndicator = modal.querySelector('.status-indicator');
         const statusDot = modal.querySelector('.status-dot');
+        const profileStatus = modal.querySelector('.profile-status');
 
         if (statusText) statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
 
@@ -2044,6 +2079,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 statusDot.classList.add('online');
             } else {
                 statusDot.classList.remove('online');
+            }
+        }
+
+        if (profileStatus) {
+            if (isOnline) {
+                profileStatus.classList.add('online');
+                profileStatus.classList.remove('offline');
+            } else {
+                profileStatus.classList.remove('online');
+                profileStatus.classList.add('offline');
             }
         }
     }
