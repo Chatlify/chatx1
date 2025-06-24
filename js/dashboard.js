@@ -1466,30 +1466,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // This function needs to be created to handle clicks on friend cards
     function handleFriendCardAction(e) {
-        const messageBtn = e.target.closest('.card-action-btn[title="Mesaj Gönder"]');
-        const callBtn = e.target.closest('.card-action-btn[title="Sesli Arama"]');
-        const profileBtn = e.target.closest('.card-action-btn[title="Profil"]');
-
-        if (!messageBtn && !callBtn && !profileBtn) return;
-
-        const card = e.target.closest('.friend-card');
+        const target = e.target;
+        const card = target.closest('.friend-card');
         if (!card) return;
 
         const userId = card.dataset.userId;
-        const friend = state.friends.find(f => f.id === userId);
-        if (!friend) return;
+        if (!userId) return;
 
-        if (messageBtn) {
+        // "Sohbet" butonu
+        if (target.closest('.chat-btn')) {
             supabaseService.getOrCreateConversation(state.currentUser.id, userId)
                 .then(conversationId => {
                     if (conversationId) {
-                        renderer.showChatPanel(friend, conversationId);
+                        const friend = state.friends.find(f => f.id === userId);
+                        if (friend) {
+                            renderer.showChatPanel(friend, conversationId);
+                        }
                     }
                 });
-        } else if (profileBtn) {
-            showProfileModal(friend);
-        } else if (callBtn) {
-            alert('Sesli arama özelliği yakında eklenecek!');
+            return;
+        }
+
+        // Kartın kendisine tıklandıysa veya profil butonuna tıklandıysa
+        if (target.closest('.profile-btn') || target.closest('.friend-avatar') || target.closest('.friend-info')) {
+            supabaseService.getUserProfile(userId).then(profile => {
+                if (profile) {
+                    showProfileModal(profile);
+                } else {
+                    console.error('Profil bilgileri alınamadı.');
+                    // Optionally, show a toast notification
+                }
+            });
         }
     }
 
@@ -1499,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Profil modal bileşenini yükle
             await loadComponent('profile-modal');
 
-            // Kullanıcının çevrimiçi durumunu kontrol et
+            // Kullanıcının çevrimiçi durumunu, mevcut state'ten alarak ekle
             user.is_online = state.onlineFriends.has(user.id);
 
             // Profil modalını başlat
