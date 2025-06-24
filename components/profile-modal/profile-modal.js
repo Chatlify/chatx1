@@ -1,26 +1,18 @@
 /**
  * Profil Modal Bileşeni
  * Başka bir kullanıcının profil bilgilerini görüntülemek için kullanılır.
- * 
- * @param {Object} user - Görüntülenecek kullanıcı nesnesi
- * @param {Object} currentUser - Mevcut oturum açmış kullanıcı
- * @param {SupabaseClient} supabase - Supabase istemcisi
- * @param {Function} onComplete - Modal kapatıldığında çalıştırılacak fonksiyon
+ * Bu fonksiyon, bir "başlatıcı" fonksiyon döndürür.
  */
-window.initializeProfileModal = function (user, currentUser, supabase, onComplete) {
-    console.log("Profil modalı yükleniyor:", user);
-
-    // Panel elementi
+function createProfileModal() {
     const modal = document.getElementById('profile-modal');
     if (!modal) {
         console.error('Profil modalı DOM\'da bulunamadı!');
-        return;
+        return null;
     }
 
-    // Panel için zamanlayıcı
     let modalCloseTimer;
+    let currentUser, supabase, onComplete;
 
-    // Modal UI elementleri
     const elements = {
         // Avatar ve durum
         avatar: modal.querySelector('.profile-avatar img'),
@@ -343,4 +335,47 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
 
     // Modal'ı aç
     openModal();
-}; 
+
+    /**
+     * Bu, dışarıya döndürülen başlatıcı fonksiyondur.
+     */
+    return function initialize(user, _currentUser, _supabase, _onComplete) {
+        console.log("Profil modalı başlatılıyor:", user);
+
+        // Değişkenleri ayarla
+        currentUser = _currentUser;
+        supabase = _supabase;
+        onComplete = _onComplete;
+
+        // Veriyi render et
+        renderUserData(user);
+
+        // Modal'ı aç
+        clearTimeout(modalCloseTimer);
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+        });
+        document.addEventListener('keydown', handleEscapeKey);
+
+        // Olay dinleyicilerini yeniden ata (veya güncelle)
+        // Bu kısım, her kullanıcı için özel eylemler gerektiriyorsa önemlidir.
+        // Örneğin, 'removeFriendButton' her seferinde doğru 'user.id' ile çalışmalıdır.
+        elements.removeFriendButton.onclick = async () => {
+            const username = user.username || user.display_name || 'Bu kullanıcıyı';
+            if (confirm(`${username} arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
+                // ... (arkadaşlıktan çıkarma mantığı)
+            }
+        };
+
+        elements.messageButton.onclick = () => {
+            closeModal();
+            if (typeof onComplete === 'function') {
+                onComplete({ action: 'message', userId: user.id });
+            }
+        };
+    };
+}
+
+// Global `initializeProfileModal` yerine bu yapıyı kullanacağız.
+// Bu script yüklendiğinde, `dashboard.js` bu fonksiyonu çağırıp başlatıcıyı alacak.
+window.createProfileModalInitializer = createProfileModal; 

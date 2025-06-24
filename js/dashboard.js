@@ -1466,69 +1466,100 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // This function needs to be created to handle clicks on friend cards
     function handleFriendCardAction(e) {
-        const target = e.target;
-        const card = target.closest('.friend-card');
+        const messageBtn = e.target.closest('.card-action-btn[title="Mesaj Gönder"]');
+        const callBtn = e.target.closest('.card-action-btn[title="Sesli Arama"]');
+        const profileBtn = e.target.closest('.card-action-btn[title="Profil"]');
+
+        if (!messageBtn && !callBtn && !profileBtn) return;
+
+        const card = e.target.closest('.friend-card');
         if (!card) return;
 
         const userId = card.dataset.userId;
-        if (!userId) return;
+        const friend = state.friends.find(f => f.id === userId);
+        if (!friend) return;
 
-        // "Sohbet" butonu
-        if (target.closest('.chat-btn')) {
+        if (messageBtn) {
             supabaseService.getOrCreateConversation(state.currentUser.id, userId)
                 .then(conversationId => {
                     if (conversationId) {
-                        const friend = state.friends.find(f => f.id === userId);
-                        if (friend) {
-                            renderer.showChatPanel(friend, conversationId);
-                        }
+                        renderer.showChatPanel(friend, conversationId);
                     }
                 });
-            return;
-        }
-
-        // Kartın kendisine tıklandıysa veya profil butonuna tıklandıysa
-        if (target.closest('.profile-btn') || target.closest('.friend-avatar') || target.closest('.friend-info')) {
-            supabaseService.getUserProfile(userId).then(profile => {
-                if (profile) {
-                    showProfileModal(profile);
-                } else {
-                    console.error('Profil bilgileri alınamadı.');
-                    // Optionally, show a toast notification
-                }
-            });
+        } else if (profileBtn) {
+            showProfileModal(friend);
+        } else if (callBtn) {
+            alert('Sesli arama özelliği yakında eklenecek!');
         }
     }
 
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
+        if (!user) {
+            console.error("Profil görüntülemek için kullanıcı verisi sağlanmadı.");
+            return;
+        }
+
+        const componentName = 'profile-modal';
+        const componentContainerId = `${componentName}-container`;
+        const componentScriptId = `${componentName}-script`;
+
         try {
-            // Profil modal bileşenini yükle
-            await loadComponent('profile-modal');
+            // Eğer modal daha önce hiç yüklenmediyse, HTML ve JS'i yükle
+            if (!profileModalInitializer) {
+                console.log("Profil modalı ilk kez yükleniyor...");
 
-            // Kullanıcının çevrimiçi durumunu, mevcut state'ten alarak ekle
-            user.is_online = state.onlineFriends.has(user.id);
+                // Mevcut script etiketini temizle (varsa)
+                const existingScript = document.getElementById(componentScriptId);
+                if (existingScript) existingScript.remove();
 
-            // Profil modalını başlat
-            window.initializeProfileModal(user, state.currentUser, supabase, (result) => {
-                if (result && result.action === 'message') {
-                    // Kullanıcı mesaj göndermek isterse
-                    supabaseService.getOrCreateConversation(state.currentUser.id, result.userId)
-                        .then(conversationId => {
-                            if (conversationId) {
-                                const friend = state.friends.find(f => f.id === result.userId);
-                                if (friend) {
-                                    renderer.showChatPanel(friend, conversationId);
-                                }
-                            }
-                        });
-                } else if (result && result.action === 'removed') {
-                    // Arkadaş listesini yeniden yükle
-                    fetchAndRenderAll();
-                }
-            });
+                // HTML'i yükle
+                const response = await fetch(`components/${componentName}/${componentName}.html`);
+                if (!response.ok) throw new Error('HTML dosyası yüklenemedi');
+                const content = await response.text();
+
+                // Konteyner oluştur ve HTML'i ekle
+                const container = document.createElement('div');
+                container.id = componentContainerId;
+                container.innerHTML = content;
+                document.body.appendChild(container);
+
+                // JavaScript'i yükle
+                const script = document.createElement('script');
+                script.id = componentScriptId;
+                script.src = `components/${componentName}/${componentName}.js`;
+                script.type = 'module'; // Gerekirse module olarak yükle
+
+                // Script yüklendiğinde başlatıcıyı oluştur
+                await new Promise((resolve, reject) => {
+                    script.onload = () => {
+                        if (window.createProfileModalInitializer) {
+                            profileModalInitializer = window.createProfileModalInitializer();
+                            console.log("Profil modalı başlatıcısı oluşturuldu.");
+                            resolve();
+                        } else {
+                            reject(new Error('createProfileModalInitializer bulunamadı.'));
+                        }
+                    };
+                    script.onerror = () => reject(new Error('Script yüklenemedi.'));
+                    document.body.appendChild(script);
+                });
+            }
+
+            // Başlatıcıyı kullanarak modal'ı göster
+            if (profileModalInitializer) {
+                profileModalInitializer(user, state.currentUser, supabase, () => {
+                    // Modal kapatıldığında yapılacaklar (şimdilik boş)
+                    console.log("Profil modalı kapatıldı.");
+                    // Konteynerin kaldırılması artık modal'ın kendi içinde yönetiliyor
+                    // veya burada yönetilebilir, ancak mevcut yapıda gerek yok.
+                });
+            } else {
+                throw new Error("Profil modalı başlatılamadı.");
+            }
+
         } catch (error) {
-            console.error('Profil modalı yüklenirken bir hata oluştu:', error);
+            console.error(`${componentName} yüklenirken veya gösterilirken hata oluştu:`, error);
         }
     }
 
