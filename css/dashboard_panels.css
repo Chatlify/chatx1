@@ -1359,8 +1359,9 @@
 .empty-state i {
     font-size: 64px;
     margin-bottom: 24px;
-    color: var(--primary-color);
-    opacity: 0.7;
+    color: #ffffff;
+    opacity: 0.8;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .empty-state p {
@@ -1386,7 +1387,8 @@
 }
 
 .pending-requests-header h3 i {
-    color: var(--primary-color);
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 /* İşlem başarılı mesajı için stil */
@@ -1408,4 +1410,102 @@
 
 .action-success i.fa-times-circle {
     color: var(--danger-color);
+}
+
+/* DM item styling - soldaki arkadaş butonu tasarımını iyileştirme */
+.dm-items .dm-item {
+    padding: 10px 14px;
+    margin: 4px 8px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid transparent;
+    overflow: hidden;
+}
+
+.dm-items .dm-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(78, 115, 223, 0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+    z-index: 0;
+}
+
+.dm-items .dm-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateX(5px);
+    border-left: 3px solid var(--brand-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dm-items .dm-item:hover::before {
+    transform: translateX(0);
+}
+
+.dm-item-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.dm-items .dm-item:hover .dm-item-avatar {
+    border-color: var(--brand-color);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(var(--brand-color-rgb, 78, 115, 223), 0.3);
+}
+
+.dm-item-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.dm-item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+    z-index: 1;
+    letter-spacing: 0.2px;
+}
+
+.dm-items .dm-item:hover .dm-item-name {
+    color: var(--text-color);
+    transform: translateX(3px);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+}
+
+.dm-item-avatar .status-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+    border: 2px solid var(--background-tertiary);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.dm-item-avatar .status-dot.online {
+    background-color: var(--success-color);
+    box-shadow: 0 0 6px var(--success-color);
+    animation: pulse 2s infinite;
 }
