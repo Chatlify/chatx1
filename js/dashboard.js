@@ -624,7 +624,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // BU FONKSİYON ARTIK TEMİZLİK YAPMIYOR. Sadece yeni abonelik oluşturmaktan sorumlu.
             console.log(`[Sub] Setting up NEW message subscription for conversation: ${conversationId}`);
 
-            const channel = supabase.channel(`realtime:messages:${conversationId}`);
+            // Kanal ismi formatı çok önemli, Supabase'in beklediği formata uygun olmalı
+            const channelName = `messages:${conversationId}`;
+            const channel = supabase.channel(channelName);
 
             channel.on(
                 'postgres_changes',
@@ -669,6 +671,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                         break;
                     case 'CHANNEL_ERROR':
                         console.error('[Sub] Channel error:', err);
+
+                        // Hata durumunda kanalı yeniden bağlamayı dene
+                        if (state.messageSubscription) {
+                            console.log('[Sub] Attempting to reconnect channel...');
+                            setTimeout(() => {
+                                cleanupChatState();
+                                this.setupMessageSubscription(conversationId);
+                            }, 2000);
+                        }
                         break;
                     case 'CLOSED':
                         console.log('[Sub] Subscription channel closed.');
@@ -1090,11 +1101,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     function cleanupChatState() {
         console.log('[CLEANUP] Cleaning up chat state and channel.');
         if (state.messageSubscription) {
-            console.log(`[CLEANUP] Removing channel: ${state.messageSubscription.topic}`);
-            // Kanaldan sadece çıkmak yetmez, Supabase client'tan tamamen kaldırmak en güvenlisidir.
-            supabase.removeChannel(state.messageSubscription)
-                .then(status => console.log(`[CLEANUP] Channel removal status: ${status}`));
-            state.messageSubscription = null;
+            try {
+                console.log(`[CLEANUP] Removing channel: ${state.messageSubscription.topic}`);
+
+                // Önce kanaldan abone olmayı bırak
+                state.messageSubscription.unsubscribe()
+                    .then(() => {
+                        console.log('[CLEANUP] Successfully unsubscribed from channel');
+
+                        // Sonra kanalı Supabase'den tamamen kaldır
+                        return supabase.removeChannel(state.messageSubscription);
+                    })
+                    .then(status => {
+                        console.log(`[CLEANUP] Channel removal status: ${status}`);
+                    })
+                    .catch(error => {
+                        console.error('[CLEANUP] Error during channel cleanup:', error);
+                    });
+            } catch (error) {
+                console.error('[CLEANUP] Error during channel cleanup:', error);
+            } finally {
+                // Her durumda state'den kanalı temizle
+                state.messageSubscription = null;
+            }
         }
 
         // State'i sıfırla
@@ -1427,25 +1456,74 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // 5. Setup Real-time Subscriptions
-            // Note: I'm simplifying the channel setup for clarity.
-            // You should have one channel for presence and another for DB changes.
-            const presenceChannel = supabase.channel('online-users');
-            presenceChannel.on('presence', { event: 'sync' }, () => {
-                const newState = presenceChannel.presenceState();
-                state.onlineFriends = new Set(Object.keys(newState));
-                renderer.render();
-                renderer.renderDirectMessagesList();
-            }).subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    await presenceChannel.track({ user_id: state.currentUser.id, online_at: new Date().toISOString() });
-                }
-            });
+            // Not: Her kanal için doğru formatı ve bağlantı mantığını kullan
 
-            supabase.channel('public:friendships')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
-                    console.log('Friendship change detected, refetching data.', payload);
-                    fetchAndRenderAll();
-                }).subscribe();
+            // Kullanıcı varlık durumu (presence) kanalı
+            const presenceChannel = supabase.channel('presence');
+
+            presenceChannel
+                .on('presence', { event: 'sync' }, () => {
+                    const newState = presenceChannel.presenceState();
+                    console.log('[Presence] Received updated presence state:', newState);
+                    state.onlineFriends = new Set(Object.keys(newState));
+                    renderer.render();
+                    renderer.renderDirectMessagesList();
+                })
+                .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                    console.log('[Presence] User joined:', newPresences);
+                })
+                .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                    console.log('[Presence] User left:', leftPresences);
+                })
+                .subscribe(async (status) => {
+                    console.log(`[Presence] Subscription status: ${status}`);
+                    if (status === 'SUBSCRIBED') {
+                        try {
+                            await presenceChannel.track({
+                                user_id: state.currentUser.id,
+                                online_at: new Date().toISOString(),
+                                username: state.currentUser.username
+                            });
+                            console.log('[Presence] Successfully tracked user presence');
+                        } catch (error) {
+                            console.error('[Presence] Error tracking presence:', error);
+                        }
+                    }
+                });
+
+            // Arkadaşlık değişikliklerini dinleyen kanal
+            const friendshipsChannel = supabase.channel('friendships_changes');
+
+            friendshipsChannel
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'friendships',
+                        filter: `user_id_1=eq.${state.currentUser.id}`
+                    },
+                    payload => {
+                        console.log('[Friendships] Change detected in user_id_1 friendships:', payload);
+                        fetchAndRenderAll();
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'friendships',
+                        filter: `user_id_2=eq.${state.currentUser.id}`
+                    },
+                    payload => {
+                        console.log('[Friendships] Change detected in user_id_2 friendships:', payload);
+                        fetchAndRenderAll();
+                    }
+                )
+                .subscribe((status) => {
+                    console.log(`[Friendships] Subscription status: ${status}`);
+                });
 
             // Emoji ve GIF butonlarına event listener ekle
             const emojiBtn = document.querySelector('.emoji-btn');
