@@ -1482,20 +1482,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const card = e.target.closest('.friend-card');
         if (!card) return;
 
-        const userId = card.dataset.userId;
-        const friend = state.friends.find(f => f.id === userId);
+        const friendId = card.dataset.userId;
+        const friend = state.friends.find(f => f.id === friendId);
         if (!friend) return;
 
-        if (messageBtn) {
-            supabaseService.getOrCreateConversation(state.currentUser.id, userId)
+        debugger; // Kodu burada durdur ve 'friend' nesnesini incele
+        console.log("Arkadaş kartı tıklandı, profil için veri:", friend);
+
+        const action = e.target.closest('[data-action]')?.dataset.action;
+
+        if (action === 'message') {
+            supabaseService.getOrCreateConversation(state.currentUser.id, friendId)
                 .then(conversationId => {
                     if (conversationId) {
                         renderer.showChatPanel(friend, conversationId);
                     }
                 });
-        } else if (profileBtn) {
+        } else if (action === 'profile') {
             showProfileModal(friend);
-        } else if (callBtn) {
+        } else if (action === 'call') {
             alert('Sesli arama özelliği yakında eklenecek!');
         }
     }
@@ -1503,8 +1508,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
         try {
-            debugger; // Kodun çalışmasını burada durdur
-            console.log("Profil paneline gönderilen kullanıcı verisi:", user);
             // Profil modal bileşenini yükle ve hazır olmasını bekle
             await loadComponent('profile-modal');
 
