@@ -1269,6 +1269,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         renderer.render(); // Call the main render function
         renderer.renderDirectMessagesList(); // Render the DMs list in the left sidebar
+
+        // Sponsor görsellerini tembel yükleme (lazy) ile işaretle
+        document.querySelectorAll('.sponsor-server-icon img').forEach(img => {
+            if (!img.getAttribute('loading')) {
+                img.setAttribute('loading', 'lazy');
+            }
+        });
     }
 
     const init = async () => {
@@ -1519,6 +1526,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- DYNAMIC COMPONENT LOADER ---
+    // Basit bellek içi cache ile HTML şablonunu yalnızca ilk seferde çek
+    const componentHtmlCache = new Map();
     /**
      * Loads an HTML component into the DOM and initializes its specific JS.
      * @param {string} componentName - The name of the component (e.g., 'add-friend').
@@ -1553,10 +1562,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error(`Bileşen bulunamadı: ${componentName}`);
             }
 
-            // HTML şablonunu yükle
-            const htmlResponse = await fetch(component.html);
-            if (!htmlResponse.ok) throw new Error(`HTML yüklenemedi: ${component.html}`);
-            const htmlContent = await htmlResponse.text();
+            // HTML şablonunu yükle (önbellekli)
+            let htmlContent;
+            if (componentHtmlCache.has(component.html)) {
+                htmlContent = componentHtmlCache.get(component.html);
+            } else {
+                const htmlResponse = await fetch(component.html);
+                if (!htmlResponse.ok) throw new Error(`HTML yüklenemedi: ${component.html}`);
+                htmlContent = await htmlResponse.text();
+                componentHtmlCache.set(component.html, htmlContent);
+            }
 
             // CSS dosyasını kontrol et ve yükle
             const existingCss = document.head.querySelector(`link[href="${component.css}"]`);
