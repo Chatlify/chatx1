@@ -225,8 +225,8 @@ window.sendFriendRequest = async function (username) {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Supabase setup
-    const supabase = supabaseInit();
+    // Supabase zaten import edildiği için tekrar initialize etmeye gerek yok
+    // const supabase = supabaseInit(); - Bu satır hataya neden oluyordu
 
     // Cloudinary yapılandırması (JavaScript tarafında yükleme yapıyoruz)
     const CLOUDINARY_CLOUD_NAME = "dxr8bxvbp"; // Burayı kendi cloud name'inizle değiştirin
