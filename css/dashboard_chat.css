@@ -7,6 +7,9 @@
     gap: 16px;
     align-items: flex-end;
     margin-bottom: 12px;
+    pointer-events: auto;
+    user-select: text;
+    min-height: 20px;
 }
 
 .message-group-avatar {
@@ -90,6 +93,9 @@
     flex-direction: column;
     height: 100%;
     background-color: var(--background-primary);
+    position: relative;
+    overflow: hidden;
+    /* Taşan içeriği gizle */
 }
 
 .chat-header {
@@ -103,7 +109,9 @@
 
 .chat-messages {
     flex: 1 1 auto;
-    overflow-y: scroll !important;
+    overflow-y: auto !important;
+    /* scroll yerine auto kullanıldı */
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     /* iOS cihazlarda düzgün kaydırma için */
     scroll-behavior: smooth;
@@ -112,6 +120,12 @@
     /* Kaydırma sırasında taşma davranışını kontrol eder */
     will-change: scroll-position;
     /* Tarayıcıya scroll işleminin optimize edilmesi gerektiğini bildirir */
+    touch-action: pan-y;
+    /* Dikey kaydırmaya izin ver */
+    height: calc(100% - 80px);
+    /* Başlık ve giriş alanına yer bırak */
+    position: relative;
+    /* Konum belirleme */
     padding: 20px;
     display: flex;
     flex-direction: column;

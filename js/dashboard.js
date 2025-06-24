@@ -1159,6 +1159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Kaydırma olaylarını izle
             if (ui.chatMessages) {
+                // Kaydırma olayını dinle
                 ui.chatMessages.addEventListener('scroll', () => {
                     const { scrollTop, scrollHeight, clientHeight } = ui.chatMessages;
                     // En aşağıdan 200px yukarıdaysak butonu göster
@@ -1170,6 +1171,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                         scrollDownBtn.classList.remove('visible');
                     }
                 });
+
+                // Mouse tekerleği olayını iyileştir
+                ui.chatMessages.addEventListener('wheel', (event) => {
+                    // Tekerlek olayını yakaladığımızı konsolda gösterelim
+                    console.log("[SCROLL] Mouse wheel event detected:", event.deltaY);
+
+                    // Eğer tarayıcı wheel olayını doğru işlemiyorsa, manuel olarak ele alalım
+                    // Bu, bazı tarayıcılarda kaydırma sorununun çözülmesine yardımcı olabilir
+                    if (Math.abs(event.deltaY) > 0) {
+                        const scrollAmount = event.deltaY * 0.5; // Kaydırma hızını ayarla
+                        ui.chatMessages.scrollTop += scrollAmount;
+
+                        // Olayın varsayılan davranışını engelleyip, manuel kaydırma uyguluyoruz
+                        // event.preventDefault();
+                    }
+                }, { passive: true }); // passive: true performans için önemli
+
+                // Dokunmatik kaydırma için touch olaylarını da dinleyelim
+                let startY = 0;
+                let startScrollTop = 0;
+
+                ui.chatMessages.addEventListener('touchstart', (event) => {
+                    startY = event.touches[0].pageY;
+                    startScrollTop = ui.chatMessages.scrollTop;
+                }, { passive: true });
+
+                ui.chatMessages.addEventListener('touchmove', (event) => {
+                    const deltaY = startY - event.touches[0].pageY;
+                    ui.chatMessages.scrollTop = startScrollTop + deltaY;
+                }, { passive: true });
 
                 // Yeni mesaj geldiğinde kaydırma pozisyonunu kontrol et
                 const checkScroll = () => {
