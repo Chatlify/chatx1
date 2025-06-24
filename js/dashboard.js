@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Cloudinary yapılandırması (JavaScript tarafında yükleme yapıyoruz)
     const CLOUDINARY_CLOUD_NAME = "dxr8bxvbp"; // Burayı kendi cloud name'inizle değiştirin
-    const CLOUDINARY_UPLOAD_PRESET = "0FZD0kmLLYmTAAqEKIaiS8CGlbo"; // Burayı kendi preset'inizle değiştirin
+    const CLOUDINARY_UPLOAD_PRESET = "ml_default"; // Unsigned preset adı (genellikle ml_default olarak gelir)
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
     // --- 1. STATE MANAGEMENT ---
@@ -2232,12 +2232,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
+        console.log(`[UPLOAD] Cloudinary request to: https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+        console.log(`[UPLOAD] Using upload_preset: ${CLOUDINARY_UPLOAD_PRESET}`);
+
         fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
             method: 'POST',
             body: formData
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    // HTTP hata kodunu yakala
+                    console.error(`[UPLOAD] HTTP error: ${response.status} ${response.statusText}`);
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                // API hatası kontrolü
+                if (data.error) {
+                    console.error('[UPLOAD] Cloudinary API error:', data.error);
+                    throw new Error(data.error.message || 'Cloudinary API hatası');
+                }
+
                 console.log('[UPLOAD] Image uploaded successfully:', data);
 
                 // Yükleme durumunu sıfırla
@@ -2247,11 +2263,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Yüklenen görseli mesaj olarak gönder
                 if (data.secure_url) {
                     sendImageMessage(data.secure_url, data.original_filename, data.bytes);
+                } else {
+                    throw new Error('Görsel URL alınamadı');
                 }
             })
             .catch(error => {
                 console.error('[UPLOAD] Error uploading image:', error);
-                alert("Görsel yüklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+                alert(`Görsel yüklenirken bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
 
                 // Yükleme durumunu sıfırla
                 state.isUploadingImage = false;
