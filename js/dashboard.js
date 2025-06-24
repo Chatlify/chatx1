@@ -688,8 +688,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 4. UI RENDERER ---
     const renderer = {
         render() {
-            // Update active tab UI
-            ui.tabsContainer.querySelectorAll('.tab').forEach(tab => {
+            // Update active tab class
+            ui.tabsContainer.querySelectorAll('[data-tab]').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.tab === state.activeFriendsTab);
             });
 
