@@ -1,9 +1,8 @@
 /**
  * Profil Modal Bileşeni
- * Başka bir kullanıcının profil bilgilerini görüntülemek için kullanılır.
  * Bu fonksiyon, bir "başlatıcı" fonksiyon döndürür.
  */
-function createProfileModal() {
+function createProfileModalInitializer() {
     const modal = document.getElementById('profile-modal');
     if (!modal) {
         console.error('Profil modalı DOM\'da bulunamadı!');
@@ -11,7 +10,7 @@ function createProfileModal() {
     }
 
     let modalCloseTimer;
-    let currentUser, supabase, onComplete;
+    let currentUser, supabase, onComplete, activeUser;
 
     const elements = {
         avatar: modal.querySelector('.profile-avatar img'),
@@ -33,8 +32,8 @@ function createProfileModal() {
 
     function closeModal() {
         modal.classList.remove('active');
+        document.removeEventListener('keydown', handleEscapeKey);
         modalCloseTimer = setTimeout(() => {
-            document.removeEventListener('keydown', handleEscapeKey);
             if (typeof onComplete === 'function') {
                 onComplete();
             }
@@ -51,13 +50,11 @@ function createProfileModal() {
         elements.badgesContainer.innerHTML = '';
         const badges = user?.badges || [];
         if (badges.length === 0) {
-            const emptyBadge = document.createElement('div');
-            emptyBadge.className = 'badge-item empty-badge';
-            emptyBadge.innerHTML = `
-                <div class="badge-placeholder"><i class="fas fa-plus"></i></div>
-                <span>Rozet Yok</span>
-            `;
-            elements.badgesContainer.appendChild(emptyBadge);
+            elements.badgesContainer.innerHTML = `
+                <div class="badge-item empty-badge">
+                    <div class="badge-placeholder"><i class="fas fa-plus"></i></div>
+                    <span>Rozet Yok</span>
+                </div>`;
             return;
         }
         const maxBadges = Math.min(badges.length, 4);
@@ -117,89 +114,79 @@ function createProfileModal() {
 
     function renderUserData(user) {
         try {
-            if (!user || typeof user !== 'object') {
-                throw new Error('Geçerli kullanıcı verisi bulunamadı');
-            }
-            if (user.avatar_url) {
-                elements.avatar.src = user.avatar_url;
-                elements.avatar.onerror = () => { elements.avatar.src = 'images/defaultavatar.png'; };
-            } else {
-                elements.avatar.src = 'images/defaultavatar.png';
-            }
-            const displayName = user.username || user.display_name || user.name || 'İsimsiz Kullanıcı';
+            if (!user) throw new Error('Geçerli kullanıcı verisi bulunamadı');
+            elements.avatar.src = user.avatar_url || 'images/defaultavatar.png';
+            const displayName = user.username || user.display_name || 'İsimsiz Kullanıcı';
             elements.username.textContent = displayName;
             document.title = `${displayName} - Profil | Chatlify`;
-            if (user.tag) {
-                elements.tag.textContent = `#${user.tag}`;
-                elements.tag.style.display = '';
-            } else {
-                elements.tag.style.display = 'none';
-            }
+            elements.tag.textContent = user.tag ? `#${user.tag}` : '';
+            elements.bio.textContent = user.bio || 'Bu kullanıcı henüz hakkında bir şey yazmamış.';
+            elements.memberSince.textContent = formatDate(user.created_at);
+            elements.memberDuration.textContent = calculateTimeElapsed(user.created_at);
+
             const isOnline = user.is_online || false;
             elements.statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
-            if (isOnline) {
-                elements.statusIndicator.classList.add('online');
-                elements.statusDot.classList.add('online');
-            } else {
-                elements.statusIndicator.classList.remove('online');
-                elements.statusDot.classList.remove('online');
-            }
-            elements.bio.textContent = user.bio || 'Bu kullanıcı henüz hakkında bir şey yazmamış.';
-            if (user.created_at) {
-                elements.memberSince.textContent = formatDate(user.created_at);
-                elements.memberDuration.textContent = calculateTimeElapsed(user.created_at);
-            } else {
-                elements.memberSince.textContent = 'Bilinmiyor';
-                elements.memberDuration.textContent = 'Bilinmiyor';
-            }
+            elements.statusIndicator.classList.toggle('online', isOnline);
+            elements.statusDot.classList.toggle('online', isOnline);
+
             renderBadges(user);
         } catch (error) {
             console.error('Kullanıcı verisi yükleme hatası:', error);
-            elements.username.textContent = 'Kullanıcı Bilgisi Yüklenemedi';
+            elements.username.textContent = 'Veri Yüklenemedi';
         }
     }
 
+    async function handleRemoveFriend() {
+        const user = activeUser;
+        if (!user) return;
+        const username = user.username || 'Bu kullanıcıyı';
+        if (confirm(`${username} arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
+            try {
+                const { data: friendship, error: findError } = await supabase.from('friendships').select('id').or(`and(user_id_1.eq.${currentUser.id},user_id_2.eq.${user.id}),and(user_id_1.eq.${user.id},user_id_2.eq.${currentUser.id})`).eq('status', 'accepted').single();
+                if (findError || !friendship) throw new Error('Arkadaşlık kaydı bulunamadı.');
+                const { error: deleteError } = await supabase.from('friendships').delete().eq('id', friendship.id);
+                if (deleteError) throw deleteError;
+                alert(`${username} arkadaşlıktan çıkarıldı.`);
+                closeModal();
+                if (typeof onComplete === 'function') onComplete({ action: 'removed', userId: user.id });
+            } catch (error) {
+                console.error('Arkadaşlıktan çıkarma hatası:', error);
+                alert(`Bir hata oluştu: ${error.message}`);
+            }
+        }
+    }
+
+    function handleSendMessage() {
+        if (activeUser) {
+            closeModal();
+            if (typeof onComplete === 'function') onComplete({ action: 'message', userId: activeUser.id });
+        }
+    }
+
+    // Olay dinleyicilerini bir kez ata
     elements.closeButton.addEventListener('click', closeModal);
     modal.addEventListener('click', (event) => {
         if (event.target === modal) closeModal();
     });
-
-    elements.callButton.addEventListener('click', () => alert('Sesli arama özelliği yakında eklenecek!'));
-    elements.blockButton.addEventListener('click', () => alert('Engelleme özelliği yakında eklenecek!'));
+    elements.messageButton.addEventListener('click', handleSendMessage);
+    elements.removeFriendButton.addEventListener('click', handleRemoveFriend);
+    elements.callButton.addEventListener('click', () => alert('Arama özelliği yakında!'));
+    elements.blockButton.addEventListener('click', () => alert('Engelleme yakında!'));
 
     return function initialize(user, _currentUser, _supabase, _onComplete) {
         console.log("Profil modalı başlatılıyor:", user);
+        activeUser = user;
         currentUser = _currentUser;
         supabase = _supabase;
         onComplete = _onComplete;
+
         renderUserData(user);
+
         clearTimeout(modalCloseTimer);
         requestAnimationFrame(() => {
             modal.classList.add('active');
+            document.addEventListener('keydown', handleEscapeKey);
         });
-        document.addEventListener('keydown', handleEscapeKey);
-
-        elements.removeFriendButton.onclick = async () => {
-            const username = user.username || user.display_name || 'Bu kullanıcıyı';
-            if (confirm(`${username} arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
-                try {
-                    const { data: friendship, error: findError } = await supabase.from('friendships').select('id').or(`and(user_id_1.eq.${currentUser.id},user_id_2.eq.${user.id}),and(user_id_1.eq.${user.id},user_id_2.eq.${currentUser.id})`).eq('status', 'accepted').single();
-                    if (findError || !friendship) throw new Error('Arkadaşlık kaydı bulunamadı.');
-                    const { error: deleteError } = await supabase.from('friendships').delete().eq('id', friendship.id);
-                    if (deleteError) throw deleteError;
-                    alert(`${username} arkadaşlıktan çıkarıldı.`);
-                    closeModal();
-                    if (typeof onComplete === 'function') onComplete({ action: 'removed', userId: user.id });
-                } catch (error) {
-                    console.error('Arkadaşlıktan çıkarma hatası:', error);
-                    alert(`Bir hata oluştu: ${error.message}`);
-                }
-            }
-        };
-        elements.messageButton.onclick = () => {
-            closeModal();
-            if (typeof onComplete === 'function') onComplete({ action: 'message', userId: user.id });
-        };
     };
 }
-window.createProfileModalInitializer = createProfileModal;
+window.createProfileModalInitializer = createProfileModalInitializer;

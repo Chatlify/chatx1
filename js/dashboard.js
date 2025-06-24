@@ -1503,37 +1503,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Kullanıcının çevrimiçi durumunu ekle
+        user.is_online = state.onlineFriends.has(user.id);
+
         const componentName = 'profile-modal';
         const componentContainerId = `${componentName}-container`;
         const componentScriptId = `${componentName}-script`;
 
         try {
-            // Eğer modal daha önce hiç yüklenmediyse, HTML ve JS'i yükle
             if (!profileModalInitializer) {
                 console.log("Profil modalı ilk kez yükleniyor...");
+                const existingContainer = document.getElementById(componentContainerId);
+                if (existingContainer) existingContainer.remove();
 
-                // Mevcut script etiketini temizle (varsa)
-                const existingScript = document.getElementById(componentScriptId);
-                if (existingScript) existingScript.remove();
-
-                // HTML'i yükle
                 const response = await fetch(`components/${componentName}/${componentName}.html`);
-                if (!response.ok) throw new Error('HTML dosyası yüklenemedi');
+                if (!response.ok) throw new Error('HTML yüklenemedi');
                 const content = await response.text();
 
-                // Konteyner oluştur ve HTML'i ekle
                 const container = document.createElement('div');
                 container.id = componentContainerId;
                 container.innerHTML = content;
                 document.body.appendChild(container);
 
-                // JavaScript'i yükle
                 const script = document.createElement('script');
                 script.id = componentScriptId;
                 script.src = `components/${componentName}/${componentName}.js`;
-                script.type = 'module'; // Gerekirse module olarak yükle
 
-                // Script yüklendiğinde başlatıcıyı oluştur
                 await new Promise((resolve, reject) => {
                     script.onload = () => {
                         if (window.createProfileModalInitializer) {
@@ -1549,13 +1544,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // Başlatıcıyı kullanarak modal'ı göster
             if (profileModalInitializer) {
-                profileModalInitializer(user, state.currentUser, supabase, () => {
-                    // Modal kapatıldığında yapılacaklar (şimdilik boş)
-                    console.log("Profil modalı kapatıldı.");
-                    // Konteynerin kaldırılması artık modal'ın kendi içinde yönetiliyor
-                    // veya burada yönetilebilir, ancak mevcut yapıda gerek yok.
+                profileModalInitializer(user, state.currentUser, supabase, (result) => {
+                    console.log("Profil modalı kapatıldı. Sonuç:", result);
+                    if (result?.action === 'removed') {
+                        fetchAndRenderAll(); // Arkadaş silindiyse listeyi yenile
+                    }
                 });
             } else {
                 throw new Error("Profil modalı başlatılamadı.");
