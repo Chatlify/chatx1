@@ -21,63 +21,133 @@
             <div class="auth-header">
                 <img src="assets/logo.png" alt="Chatlify Logo" class="logo">
                 <h1>Chatlify'a Katıl</h1>
-                <p>Yeni bir hesap oluşturarak başlayın</p>
+                <p>Birkaç adımda yeni bir hesap oluşturarak başlayın</p>
             </div>
 
             <div class="form-container">
+                <!-- Adım Göstergesi -->
+                <div class="step-indicator">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Kullanıcı Adı</div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">E-Posta</div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Avatar</div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Şifre</div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">Onay</div>
+                    </div>
+                </div>
+
                 <div class="form-header">
                     <h2 class="form-title">Hesap Oluştur</h2>
-                    <p class="form-subtitle">Sohbete katılmak için yeni bir hesap oluşturun.</p>
+                    <p class="form-subtitle" id="stepSubtitle">Seni tanıyabilmemiz için harika bir kullanıcı adı seç!
+                    </p>
                 </div>
+
                 <form id="registerForm" novalidate>
-                    <!-- Avatar Yükleme Bölümü -->
-                    <div class="avatar-upload-container">
-                        <div class="avatar-preview" id="avatarPreview">
-                            <div class="avatar-preview-text">
-                                <i class="fas fa-camera avatar-upload-icon"></i>
-                                <span>Profil Fotoğrafı Seç</span>
-                            </div>
-                            <img src="" alt="Avatar Önizleme" class="avatar-preview-img">
+                    <!-- Adım 1: Kullanıcı Adı -->
+                    <div class="step-content" data-step="1">
+                        <div class="input-group">
+                            <label for="username"><i class="fas fa-user"></i> Kullanıcı Adı</label>
+                            <input type="text" id="username" name="username"
+                                placeholder="Seni yansıtan bir kullanıcı adı seç" required>
+                            <div class="form-error" data-for="username"></div>
                         </div>
-                        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
-                        <div class="form-error" data-for="avatar"></div>
-                        <p class="avatar-info">İsteğe bağlı - Profil fotoğrafı seçmezseniz veya yükleme başarısız
-                            olursa, sizin için rastgele bir avatar atanacaktır.</p>
-                        <div class="cloudinary-note">Not: Avatar yükleme özelliğinin çalışması için Cloudinary API
-                            ayarlarının yapılması gerekir. Ayarlanmadığında varsayılan avatarlar kullanılır.</div>
+                        <button type="button" class="form-btn next-step-btn" data-next="2">Devam Et</button>
                     </div>
 
-                    <div class="input-group">
-                        <label for="username"><i class="fas fa-user"></i> Kullanıcı Adı</label>
-                        <input type="text" id="username" name="username" required>
-                        <div class="form-error" data-for="username"></div>
-                    </div>
-                    <div class="input-group">
-                        <label for="email"><i class="fas fa-envelope"></i> E-posta</label>
-                        <input type="email" id="email" name="email" required>
-                        <div class="form-error" data-for="email"></div>
-                    </div>
-                    <div class="input-group">
-                        <label for="password"><i class="fas fa-lock"></i> Şifre</label>
-                        <input type="password" id="password" name="password" required>
-                        <div class="form-error" data-for="password"></div>
-                    </div>
-                    <div class="input-group">
-                        <label for="confirmPassword"><i class="fas fa-lock"></i> Şifreyi Onayla</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
-                        <div class="form-error" data-for="confirmPassword"></div>
-                    </div>
-                    <div class="form-options">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="terms" name="terms" required>
-                            <label for="terms">Kullanım <a href="/legal/terms-of-service.html"
-                                    target="_blank">koşullarını</a> ve <a href="/legal/privacy-policy.html"
-                                    target="_blank">gizlilik politikasını</a> kabul ediyorum.</label>
+                    <!-- Adım 2: E-posta -->
+                    <div class="step-content" data-step="2" style="display: none;">
+                        <div class="input-group">
+                            <label for="email"><i class="fas fa-envelope"></i> E-posta</label>
+                            <input type="email" id="email" name="email"
+                                placeholder="Güvenlik için geçerli bir e-posta gerekli" required>
+                            <div class="form-error" data-for="email"></div>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" class="form-btn prev-step-btn" data-prev="1">Geri Dön</button>
+                            <button type="button" class="form-btn next-step-btn" data-next="3">Devam Et</button>
                         </div>
                     </div>
-                    <button type="submit" id="submitBtn" class="form-btn" disabled>
-                        <span class="btn-text">Hesap Oluştur</span>
-                    </button>
+
+                    <!-- Adım 3: Avatar -->
+                    <div class="step-content" data-step="3" style="display: none;">
+                        <div class="avatar-upload-container">
+                            <p class="avatar-info-title">Kendini Göster!</p>
+                            <div class="avatar-preview" id="avatarPreview">
+                                <div class="avatar-preview-text">
+                                    <i class="fas fa-camera avatar-upload-icon"></i>
+                                    <span>Profil Fotoğrafı Seç</span>
+                                </div>
+                                <img src="" alt="Avatar Önizleme" class="avatar-preview-img">
+                            </div>
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                            <div class="form-error" data-for="avatar"></div>
+                            <p class="avatar-info">İsteğe bağlı - Profil fotoğrafı seçmezseniz veya yükleme başarısız
+                                olursa, sizin için rastgele bir avatar atanacaktır.</p>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" class="form-btn prev-step-btn" data-prev="2">Geri Dön</button>
+                            <button type="button" class="form-btn next-step-btn" data-next="4">Devam Et</button>
+                        </div>
+                    </div>
+
+                    <!-- Adım 4: Şifre -->
+                    <div class="step-content" data-step="4" style="display: none;">
+                        <div class="input-group">
+                            <label for="password"><i class="fas fa-lock"></i> Şifre</label>
+                            <input type="password" id="password" name="password" placeholder="Güçlü bir şifre oluştur"
+                                required>
+                            <div class="form-error" data-for="password"></div>
+                        </div>
+                        <div class="input-group">
+                            <label for="confirmPassword"><i class="fas fa-lock"></i> Şifreyi Onayla</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword"
+                                placeholder="Şifreni tekrar gir" required>
+                            <div class="form-error" data-for="confirmPassword"></div>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" class="form-btn prev-step-btn" data-prev="3">Geri Dön</button>
+                            <button type="button" class="form-btn next-step-btn" data-next="5">Devam Et</button>
+                        </div>
+                    </div>
+
+                    <!-- Adım 5: Onay -->
+                    <div class="step-content" data-step="5" style="display: none;">
+                        <div class="final-step-container">
+                            <h3>Son Bir Adım Kaldı!</h3>
+                            <p>Chatlify'ı kullanmak için aşağıdaki şartları kabul etmelisin:</p>
+                            <div class="form-options">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="terms" name="terms" required>
+                                    <label for="terms">Kullanım <a href="/legal/terms-of-service.html"
+                                            target="_blank">koşullarını</a> ve <a href="/legal/privacy-policy.html"
+                                            target="_blank">gizlilik politikasını</a> kabul ediyorum.</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" class="form-btn prev-step-btn" data-prev="4">Geri Dön</button>
+                            <button type="submit" id="submitBtn" class="form-btn">
+                                <span class="btn-text">Hesabımı Oluştur</span>
+                            </button>
+                        </div>
+                    </div>
                 </form>
                 <div class="form-footer">
                     Zaten bir hesabın var mı? <a href="/login.html">Giriş Yap</a>

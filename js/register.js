@@ -14,6 +14,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
     const submitBtn = document.getElementById('submitBtn');
     const formErrors = document.querySelectorAll('.form-error');
+    const stepIndicator = document.querySelector('.step-indicator');
+    const stepSubtitle = document.getElementById('stepSubtitle');
+    const steps = document.querySelectorAll('.step');
+    const stepConnectors = document.querySelectorAll('.step-connector');
+    const stepContents = document.querySelectorAll('.step-content');
+    const nextButtons = document.querySelectorAll('.next-step-btn');
+    const prevButtons = document.querySelectorAll('.prev-step-btn');
+
+    let currentStep = 1;
+    const stepSubtitles = [
+        "Seni tanıyabilmemiz için harika bir kullanıcı adı seç!",
+        "Hesabını güvenceye almak için e-posta adresini ekle",
+        "Kendini göster! Harika bir profil fotoğrafı ekle",
+        "Hesabını koruyacak güçlü bir şifre belirle",
+        "Neredeyse bitti! Sadece son bir adım kaldı"
+    ];
 
     // Avatar elementleri
     const avatarPreview = document.getElementById('avatarPreview');
@@ -79,6 +95,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Adım işlevselliği
+    nextButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const nextStep = parseInt(btn.getAttribute('data-next'));
+            if (validateStep(currentStep)) {
+                goToStep(nextStep);
+            }
+        });
+    });
+
+    prevButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prevStep = parseInt(btn.getAttribute('data-prev'));
+            goToStep(prevStep);
+        });
+    });
+
+    function goToStep(step) {
+        // Mevcut adımı gizle
+        stepContents.forEach(content => {
+            if (parseInt(content.getAttribute('data-step')) === currentStep) {
+                content.style.display = 'none';
+            }
+        });
+
+        // Adım göstergesini güncelle
+        steps.forEach(stepEl => {
+            const stepNum = parseInt(stepEl.getAttribute('data-step'));
+            if (stepNum < step) {
+                stepEl.classList.add('completed');
+                stepEl.classList.remove('active');
+            } else if (stepNum === step) {
+                stepEl.classList.add('active');
+                stepEl.classList.remove('completed');
+            } else {
+                stepEl.classList.remove('active', 'completed');
+            }
+        });
+
+        // Bağlantıları (connectors) güncelle
+        stepConnectors.forEach((connector, index) => {
+            if (index < step - 1) {
+                connector.classList.add('active');
+            } else {
+                connector.classList.remove('active');
+            }
+        });
+
+        // Yeni adımı göster ve altyazıyı güncelle
+        currentStep = step;
+        stepSubtitle.textContent = stepSubtitles[currentStep - 1];
+
+        stepContents.forEach(content => {
+            if (parseInt(content.getAttribute('data-step')) === currentStep) {
+                content.style.display = 'block';
+
+                // Odaklanılacak ilk input'u bul ve odaklan
+                const firstInput = content.querySelector('input');
+                if (firstInput) {
+                    setTimeout(() => {
+                        firstInput.focus();
+                    }, 300);
+                }
+            }
+        });
+
+        // Son adımda tüm alanları kontrol et
+        if (currentStep === 5) {
+            validateForm();
+        }
+    }
+
+    function validateStep(step) {
+        let isValid = true;
+
+        // Her adım için özel doğrulama
+        if (step === 1) {
+            isValid = validateField('username');
+        } else if (step === 2) {
+            isValid = validateField('email');
+        } else if (step === 3) {
+            // Avatar adımı opsiyonel, bu nedenle her zaman geçerli
+            isValid = true;
+        } else if (step === 4) {
+            isValid = validateField('password') && validateField('confirmPassword');
+        }
+
+        return isValid;
+    }
+
     function resetAvatarPreview() {
         avatarPreviewImg.style.display = 'none';
         avatarPreviewText.style.display = 'flex';
@@ -131,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return isFormValid;
     };
 
+    // Kullanıcı etkileşimleri için alan validasyonları
     Object.values(fields).forEach(field => {
         if (field.input && field.input.type === 'checkbox') {
             field.input.addEventListener('change', validateForm);
@@ -140,7 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (field.input.name === 'password') {
                     validateField('confirmPassword');
                 }
-                validateForm();
+
+                if (currentStep === 5) {
+                    validateForm();
+                }
             });
         }
     });
@@ -233,9 +343,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showError('username', `Kayıt başarısız: ${error.message}`);
         } finally {
             submitBtn.disabled = false;
-            submitBtn.querySelector('.btn-text').textContent = 'Hesap Oluştur';
+            submitBtn.querySelector('.btn-text').textContent = 'Hesabımı Oluştur';
         }
     });
 
-    validateForm(); // Sayfa yüklendiğinde butonun durumunu ayarla
+    // Sayfa yüklendiğinde ilk adıma gidelim
+    goToStep(1);
 }); 
