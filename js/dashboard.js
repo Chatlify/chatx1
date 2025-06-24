@@ -1257,25 +1257,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 6. INITIALIZATION & HELPERS ---
     async function fetchAndRenderAll() {
-        if (!state.currentUser) return;
-
-        const [friends, pendingRequests] = await Promise.all([
-            supabaseService.getFriends(state.currentUser.id),
-            supabaseService.getPendingRequests(state.currentUser.id)
-        ]);
-
-        state.friends = friends;
-        state.pendingRequests = pendingRequests;
-
-        renderer.render(); // Call the main render function
-        renderer.renderDirectMessagesList(); // Render the DMs list in the left sidebar
-
-        // Sponsor görsellerini tembel yükleme (lazy) ile işaretle
-        document.querySelectorAll('.sponsor-server-icon img').forEach(img => {
-            if (!img.getAttribute('loading')) {
-                img.setAttribute('loading', 'lazy');
+        try {
+            const session = await supabaseService.getUserSession();
+            if (!session) {
+                console.log("No active session. Redirecting to login.");
+                window.location.href = '/login.html'; // Redirect if no session
+                return;
             }
-        });
+
+            // 2. Fetch full user profile and merge into state
+            const userProfile = await supabaseService.getUserProfile(session.id);
+            state.currentUser = { ...session, ...userProfile }; // Important: merge profile data
+            console.log('[INIT] Current user loaded:', state.currentUser);
+
+            renderer.renderUserFooter(state.currentUser);
+
+            // 3. Fetch and render all data
+            state.friends = (await supabaseService.getFriends(state.currentUser.id)) || [];
+            state.pendingRequests = (await supabaseService.getPendingRequests(state.currentUser.id)) || [];
+
+            renderer.render();
+
+            console.log("Tüm veriler başarıyla yüklendi ve render edildi.");
+
+        } catch (error) {
+            console.error('Veri yükleme ve render etme sırasında hata:', error);
+        }
     }
 
     const init = async () => {
@@ -1496,7 +1503,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
         try {
-            console.log("Profil paneline gönderilen kullanıcı verisi:", JSON.stringify(user, null, 2));
+            debugger; // Kodun çalışmasını burada durdur
+            console.log("Profil paneline gönderilen kullanıcı verisi:", user);
             // Profil modal bileşenini yükle ve hazır olmasını bekle
             await loadComponent('profile-modal');
 
@@ -1612,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (window[component.initFunction]) {
                     window[component.initFunction](supabase, () => {
                         console.log(`${componentName} bileşeni kapatıldı`);
-                        fetchAndRenderAll();
+                        // fetchAndRenderAll();
                     });
                 } else {
                     console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
