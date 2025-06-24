@@ -173,6 +173,10 @@
     left: 0;
 }
 
+.sidebar-item:not(:hover)::before {
+    left: -100%;
+}
+
 .sidebar-item:active {
     transform: scale(0.95) translateX(3px);
 }
@@ -423,6 +427,7 @@
     border-radius: 4px;
     cursor: pointer;
     margin-bottom: 1px;
+    position: relative;
 }
 
 .dm-item:hover {
@@ -860,4 +865,35 @@
     100% {
         transform: rotate(360deg);
     }
+}
+
+/* Bildirim sayacı için stil */
+.dm-notification-badge {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--danger-color, #ff5252);
+    color: white;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: scale(0.5) translateY(-50%);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    /* Tıklamayı engelleme */
+    z-index: 2;
+}
+
+.dm-notification-badge.visible {
+    opacity: 1;
+    transform: scale(1) translateY(-50%);
 }
