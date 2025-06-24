@@ -191,7 +191,10 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-attachments">
-                        <button class="chat-attachment-btn" title="Dosya ekle"><i class="fas fa-paperclip"></i></button>
+                        <button class="chat-attachment-btn file-upload-btn" title="Görsel Ekle"><i
+                                class="fas fa-paperclip"></i></button>
+                        <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg, image/gif"
+                            style="display: none;" />
                         <button class="chat-attachment-btn emoji-btn" title="Emoji Ekle"><i
                                 class="fas fa-smile"></i></button>
                         <button class="chat-attachment-btn gif-btn" title="GIF Ekle"><i
@@ -312,6 +315,7 @@
     <script src="js/logger.js" type="module"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <script src="js/libs/snowflake-id.min.js"></script>
     <script src="js/auth_config.js" type="module"></script>
     <script src="js/dashboard.js" type="module"></script>

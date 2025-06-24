@@ -225,6 +225,13 @@ window.sendFriendRequest = async function (username) {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Supabase setup
+    const supabase = supabaseInit();
+
+    // Cloudinary yapılandırması (JavaScript tarafında yükleme yapıyoruz)
+    const CLOUDINARY_CLOUD_NAME = "democloud"; // Burayı kendi cloud name'inizle değiştirin
+    const CLOUDINARY_UPLOAD_PRESET = "ml_default"; // Burayı kendi preset'inizle değiştirin
+    const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
     // --- 1. STATE MANAGEMENT ---
     const state = {
@@ -240,7 +247,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentFriend: null,
         participants: {},
         activePanel: 'friends',
-        lastHeartbeat: Date.now() // Son heartbeat zamanını tutmak için
+        lastHeartbeat: Date.now(), // Son heartbeat zamanını tutmak için
+        isUploadingImage: false,   // Resim yükleme durumunu izlemek için
+        uploadingImageElement: null // Yükleme göstergesini tutmak için
     };
 
     // --- 2. UI ELEMENTS ---
@@ -1343,10 +1352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (ui.friendsContentContainer) {
                 // This now handles both friend card clicks and pending request actions
-                ui.friendsContentContainer.addEventListener('click', (e) => {
-                    handlePendingRequestAction(e);
-                    handleFriendCardAction(e); // You need to create this function
-                });
+                ui.friendsContentContainer.addEventListener('click', handlePendingRequestAction);
             }
             if (ui.dmList) {
                 ui.dmList.addEventListener('click', handleDmItemClick);
@@ -1592,6 +1598,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Panel dışına tıklanınca kapatma için document'a event listener ekle
             document.addEventListener('click', handleClickOutsidePanels);
+
+            // Yeni eklenen dosya yükleme butonu için listener
+            const fileUploadBtn = document.querySelector('.file-upload-btn');
+            if (fileUploadBtn) {
+                fileUploadBtn.addEventListener('click', handleFileUploadButtonClick);
+            }
+
+            // Dosya input değişimini dinle
+            const fileInput = document.getElementById('image-upload');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelected);
+            }
 
         } catch (error) {
             console.error('Fatal initialization error:', error);
@@ -2130,6 +2148,188 @@ document.addEventListener('DOMContentLoaded', async () => {
                 profileStatus.classList.add('offline');
             }
         }
+    }
+
+    // Dosya ekleme butonuna tıklandığında
+    function handleFileUploadButtonClick() {
+        // Zaten yükleme yapılıyorsa işlemi engelle
+        if (state.isUploadingImage) {
+            alert("Şu anda bir görsel yükleniyor. Lütfen bekleyin.");
+            return;
+        }
+
+        const fileInput = document.getElementById('image-upload');
+        if (fileInput) {
+            fileInput.click();
+        }
+    }
+
+    // Dosya seçildiğinde
+    function handleFileSelected(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Dosya bir görsel mi kontrol et
+        if (!file.type.match('image.*')) {
+            alert("Lütfen sadece görsel dosyası (PNG, JPG, JPEG, GIF) yükleyin.");
+            e.target.value = '';
+            return;
+        }
+
+        // Dosya boyutu kontrolü
+        if (file.size > MAX_IMAGE_SIZE) {
+            alert("Dosya boyutu 2MB'dan büyük olamaz. Lütfen daha küçük bir görsel seçin.");
+            e.target.value = '';
+            return;
+        }
+
+        // Yükleme durumunu güncelle
+        state.isUploadingImage = true;
+
+        // Kullanıcıya yükleme işleminin başladığını göster
+        showUploadingIndicator();
+
+        // Cloudinary'ye yükle
+        uploadImageToCloudinary(file);
+
+        // Input'u temizle
+        e.target.value = '';
+    }
+
+    // Yükleme göstergesini ekle
+    function showUploadingIndicator() {
+        if (!ui.chatMessages) return;
+
+        // Temp mesaj oluştur
+        const uploadingElement = document.createElement('div');
+        uploadingElement.className = 'message-group own-message uploading-message';
+        uploadingElement.innerHTML = `
+            <div class="message-group-content">
+                <div class="message-content">
+                    <p><i class="fas fa-spinner fa-spin"></i> Görsel yükleniyor...</p>
+                </div>
+            </div>
+        `;
+
+        ui.chatMessages.appendChild(uploadingElement);
+        renderer.scrollToBottom();
+
+        // Referansı sakla
+        state.uploadingImageElement = uploadingElement;
+    }
+
+    // Yükleme göstergesini kaldır
+    function removeUploadingIndicator() {
+        if (state.uploadingImageElement && state.uploadingImageElement.parentNode) {
+            state.uploadingImageElement.parentNode.removeChild(state.uploadingImageElement);
+            state.uploadingImageElement = null;
+        }
+    }
+
+    // Cloudinary'ye görsel yükleme
+    function uploadImageToCloudinary(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('[UPLOAD] Image uploaded successfully:', data);
+
+                // Yükleme durumunu sıfırla
+                state.isUploadingImage = false;
+                removeUploadingIndicator();
+
+                // Yüklenen görseli mesaj olarak gönder
+                if (data.secure_url) {
+                    sendImageMessage(data.secure_url, data.original_filename, data.bytes);
+                }
+            })
+            .catch(error => {
+                console.error('[UPLOAD] Error uploading image:', error);
+                alert("Görsel yüklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+
+                // Yükleme durumunu sıfırla
+                state.isUploadingImage = false;
+                removeUploadingIndicator();
+            });
+    }
+
+    // Görsel mesajı gönder
+    async function sendImageMessage(imageUrl, fileName, fileSize) {
+        if (!state.currentConversationId) return;
+
+        // Dosya boyutunu formatla
+        const formattedSize = formatFileSize(fileSize);
+
+        // Görsel mesajı hazırla
+        const imageContent = `<div class="message-image-container">
+            <img src="${imageUrl}" alt="${fileName}" class="message-image">
+            <div class="message-attachment">
+                <div class="attachment-icon"><i class="fas fa-file-image"></i></div>
+                <div class="attachment-details">
+                    <div class="attachment-name">${fileName}</div>
+                    <div class="attachment-size">${formattedSize}</div>
+                </div>
+            </div>
+        </div>`;
+
+        // Geçici mesaj ID'si
+        const tempId = `temp-img-${Date.now()}`;
+
+        // Geçici mesaj
+        const tempMessage = {
+            id: tempId,
+            conversation_id: state.currentConversationId,
+            sender_id: state.currentUser.id,
+            content: imageContent,
+            createdAt: new Date().toISOString(),
+            sender: state.currentUser,
+            is_image: true
+        };
+
+        // Mesajı UI'a ekle
+        state.messages.push(tempMessage);
+        renderer.renderMessages(state.messages);
+
+        // Supabase'e gönder
+        const { data: serverMessage, error } = await supabaseService.sendMessage(
+            state.currentConversationId,
+            state.currentUser.id,
+            imageContent
+        );
+
+        // Sonucu işle
+        const messageIndex = state.messages.findIndex(m => m.id === tempId);
+
+        if (error) {
+            console.error('[SEND] Failed to send image message:', error);
+            if (messageIndex !== -1) {
+                state.messages.splice(messageIndex, 1);
+                renderer.renderMessages(state.messages);
+            }
+            alert("Görsel mesajı gönderilemedi. Lütfen tekrar deneyin.");
+        } else {
+            console.log('[SEND] Image message sent successfully.');
+            if (messageIndex !== -1) {
+                state.messages[messageIndex] = serverMessage;
+                const tempElement = document.querySelector(`[data-message-id="${tempId}"]`);
+                if (tempElement) {
+                    tempElement.dataset.messageId = serverMessage.id;
+                }
+            }
+        }
+    }
+
+    // Dosya boyutunu formatlı şekilde göster
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 
     init();

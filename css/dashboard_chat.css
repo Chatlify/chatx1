@@ -328,3 +328,42 @@
         transform: translateY(0);
     }
 }
+
+/* Görsel Mesaj Stili */
+.message-image-container {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    max-width: 100%;
+}
+
+.message-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.message-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Yükleme Göstergesi */
+.uploading-message {
+    opacity: 0.8;
+}
+
+.uploading-message .fas.fa-spinner {
+    margin-right: 8px;
+    color: var(--accent-color);
+}
+
+/* Dosya ekleme butonu hover efekti */
+.file-upload-btn:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.15);
+    color: var(--accent-color);
+}
