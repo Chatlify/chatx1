@@ -1531,8 +1531,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- DYNAMIC COMPONENT LOADER ---
-    // Basit bellek içi cache ile HTML şablonunu yalnızca ilk seferde çek
+    // Basit bellek içi cache ile HTML şablonunu ve JS durumunu önbelleğe alıyoruz
     const componentHtmlCache = new Map();
+    const componentJsCache = new Map(); // JS yükleme durumlarını takip etmek için yeni cache
+
     /**
      * Loads an HTML component into the DOM and initializes its specific JS.
      * @param {string} componentName - The name of the component (e.g., 'add-friend').
@@ -1563,50 +1565,105 @@ document.addEventListener('DOMContentLoaded', async () => {
             const component = componentPaths[componentName];
             if (!component) throw new Error(`Bileşen bulunamadı: ${componentName}`);
 
-            let htmlContent;
-            if (componentHtmlCache.has(component.html)) {
-                htmlContent = componentHtmlCache.get(component.html);
-            } else {
-                const htmlResponse = await fetch(component.html);
-                if (!htmlResponse.ok) throw new Error(`HTML yüklenemedi: ${component.html}`);
-                htmlContent = await htmlResponse.text();
-                componentHtmlCache.set(component.html, htmlContent);
-            }
+            // Paralel yükleme için tüm işlemleri aynı anda başlatalım
+            const loadTasks = [];
 
-            if (component.css && !document.head.querySelector(`link[href="${component.css}"]`)) {
-                const cssLink = document.createElement('link');
-                cssLink.rel = 'stylesheet';
-                cssLink.href = component.css;
-                document.head.appendChild(cssLink);
-            }
-
-            // JavaScript'in yüklenmesini ve hazır olmasını bekle
-            if (component.js && component.initFunction) {
-                if (typeof window[component.initFunction] !== 'function') {
-                    const existingJs = document.head.querySelector(`script[src="${component.js}"]`);
-                    if (!existingJs) {
-                        const jsScript = document.createElement('script');
-                        jsScript.src = component.js;
-                        document.head.appendChild(jsScript);
+            // 1. HTML içeriğini yükle (önbellekten veya uzaktan)
+            const htmlPromise = new Promise(async (resolve) => {
+                if (componentHtmlCache.has(component.html)) {
+                    resolve(componentHtmlCache.get(component.html));
+                } else {
+                    try {
+                        const htmlResponse = await fetch(component.html);
+                        if (!htmlResponse.ok) throw new Error(`HTML yüklenemedi: ${component.html}`);
+                        const htmlContent = await htmlResponse.text();
+                        componentHtmlCache.set(component.html, htmlContent);
+                        resolve(htmlContent);
+                    } catch (error) {
+                        console.error(`HTML yükleme hatası: ${error.message}`);
+                        resolve(''); // Hata durumunda boş içerik döndür ama işlemi durdurma
                     }
-
-                    // Fonksiyonun window'a eklenmesini bekle (polling)
-                    await new Promise((resolve, reject) => {
-                        const maxTries = 50; // 5 saniye bekle
-                        let tries = 0;
-                        const interval = setInterval(() => {
-                            if (typeof window[component.initFunction] === 'function') {
-                                clearInterval(interval);
-                                resolve();
-                            } else if (tries++ > maxTries) {
-                                clearInterval(interval);
-                                reject(new Error(`${component.initFunction} fonksiyonu yüklenemedi.`));
-                            }
-                        }, 100);
-                    });
                 }
+            });
+            loadTasks.push(htmlPromise);
+
+            // 2. CSS yükle (eğer yoksa)
+            if (component.css && !document.head.querySelector(`link[href="${component.css}"]`)) {
+                const cssPromise = new Promise((resolve) => {
+                    const cssLink = document.createElement('link');
+                    cssLink.rel = 'stylesheet';
+                    cssLink.href = component.css;
+                    cssLink.onload = () => resolve();
+                    cssLink.onerror = () => {
+                        console.error(`CSS yüklenemedi: ${component.css}`);
+                        resolve(); // Hata durumunda bile devam et
+                    };
+                    document.head.appendChild(cssLink);
+                });
+                loadTasks.push(cssPromise);
             }
 
+            // 3. JavaScript'i yükle ve hazır olmasını bekle
+            if (component.js && component.initFunction) {
+                // Daha önce bu JS için yükleme başlatılmış mı kontrol et
+                let jsPromise;
+                if (componentJsCache.has(component.js)) {
+                    jsPromise = componentJsCache.get(component.js);
+                } else {
+                    jsPromise = new Promise((resolve) => {
+                        if (typeof window[component.initFunction] === 'function') {
+                            // Fonksiyon zaten hazır
+                            resolve();
+                            return;
+                        }
+
+                        // Eğer script zaten yüklenmekteyse, hazır olmasını bekle
+                        const existingJs = document.head.querySelector(`script[src="${component.js}"]`);
+                        if (existingJs) {
+                            // Script yükleniyor, hazır olmasını bekle
+                            const checkFunction = () => {
+                                if (typeof window[component.initFunction] === 'function') {
+                                    resolve();
+                                } else {
+                                    // Hızlı polling yerine, tarayıcının bir sonraki boşta kalma zamanını kullan
+                                    requestAnimationFrame(checkFunction);
+                                }
+                            };
+                            requestAnimationFrame(checkFunction);
+                        } else {
+                            // Script henüz yüklenmemiş, yüklemeyi başlat
+                            const jsScript = document.createElement('script');
+                            jsScript.src = component.js;
+                            jsScript.onload = () => {
+                                // Script yüklendi, fonksiyonun hazır olmasını bekle
+                                const checkFunction = () => {
+                                    if (typeof window[component.initFunction] === 'function') {
+                                        resolve();
+                                    } else {
+                                        requestAnimationFrame(checkFunction);
+                                    }
+                                };
+                                requestAnimationFrame(checkFunction);
+                            };
+                            jsScript.onerror = () => {
+                                console.error(`JS yüklenemedi: ${component.js}`);
+                                resolve(); // Hata durumunda bile devam et
+                            };
+                            document.head.appendChild(jsScript);
+                        }
+                    });
+
+                    // Promise'i önbelleğe al, aynı anda birden fazla istek gelirse yeniden yüklemeyi önle
+                    componentJsCache.set(component.js, jsPromise);
+                }
+
+                loadTasks.push(jsPromise);
+            }
+
+            // Tüm yükleme görevlerini paralel olarak bekle
+            const [htmlContent] = await Promise.all(loadTasks);
+
+            // HTML içeriğini DOM'a ekle
             let container = document.getElementById(`${componentName}-modal-container`);
             if (!container) {
                 container = document.createElement('div');
