@@ -126,6 +126,10 @@ textarea {
     height: 100vh;
     position: relative;
     transition: grid-template-columns var(--transition-normal);
+    overflow: hidden;
+    /* Taşan içeriği gizle */
+    z-index: 10;
+    /* Arkaplan animasyonunun üzerinde göster */
 }
 
 .server-layout.members-closed {
@@ -739,6 +743,8 @@ body.server-page {
     height: 100vh;
     background-color: var(--bg-light);
     position: relative;
+    z-index: 10;
+    /* Arkaplan animasyonunun üzerinde göster */
 }
 
 /* Sohbet Başlığı */
@@ -1608,6 +1614,8 @@ body {
     overflow: hidden;
     border-left: 1px solid var(--divider-color);
     transition: transform var(--transition-normal);
+    z-index: 10;
+    /* Arkaplan animasyonunun üzerinde göster */
 }
 
 .members-header {

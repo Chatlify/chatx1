@@ -10,6 +10,68 @@ body {
     overflow: hidden;
 }
 
+/* Yıldızlı arkaplan için z-index tanımları */
+.bg-animation {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    /* Negatif z-index ile içeriğin arkasına atma */
+    pointer-events: none;
+    /* Arkaplanın tıklanabilir olmamasını sağlar */
+}
+
+.stars,
+.twinkling,
+.clouds {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.stars {
+    background: #000 url('http://www.script-tutorials.com/demos/360/images/stars.png') repeat top center;
+    z-index: -3;
+}
+
+.twinkling {
+    background: transparent url('http://www.script-tutorials.com/demos/360/images/twinkling.png') repeat top center;
+    z-index: -2;
+    animation: move-twink-back 200s linear infinite;
+}
+
+.clouds {
+    background: transparent url('http://www.script-tutorials.com/demos/360/images/clouds.png') repeat top center;
+    z-index: -1;
+    animation: move-clouds-back 200s linear infinite;
+}
+
+@keyframes move-twink-back {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: -10000px 5000px;
+    }
+}
+
+@keyframes move-clouds-back {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 10000px 0;
+    }
+}
+
 @keyframes gradient {
     0% {
         background-position: 0% 50%;
