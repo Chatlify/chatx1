@@ -676,6 +676,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const currentCount = state.unreadMessages[newMessage.sender_id] || 0;
                         updateNotificationBadge(newMessage.sender_id, currentCount + 1);
                         console.log(`[Notification] Added new message notification for user ${newMessage.sender_id}, count: ${currentCount + 1}`);
+
+                        // DM listesini yeniden render et
+                        renderer.renderDirectMessagesList();
                     }
 
                     // Eğer mesaj zaten ekranda varsa (çok nadir bir durum), tekrar ekleme
@@ -879,18 +882,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         renderDirectMessagesList() {
+            console.log('[RENDER] Rendering direct messages list');
             const { friends, onlineFriends, unreadMessages } = state;
             const { dmList } = ui;
+
+            if (!dmList) {
+                console.error('[RENDER] DM list container not found!');
+                return;
+            }
+
             dmList.innerHTML = ''; // Clear previous list
 
             if (friends.length === 0) {
                 dmList.innerHTML = '<li class="dm-item-empty" style="padding: 10px 15px; color: var(--text-muted);">Sohbet edecek kimse yok.</li>';
+                console.log('[RENDER] No friends to display');
                 return;
             }
+
+            console.log('[RENDER] Current unreadMessages state:', unreadMessages);
 
             const friendsHTML = friends.map(friend => {
                 const isOnline = onlineFriends.has(friend.id);
                 const unreadCount = unreadMessages[friend.id] || 0;
+
+                console.log(`[RENDER] Friend: ${friend.username}, unreadCount: ${unreadCount}`);
 
                 return `
                     <li class="dm-item" data-user-id="${friend.id}" title="${friend.username}">
@@ -907,6 +922,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }).join('');
 
             dmList.innerHTML = friendsHTML;
+            console.log('[RENDER] Direct messages list rendered successfully');
         },
 
         renderMessages(messages) {
@@ -2459,8 +2475,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 
-    // Bildirim rozeti güncelleme fonksiyonu ekle
+    // Bildirim rozeti güncelleme fonksiyonu
     function updateNotificationBadge(userId, count) {
+        console.log(`[BADGE] Updating notification badge for user ${userId} with count ${count}`);
+
         // State'i güncelle
         if (count === 0) {
             delete state.unreadMessages[userId];
@@ -2468,18 +2486,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.unreadMessages[userId] = count;
         }
 
+        console.log(`[BADGE] State unreadMessages updated:`, state.unreadMessages);
+
         // DOM'u güncelle
         const dmItem = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
-        if (!dmItem) return;
+        if (!dmItem) {
+            console.warn(`[BADGE] No dm-item found for user ${userId}`);
+            return;
+        }
 
-        const badge = dmItem.querySelector('.dm-notification-badge');
-        if (!badge) return;
+        // Eğer bildirim rozeti yoksa oluştur
+        let badge = dmItem.querySelector('.dm-notification-badge');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'dm-notification-badge';
+            badge.setAttribute('data-count', '0');
+            dmItem.appendChild(badge);
+            console.log(`[BADGE] Created new badge element for user ${userId}`);
+        }
 
         if (count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
             badge.classList.add('visible');
+            console.log(`[BADGE] Badge set to visible with count ${badge.textContent}`);
         } else {
             badge.classList.remove('visible');
+            console.log(`[BADGE] Badge hidden for user ${userId}`);
         }
     }
 

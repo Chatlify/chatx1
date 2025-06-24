@@ -145,36 +145,17 @@
     border-radius: 8px;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
     gap: 12px;
     z-index: 1;
-}
-
-.sidebar-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: -1;
-    border-radius: 8px;
+    background-color: transparent;
+    overflow: visible;
 }
 
 .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
     transform: translateX(5px);
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.sidebar-item:hover::before {
-    left: 0;
-}
-
-.sidebar-item:not(:hover)::before {
-    left: -100%;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-item:active {
@@ -190,17 +171,18 @@
     justify-content: center;
     background-color: rgba(54, 57, 63, 0.8);
     border-radius: 50%;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-item-icon i {
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
 }
 
 .sidebar-item:hover .sidebar-item-icon {
     border-radius: 12px;
     transform: rotate(8deg);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
 }
 
 .sidebar-item-text {
@@ -870,7 +852,7 @@
 /* Bildirim sayacı için stil */
 .dm-notification-badge {
     position: absolute;
-    right: 10px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     background-color: var(--danger-color, #ff5252);
@@ -878,7 +860,7 @@
     min-width: 18px;
     height: 18px;
     border-radius: 9px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -893,7 +875,23 @@
     z-index: 2;
 }
 
+/* Bildirim rozeti animasyonu */
+@keyframes badge-pulse {
+    0% {
+        transform: scale(1) translateY(-50%);
+    }
+
+    50% {
+        transform: scale(1.1) translateY(-50%);
+    }
+
+    100% {
+        transform: scale(1) translateY(-50%);
+    }
+}
+
 .dm-notification-badge.visible {
     opacity: 1;
     transform: scale(1) translateY(-50%);
+    animation: badge-pulse 1s infinite;
 }
