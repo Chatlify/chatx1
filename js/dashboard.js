@@ -1941,41 +1941,79 @@ document.addEventListener('DOMContentLoaded', async () => {
      * düzenli aralıklarla çalışan heartbeat fonksiyonu
      */
     function startPresenceHeartbeat() {
+        // Kullanıcı aktivitesini izlemek için değişkenler
+        let lastActivityTime = Date.now();
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 dakika inaktivite süresi
+        let isOfflineDueToInactivity = false;
+
+        // Kullanıcı aktivitesini güncelleyen fonksiyon
+        const updateActivity = () => {
+            lastActivityTime = Date.now();
+
+            // Eğer inaktiviteden dolayı çevrimdışıysa, yeniden çevrimiçi yap
+            if (isOfflineDueToInactivity) {
+                trackPresence();
+                isOfflineDueToInactivity = false;
+                console.log('[Presence] User is active again, tracking presence');
+            }
+        };
+
+        // Aktivite olaylarını dinle
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(eventName => {
+            document.addEventListener(eventName, updateActivity, { passive: true });
+        });
+
         // Tarayıcı kapatıldığında çevrimdışı olarak işaretle
         window.addEventListener('beforeunload', async () => {
             if (state.presenceChannel) {
                 try {
                     await state.presenceChannel.untrack();
                     console.log('[Presence] Successfully untracked before page unload');
+                    // LocalStorage'da çevrimdışı olma zamanını kaydet
+                    localStorage.setItem('chatlify_offline_time', Date.now().toString());
                 } catch (e) {
                     console.error('[Presence] Error untracking presence:', e);
                 }
             }
         });
 
-        // Düzenli olarak varlık bilgisini güncelle (30 saniye)
+        // Düzenli olarak varlık bilgisini güncelle ve inaktiviteyi kontrol et (60 saniyede bir)
         setInterval(async () => {
             // Kullanıcı oturumu aktif mi kontrol et
             if (state.currentUser && state.presenceChannel) {
-                await trackPresence();
-            }
-        }, 30000); // 30 saniye
+                const now = Date.now();
 
-        // Sayfa görünürlüğü değiştiğinde presence durumunu güncelle
-        document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState === 'visible') {
-                // Sayfa görünür olduğunda tekrar çevrimiçi yap
-                await trackPresence();
-            } else if (document.visibilityState === 'hidden') {
-                // Sayfa görünmez olduğunda çevrimdışı işaretle
-                try {
-                    await state.presenceChannel.untrack();
-                    console.log('[Presence] User marked as offline (page hidden)');
-                } catch (e) {
-                    console.error('[Presence] Error untracking presence when page hidden:', e);
+                // İnaktivite kontrolü - 30 dakikadan fazla aktif değilse
+                if ((now - lastActivityTime) > INACTIVITY_TIMEOUT) {
+                    if (!isOfflineDueToInactivity) {
+                        console.log('[Presence] User inactive for too long, marking as offline');
+                        try {
+                            await state.presenceChannel.untrack();
+                            isOfflineDueToInactivity = true;
+                        } catch (e) {
+                            console.error('[Presence] Error untracking due to inactivity:', e);
+                        }
+                    }
+                } else {
+                    // Aktifse presence gönder
+                    await trackPresence();
                 }
             }
-        });
+        }, 60000); // 60 saniye
+
+        // Sayfa yüklendiğinde, kullanıcının son çevrimdışı olma zamanını kontrol et
+        const lastOfflineTime = parseInt(localStorage.getItem('chatlify_offline_time') || '0');
+        const now = Date.now();
+        const OFFLINE_THRESHOLD = 5 * 60 * 1000; // 5 dakika
+
+        // Eğer 5 dakikadan daha kısa süre önce çevrimdışı olduysa, hemen çevrimiçi yap
+        if (lastOfflineTime > 0 && (now - lastOfflineTime) < OFFLINE_THRESHOLD) {
+            console.log('[Presence] Recently offline, immediately tracking presence');
+            trackPresence();
+        }
+
+        // Önceki implementasyonda kullanılan sayfa görünürlüğünü değiştirme kısmını kaldırdık
+        // Artık kullanıcı sekmeyi değiştirdiğinde çevrimdışı olmayacak
     }
 
     /**
@@ -1991,7 +2029,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 username: state.currentUser.username,
                 avatar_url: state.currentUser.avatar_url,
                 online_at: new Date().toISOString(),
-                client_reference_id: generateClientId()
+                client_reference_id: generateClientId(),
+                last_active: Date.now()
             };
 
             console.log('[Presence] Tracking presence with data:', presenceData);
