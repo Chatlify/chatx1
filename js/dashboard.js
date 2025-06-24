@@ -1496,6 +1496,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Profil modal'ını gösterir
     async function showProfileModal(user) {
         try {
+            console.log("Profil paneline gönderilen kullanıcı verisi:", JSON.stringify(user, null, 2));
             // Profil modal bileşenini yükle ve hazır olmasını bekle
             await loadComponent('profile-modal');
 
