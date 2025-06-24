@@ -1,280 +1,481 @@
+/**
+ * Chatlify - Modern Sunucu Sayfası JavaScript
+ * Dashboard ile uyumlu, özgün ve modern tasarım
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Cosmic Sunucu JS başlatıldı.");
+    console.log('Chatlify Sunucu JS yüklendi');
 
-    // Snowflake ID üreticiyi başlat
-    // Not: Tarayıcıda makine ID'si veya diğer özel ayarlar olmadan temel bir örnek oluşturulur.
+    // Snowflake ID oluşturucu - benzersiz ID'ler için
     const snowflake = new Snowflake({
-        worker_id: 1, // Örnek bir worker ID
-        epoch: 1609459200000, // Özel bir başlangıç zamanı (isteğe bağlı), örneğin 1 Ocak 2021
-    });
-    console.log("Snowflake ID üretici hazır.");
-
-    // Gerekli tüm DOM elementlerini seç
-    const channelItems = document.querySelectorAll('.channel-item, .voice-channel-header');
-    const categoryHeaders = document.querySelectorAll('.category-header');
-    const userPanel = document.querySelector('.user-panel');
-    const messageGroups = document.querySelectorAll('.message-group');
-    const members = document.querySelectorAll('.member-item');
-    const contextMenu = document.getElementById('contextMenu');
-    const channelsPanel = document.querySelector('.channels-panel');
-    const membersToggle = document.querySelector('.members-toggle');
-    const hamburgerMenu = document.querySelector('.hamburger-menu'); // Mobil için menü butonu
-    const chatInput = document.querySelector('.chat-input');
-    const messagesContainer = document.querySelector('.messages-container'); // Mesajların ekleneceği alan
-
-    // Yeni eklenenler
-    const serverMenuBtn = document.querySelector('.server-menu-btn');
-    const serverMenuDropdown = document.querySelector('.server-menu-dropdown');
-    const membersToggleBtn = document.querySelector('.members-toggle');
-    const membersPanel = document.querySelector('.members-panel');
-    const serverLayout = document.querySelector('.server-layout');
-    const dateDisplay = document.querySelector('.date-display');
-    const testDenemeDate = document.querySelector('.test-deneme-date');
-
-    // Tarih gösterimi için fonksiyon
-    function updateDateTime() {
-        const now = new Date();
-        const options = {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        };
-        const dateStr = now.toLocaleDateString('tr-TR', options);
-
-        if (dateDisplay) {
-            dateDisplay.textContent = dateStr;
-        }
-
-        if (testDenemeDate) {
-            testDenemeDate.textContent = dateStr;
-        }
-    }
-
-    // Sayfa yüklendiğinde tarihi güncelle
-    updateDateTime();
-
-    // Her dakika tarihi güncelle
-    setInterval(updateDateTime, 60000);
-
-    // Aktif Kanal Değiştirme
-    channelItems.forEach(item => {
-        item.addEventListener('click', () => {
-            // Önceki aktif kanaldan 'active' sınıfını kaldır
-            document.querySelector('.channel-item.active, .voice-channel-header.active')?.classList.remove('active');
-            // Tıklanan kanala 'active' sınıfını ekle
-            item.classList.add('active');
-
-            // Orta paneldeki kanal ismini ve ikonunu güncelle (isteğe bağlı)
-            const channelName = item.querySelector('.channel-name').textContent.trim();
-            const channelIcon = item.querySelector('.channel-icon').cloneNode(true);
-
-            const chatHeaderName = document.querySelector('.current-channel-name');
-            const chatHeaderIcon = document.querySelector('.chat-header .channel-info i');
-
-            if (chatHeaderName) chatHeaderName.textContent = channelName;
-            if (chatHeaderIcon) chatHeaderIcon.className = channelIcon.className;
-
-            // Mobil görünümde menüyü kapat
-            if (window.innerWidth <= 768) {
-                channelsPanel.classList.remove('open');
-            }
-        });
+        worker_id: 1,
+        epoch: 1609459200000, // 1 Ocak 2021
     });
 
-    // Kategori Açma/Kapatma
-    categoryHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            header.classList.toggle('collapsed');
-            const channels = header.nextElementSibling;
-            if (channels && channels.classList.contains('category-channels')) {
-                channels.style.display = header.classList.contains('collapsed') ? 'none' : 'block';
-            }
-        });
-    });
-
-    // Sunucu Menüsü (3 nokta) Açma/Kapatma
-    if (serverMenuBtn && serverMenuDropdown) {
-        serverMenuBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Olayın dışarıya yayılmasını engelle
-            serverMenuDropdown.classList.toggle('active');
-        });
-    }
-
-    // Üye Paneli (sağ taraf) Açma/Kapatma
-    if (membersToggleBtn && membersPanel && serverLayout) {
-        membersToggleBtn.addEventListener('click', () => {
-            membersPanel.classList.toggle('closed');
-            serverLayout.classList.toggle('members-closed');
-        });
-    }
-
-    // Context Menu (Sağ Tık Menüsü)
-    const showContextMenu = (event, items) => {
-        event.preventDefault();
-        contextMenu.innerHTML = ''; // Menüyü temizle
-        items.forEach(item => {
-            if (item.divider) {
-                contextMenu.appendChild(document.createElement('div')).className = 'context-divider';
-            } else {
-                const menuItem = document.createElement('div');
-                menuItem.className = `context-item ${item.class || ''}`;
-                menuItem.innerHTML = `<i class="${item.icon}"></i><span>${item.text}</span>`;
-                menuItem.onclick = (e) => {
-                    e.stopPropagation();
-                    item.action();
-                    contextMenu.classList.remove('active');
-                };
-                contextMenu.appendChild(menuItem);
-            }
-        });
-
-        contextMenu.style.left = `${event.pageX}px`;
-        contextMenu.style.top = `${event.pageY}px`;
-        contextMenu.classList.add('active');
+    // State Management - Sayfa durumunu takip etmek için
+    const state = {
+        currentChannel: null,
+        currentUser: {
+            id: 'user123',
+            name: 'Kullanıcı',
+            avatar: 'images/defaultavatar.png',
+            status: 'online'
+        },
+        channels: {},
+        messages: {},
+        users: {}
     };
 
-    // Açık menüleri kapatma
-    document.addEventListener('click', () => {
-        if (serverMenuDropdown && serverMenuDropdown.classList.contains('active')) {
-            serverMenuDropdown.classList.remove('active');
-        }
-        if (contextMenu.classList.contains('active')) {
-            contextMenu.classList.remove('active');
-        }
-    });
+    // UI Elementleri
+    const ui = {
+        channelsSidebar: document.querySelector('.channels-sidebar'),
+        membersSidebar: document.querySelector('.members-sidebar'),
+        chatArea: document.querySelector('.chat-area'),
+        messagesContainer: document.querySelector('.messages-container'),
+        messageInput: document.querySelector('.message-input'),
+        sendButton: document.querySelector('.send-btn'),
+        categoryHeaders: document.querySelectorAll('.category-header'),
+        channelItems: document.querySelectorAll('.channel-item'),
+        voiceChannels: document.querySelectorAll('.voice-channel-header'),
+        featuredChannels: document.querySelectorAll('.featured-channel'),
+        serverMenuButton: document.querySelector('.server-actions-button'),
+        serverMenuDropdown: document.querySelector('.server-menu-dropdown'),
+        toggleMembersButton: document.querySelector('.toggle-members-btn'),
+        serverLayout: document.querySelector('.server-layout'),
+        backButton: document.querySelector('.back-button'),
+        contextMenu: document.getElementById('contextMenu')
+    };
 
-    // Farklı elementler için context menu tanımlamaları
-    userPanel.addEventListener('contextmenu', (e) => {
-        showContextMenu(e, [
-            { text: 'Durumu Değiştir', icon: 'fas fa-smile', action: () => console.log('Durum değiştirildi.') },
-            { text: 'Profilim', icon: 'fas fa-user-edit', action: () => console.log('Profil düzenlendi.') },
-            { divider: true },
-            { text: 'Ayarlar', icon: 'fas fa-cog', action: () => console.log('Ayarlar açıldı.') }
-        ]);
-    });
+    // Fonksiyonlar
+    const functions = {
+        // Kategori başlıklarına tıklandığında açılma/kapanma
+        initCategoryToggles() {
+            ui.categoryHeaders.forEach(header => {
+                header.addEventListener('click', (e) => {
+                    // Eğer "Yeni Kanal Ekle" butonuna tıklandıysa, kategorinin açılma/kapanma işlemi durdur
+                    if (e.target.closest('.add-channel-btn')) {
+                        return;
+                    }
 
-    messageGroups.forEach(msg => {
-        msg.addEventListener('contextmenu', (e) => {
-            showContextMenu(e, [
-                { text: 'Yanıtla', icon: 'fas fa-reply', action: () => console.log('Mesaj yanıtlandı.') },
-                { text: 'Kopyala', icon: 'fas fa-copy', action: () => console.log('Mesaj kopyalandı.') },
-                { text: 'Sabitle', icon: 'fas fa-thumbtack', action: () => console.log('Mesaj sabitlendi.') },
-                { divider: true },
-                { text: 'Sil', icon: 'fas fa-trash-alt', class: 'danger', action: () => console.log('Mesaj silindi.') }
-            ]);
-        });
-    });
+                    const toggleBtn = header.querySelector('.toggle-btn');
+                    const channelsList = header.nextElementSibling;
 
-    members.forEach(member => {
-        member.addEventListener('contextmenu', (e) => {
-            showContextMenu(e, [
-                { text: 'Profil', icon: 'fas fa-user', action: () => console.log('Profil görüntülendi.') },
-                { text: 'Mesaj Gönder', icon: 'fas fa-paper-plane', action: () => console.log('Mesaj gönderildi.') },
-                { divider: true },
-                { text: 'Sustur', icon: 'fas fa-microphone-slash', class: 'danger', action: () => console.log('Kullanıcı susturuldu.') },
-                { text: 'At', icon: 'fas fa-sign-out-alt', class: 'danger', action: () => console.log('Kullanıcı atıldı.') }
-            ]);
-        });
-    });
+                    header.classList.toggle('collapsed');
 
-    // Mobil/Tablet için Kanal Panelini Açma/Kapatma
-    if (hamburgerMenu) {
-        hamburgerMenu.addEventListener('click', () => {
-            channelsPanel.classList.toggle('open');
-        });
-    }
+                    if (header.classList.contains('collapsed')) {
+                        channelsList.style.height = '0';
+                        toggleBtn.style.transform = 'rotate(-90deg)';
+                    } else {
+                        channelsList.style.height = channelsList.scrollHeight + 'px';
+                        toggleBtn.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+        },
 
-    // Chat input alanının yüksekliğini içeriğe göre ayarla
-    if (chatInput) {
-        chatInput.addEventListener('input', () => {
-            chatInput.style.height = 'auto';
-            chatInput.style.height = `${chatInput.scrollHeight}px`;
-        });
+        // Kanal değiştirme işlemleri
+        initChannelSelection() {
+            // Normal metin kanalları
+            ui.channelItems.forEach(channel => {
+                channel.addEventListener('click', () => {
+                    // Aktif kanalı kaldır
+                    document.querySelector('.channel-item.active')?.classList.remove('active');
 
-        // Enter tuşuyla mesaj gönderme ve ID üretme
-        chatInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Enter'ın varsayılan davranışını (yeni satır) engelle
-                const messageText = chatInput.value.trim();
-                if (messageText) {
-                    const messageId = snowflake.generate();
+                    // Yeni kanalı aktif et
+                    channel.classList.add('active');
 
-                    // GÜVENLİ YÖNTEM: Elementleri manuel olarak oluştur
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'message';
+                    // Kanal bilgilerini güncelle
+                    const channelName = channel.querySelector('.channel-name').textContent;
+                    const channelIcon = channel.querySelector('.channel-icon i').className;
+                    const channelDescription = channel.querySelector('.channel-description')?.textContent || 'Kanal açıklaması';
 
-                    const avatarImg = document.createElement('img');
-                    avatarImg.src = "https://i.ibb.co/3k5g78k/siyah.png"; // Statik avatar yolu
-                    avatarImg.alt = "Avatar";
-                    avatarImg.className = "avatar";
+                    // UI'ı güncelle
+                    functions.updateChannelHeader(channelName, channelIcon, channelDescription);
 
-                    const messageContentDiv = document.createElement('div');
-                    messageContentDiv.className = 'message-content';
+                    // Mobil görünümde kanal panelini kapat
+                    if (window.innerWidth <= 768) {
+                        ui.channelsSidebar.classList.remove('active');
+                    }
 
-                    const messageHeaderDiv = document.createElement('div');
+                    // Gerekirse mesajları yükle
+                    functions.loadChannelMessages(channelName);
+                });
+            });
 
-                    const usernameSpan = document.createElement('span');
-                    usernameSpan.className = 'username';
-                    usernameSpan.textContent = "Kullanıcı"; // Statik kullanıcı adı
+            // Öne çıkan kanallar
+            ui.featuredChannels.forEach(channel => {
+                channel.addEventListener('click', () => {
+                    document.querySelector('.featured-channel.active')?.classList.remove('active');
+                    channel.classList.add('active');
 
-                    const timestampSpan = document.createElement('span');
-                    timestampSpan.className = 'timestamp';
-                    timestampSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const channelName = channel.querySelector('span').textContent;
+                    const channelIcon = channel.querySelector('i').className;
 
-                    const messageTextP = document.createElement('p');
-                    messageTextP.className = 'message-text';
-                    messageTextP.dataset.id = messageId;
-                    // !!! XSS GÜVENLİK DÜZELTMESİ BURADA !!!
-                    // Kullanıcı girdisi .textContent ile atanarak zararsız hale getirilir.
-                    messageTextP.textContent = messageText;
+                    functions.updateChannelHeader(channelName, channelIcon, 'Öne çıkan kanal');
+                    functions.loadChannelMessages(channelName);
+                });
+            });
 
-                    // Elementleri birbirine ekle
-                    messageHeaderDiv.appendChild(usernameSpan);
-                    messageHeaderDiv.appendChild(timestampSpan);
-                    messageContentDiv.appendChild(messageHeaderDiv);
-                    messageContentDiv.appendChild(messageTextP);
-                    messageElement.appendChild(avatarImg);
-                    messageElement.appendChild(messageContentDiv);
+            // Ses kanalları
+            ui.voiceChannels.forEach(channel => {
+                channel.addEventListener('click', () => {
+                    // Gerçek bir uygulamada burada ses bağlantısı açılır
+                    console.log('Ses kanalına bağlanılıyor:', channel.querySelector('.channel-name').textContent);
+                    alert('Ses kanalına bağlanma özelliği demo sürümünde aktif değildir.');
+                });
+            });
+        },
 
-                    messagesContainer.appendChild(messageElement);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Kanal başlığını güncelleme
+        updateChannelHeader(name, iconClass, description) {
+            const channelTitle = document.querySelector('.channel-title');
+            const channelIcon = document.querySelector('.current-channel .channel-icon i');
+            const channelTopic = document.querySelector('.channel-topic');
 
-                    console.log(`Mesaj Gönderildi: "${messageText}" | ID: ${messageId}`);
+            channelTitle.textContent = name;
+            channelIcon.className = iconClass;
+            channelTopic.textContent = description;
 
-                    chatInput.value = '';
+            // Güncel kanalı state'e kaydet
+            state.currentChannel = name;
+        },
+
+        // Kanaldaki mesajları yükleme simülasyonu
+        loadChannelMessages(channelName) {
+            // Mevcut mesajları temizle
+            ui.messagesContainer.innerHTML = '';
+
+            // Demo mesajlarını göster (gerçek uygulamada API'den gelir)
+            const isDemoChannel = ['genel-sohbet', 'duyurular', 'popüler-konular'].includes(channelName);
+
+            if (isDemoChannel) {
+                // Hoş geldiniz banner'ı
+                const welcomeBanner = document.createElement('div');
+                welcomeBanner.className = 'welcome-banner';
+                welcomeBanner.innerHTML = `
+                    <div class="welcome-icon">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <h2 class="welcome-title">${channelName} kanalına hoş geldiniz!</h2>
+                    <p class="welcome-text">Bu kanalın başlangıcı. Sunucu hakkında yardıma ihtiyacınız olursa @moderatör etiketini kullanabilirsiniz.</p>
+                `;
+                ui.messagesContainer.appendChild(welcomeBanner);
+
+                // Demo mesajlar
+                for (let i = 0; i < 3; i++) {
+                    const demoMessage = functions.createDemoMessage(i);
+                    ui.messagesContainer.appendChild(demoMessage);
                 }
+            } else {
+                // Boş kanal mesajı
+                const emptyChannel = document.createElement('div');
+                emptyChannel.className = 'welcome-banner';
+                emptyChannel.innerHTML = `
+                    <div class="welcome-icon">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <h2 class="welcome-title">${channelName} kanalına hoş geldiniz!</h2>
+                    <p class="welcome-text">Bu kanalda henüz mesaj bulunmuyor. İlk mesajı gönderen siz olun!</p>
+                `;
+                ui.messagesContainer.appendChild(emptyChannel);
             }
-        });
-    }
 
-    console.log('Chatlify Server Panel script loaded and updated.');
+            // Mesaj konteynerini en alta kaydır
+            ui.messagesContainer.scrollTop = ui.messagesContainer.scrollHeight;
+        },
 
-    const createServerCard = document.getElementById('create-server-card');
-    const joinServerCard = document.getElementById('join-server-card');
-    const closeModalBtn = document.querySelector('.close-modal-btn');
+        // Demo mesaj oluşturma
+        createDemoMessage(index) {
+            const demoUsers = [
+                { name: 'Mehmet', role: 'moderator', avatar: 'images/defaultavatar.png' },
+                { name: 'Ayşe', role: 'premium', avatar: 'images/defaultavatar.png' },
+                { name: 'Ahmet', role: '', avatar: 'images/defaultavatar.png' }
+            ];
 
-    if (createServerCard) {
-        createServerCard.addEventListener('click', () => {
-            console.log('Sunucu oluşturma seçeneği tıklandı.');
-            // Burada sunucu oluşturma formunu gösteren kod olacak
-            alert('Sunucu oluşturma özelliği yakında eklenecektir!');
-        });
-    }
+            const demoTexts = [
+                'Merhaba arkadaşlar! Bugün sunucumuza yeni özellikler eklendi. Özellikle yeni tasarımımız nasıl görünüyor? 🎨',
+                'Harika görünüyor! Özellikle yeni sunucu sayfası çok modern olmuş. Emeği geçen herkese teşekkürler.',
+                'Kesinlikle katılıyorum, eski tasarımdan çok daha iyi olmuş. Kullanımı da daha kolay gibi. 👍'
+            ];
 
-    if (joinServerCard) {
-        joinServerCard.addEventListener('click', () => {
-            console.log('Sunucuya katılma seçeneği tıklandı.');
-            // Burada sunucuya katılma formunu gösteren kod olacak
-            alert('Sunucuya katılma özelliği yakında eklenecektir!');
-        });
-    }
+            const user = demoUsers[index % demoUsers.length];
+            const text = demoTexts[index % demoTexts.length];
 
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-            // Pencereyi kapat veya bir önceki sayfaya dön
-            // Basit bir çözüm olarak, eğer bu sayfa bir pop-up değilse,
-            // kullanıcıyı dashboard'a geri yönlendirebiliriz.
-            window.location.href = 'dashboard.html';
-        });
+            // Mesaj grubu oluştur
+            const messageGroup = document.createElement('div');
+            messageGroup.className = 'message-group';
+            messageGroup.dataset.userId = `user${index}`;
+
+            // Eklenme zamanını belirle
+            const timeAgo = index * 2 + 1; // dakika
+            const messageTime = new Date(Date.now() - timeAgo * 60 * 1000);
+            const formattedTime = `Bugün ${messageTime.getHours().toString().padStart(2, '0')}:${messageTime.getMinutes().toString().padStart(2, '0')}`;
+
+            // HTML içeriğini oluştur
+            messageGroup.innerHTML = `
+                <div class="message-avatar">
+                    <img src="${user.avatar}" alt="${user.name}">
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <div class="message-author">
+                            <span class="author-name">${user.name}</span>
+                            ${user.role ? `<span class="author-badge ${user.role}">${user.role === 'moderator' ? 'Moderatör' : 'Premium'}</span>` : ''}
+                        </div>
+                        <span class="message-time">${formattedTime}</span>
+                    </div>
+                    <div class="message-body">
+                        <p>${text}</p>
+                        ${index === 1 ? `
+                        <div class="attachment-preview">
+                            <img src="https://via.placeholder.com/400x200" alt="Ekran görüntüsü">
+                            <div class="attachment-info">
+                                <span class="attachment-name">sunucu-goruntusu.png</span>
+                                <span class="attachment-size">1.2 MB</span>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    <div class="message-reactions">
+                        <div class="reaction-badge">
+                            <span class="reaction-emoji">👍</span>
+                            <span class="reaction-count">${index + 2}</span>
+                        </div>
+                        <div class="reaction-badge">
+                            <span class="reaction-emoji">❤️</span>
+                            <span class="reaction-count">${index + 1}</span>
+                        </div>
+                        <button class="add-reaction-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Sağ tık menüsü için event listener ekle
+            messageGroup.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                functions.showContextMenu(e, [
+                    { text: 'Yanıtla', icon: 'fas fa-reply', action: () => console.log('Mesaja yanıt verildi') },
+                    {
+                        text: 'Kopyala', icon: 'fas fa-copy', action: () => {
+                            navigator.clipboard.writeText(text).then(() => {
+                                console.log('Mesaj kopyalandı');
+                            });
+                        }
+                    },
+                    { text: 'Tepki Ekle', icon: 'fas fa-smile', action: () => console.log('Tepki eklendi') },
+                    { divider: true },
+                    { text: 'Sil', icon: 'fas fa-trash-alt', class: 'danger', action: () => console.log('Mesaj silindi') }
+                ]);
+            });
+
+            return messageGroup;
+        },
+
+        // Mesaj gönderme
+        initMessageSending() {
+            // Mesaj input alanı otomatik büyüme
+            ui.messageInput.addEventListener('input', () => {
+                ui.messageInput.style.height = 'auto';
+                ui.messageInput.style.height = `${Math.min(ui.messageInput.scrollHeight, 200)}px`;
+            });
+
+            // Enter tuşu ile gönderme
+            ui.messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    functions.sendMessage();
+                }
+            });
+
+            // Gönder butonu ile gönderme
+            ui.sendButton.addEventListener('click', functions.sendMessage);
+        },
+
+        // Mesaj gönderme işlemi
+        sendMessage() {
+            const messageText = ui.messageInput.value.trim();
+            if (!messageText) return;
+
+            // Mesajı oluştur
+            const messageId = snowflake.generate();
+            const currentTime = new Date();
+            const formattedTime = `Bugün ${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+
+            const messageGroup = document.createElement('div');
+            messageGroup.className = 'message-group own-message';
+            messageGroup.dataset.messageId = messageId;
+
+            messageGroup.innerHTML = `
+                <div class="message-avatar">
+                    <img src="${state.currentUser.avatar}" alt="${state.currentUser.name}">
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <div class="message-author">
+                            <span class="author-name">${state.currentUser.name}</span>
+                        </div>
+                        <span class="message-time">${formattedTime}</span>
+                    </div>
+                    <div class="message-body">
+                        <p>${messageText.replace(/\n/g, '<br>')}</p>
+                    </div>
+                </div>
+            `;
+
+            // Mesajı ekle ve en alta kaydır
+            ui.messagesContainer.appendChild(messageGroup);
+            ui.messagesContainer.scrollTop = ui.messagesContainer.scrollHeight;
+
+            // Input alanını temizle
+            ui.messageInput.value = '';
+            ui.messageInput.style.height = 'auto';
+
+            // Gerçek uygulamada burada API'ye mesaj gönderilir
+            console.log(`Mesaj gönderildi. ID: ${messageId}, Kanal: ${state.currentChannel}, İçerik: ${messageText}`);
+        },
+
+        // Context menu (sağ tık menüsü) gösterme
+        showContextMenu(event, items) {
+            // Önceki menüyü temizle
+            ui.contextMenu.innerHTML = '';
+
+            // Yeni menü öğelerini ekle
+            items.forEach(item => {
+                if (item.divider) {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    ui.contextMenu.appendChild(divider);
+                } else {
+                    const menuItem = document.createElement('div');
+                    menuItem.className = `menu-item ${item.class || ''}`;
+                    menuItem.innerHTML = `
+                        <i class="${item.icon}"></i>
+                        <span>${item.text}</span>
+                    `;
+                    menuItem.addEventListener('click', () => {
+                        item.action();
+                        functions.hideContextMenu();
+                    });
+                    ui.contextMenu.appendChild(menuItem);
+                }
+            });
+
+            // Menüyü konumlandır ve göster
+            ui.contextMenu.style.top = `${event.pageY}px`;
+            ui.contextMenu.style.left = `${event.pageX}px`;
+            ui.contextMenu.classList.add('active');
+
+            // Viewport dışına taşmayı engelle
+            const rect = ui.contextMenu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                ui.contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
+            }
+            if (rect.bottom > window.innerHeight) {
+                ui.contextMenu.style.top = `${window.innerHeight - rect.height - 5}px`;
+            }
+        },
+
+        // Context menu'yü gizleme
+        hideContextMenu() {
+            ui.contextMenu.classList.remove('active');
+        },
+
+        // Sunucu menüsü açma/kapama
+        initServerMenu() {
+            ui.serverMenuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                ui.serverMenuDropdown.classList.toggle('active');
+            });
+
+            // Menü öğelerine tıklandığında işlevler
+            const menuItems = document.querySelectorAll('.server-menu-dropdown .menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const action = item.textContent.trim();
+                    console.log(`Menü eylemi: ${action}`);
+
+                    if (action.includes('Ayrıl')) {
+                        if (confirm('Sunucudan ayrılmak istediğinize emin misiniz?')) {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }
+
+                    ui.serverMenuDropdown.classList.remove('active');
+                });
+            });
+        },
+
+        // Üye panelini açma/kapama
+        initMembersPanel() {
+            ui.toggleMembersButton.addEventListener('click', () => {
+                ui.membersSidebar.classList.toggle('active');
+                ui.serverLayout.classList.toggle('members-closed');
+            });
+        },
+
+        // Geri butonu işlevi
+        initBackButton() {
+            ui.backButton.addEventListener('click', () => {
+                window.location.href = 'dashboard.html';
+            });
+        },
+
+        // Mobil cihazlar için hamburger menü
+        initMobileMenu() {
+            // Mobil görünümde hamburger menü ekle
+            if (window.innerWidth <= 768) {
+                const hamburgerButton = document.createElement('button');
+                hamburgerButton.className = 'hamburger-menu';
+                hamburgerButton.innerHTML = '<i class="fas fa-bars"></i>';
+                document.querySelector('.chat-header').prepend(hamburgerButton);
+
+                hamburgerButton.addEventListener('click', () => {
+                    ui.channelsSidebar.classList.toggle('active');
+                });
+            }
+        },
+
+        // Dışa tıklandığında açık menüleri kapat
+        initClickOutsideHandler() {
+            document.addEventListener('click', (e) => {
+                // Context menu dışına tıklandığında kapat
+                if (!e.target.closest('.context-menu') && ui.contextMenu.classList.contains('active')) {
+                    functions.hideContextMenu();
+                }
+
+                // Server menu dışına tıklandığında kapat
+                if (!e.target.closest('.server-actions-button') && !e.target.closest('.server-menu-dropdown') && ui.serverMenuDropdown.classList.contains('active')) {
+                    ui.serverMenuDropdown.classList.remove('active');
+                }
+
+                // Mobil görünümde panel dışına tıklandığında kapat
+                if (window.innerWidth <= 768) {
+                    if (!e.target.closest('.channels-sidebar') && !e.target.closest('.hamburger-menu') && ui.channelsSidebar.classList.contains('active')) {
+                        ui.channelsSidebar.classList.remove('active');
+                    }
+
+                    if (!e.target.closest('.members-sidebar') && !e.target.closest('.toggle-members-btn') && ui.membersSidebar.classList.contains('active')) {
+                        ui.membersSidebar.classList.remove('active');
+                    }
+                }
+            });
+        }
+    };
+
+    // Sayfa yüklendiğinde tüm işlevleri başlat
+    functions.initCategoryToggles();
+    functions.initChannelSelection();
+    functions.initMessageSending();
+    functions.initServerMenu();
+    functions.initMembersPanel();
+    functions.initBackButton();
+    functions.initMobileMenu();
+    functions.initClickOutsideHandler();
+
+    // İlk kanalı aktif et (varsayılan görünüm)
+    const defaultChannel = document.querySelector('.channel-item.active') || document.querySelector('.channel-item');
+    if (defaultChannel) {
+        defaultChannel.click();
     }
 });
