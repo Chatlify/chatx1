@@ -229,8 +229,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const supabase = supabaseInit();
 
     // Cloudinary yapılandırması (JavaScript tarafında yükleme yapıyoruz)
-    const CLOUDINARY_CLOUD_NAME = "democloud"; // Burayı kendi cloud name'inizle değiştirin
-    const CLOUDINARY_UPLOAD_PRESET = "ml_default"; // Burayı kendi preset'inizle değiştirin
+    const CLOUDINARY_CLOUD_NAME = "dxr8bxvbp"; // Burayı kendi cloud name'inizle değiştirin
+    const CLOUDINARY_UPLOAD_PRESET = "0FZD0kmLLYmTAAqEKIaiS8CGlbo"; // Burayı kendi preset'inizle değiştirin
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
     // --- 1. STATE MANAGEMENT ---
