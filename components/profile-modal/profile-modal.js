@@ -9,6 +9,15 @@
 window.initializeProfileModal = function (user, currentUser, supabase, onComplete) {
     console.log("Initializing profile modal with user data:", user);
 
+    // Hızlı çıkış, kullanıcı verisi yoksa
+    if (!user || typeof user !== 'object') {
+        console.error('Invalid user data provided for profile modal');
+        if (typeof onComplete === 'function') {
+            onComplete({ error: 'Invalid user data' });
+        }
+        return;
+    }
+
     const panel = document.getElementById('profile-modal');
     if (!panel) {
         console.error('Profile Modal not found in the DOM.');
@@ -26,8 +35,7 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
     const bio = panel.querySelector('.bio');
     const memberSince = panel.querySelector('.member-since');
     const memberDuration = panel.querySelector('.member-duration');
-    const mutualFriendsContainer = panel.querySelector('.mutual-friends');
-    const noMutualFriends = panel.querySelector('.no-mutual-friends');
+    const badgesContainer = panel.querySelector('.profile-badges');
     const messageBtn = panel.querySelector('.message-btn');
     const callBtn = panel.querySelector('.call-btn');
     const removeFriendBtn = panel.querySelector('.remove-friend-btn');
@@ -86,25 +94,71 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
             if (typeof onComplete === 'function') {
                 onComplete();
             }
-        }, 300); // Corresponds to the CSS transition duration
+        }, 400); // Corresponds to the CSS transition duration
+    }
+
+    /**
+     * Rozet işleyicisi - Kullanıcının rozetlerini göstermek için
+     * @param {Array} badges - Kullanıcı rozetleri dizisi
+     */
+    function renderBadges(badges) {
+        // Önce mevcut rozetleri temizle
+        badgesContainer.innerHTML = '';
+
+        // Eğer rozet yoksa veya boş diziyse boş rozet göster
+        if (!badges || !Array.isArray(badges) || badges.length === 0) {
+            const emptyBadge = document.createElement('div');
+            emptyBadge.className = 'badge-item empty-badge';
+            emptyBadge.innerHTML = `
+                <div class="badge-placeholder"><i class="fas fa-plus"></i></div>
+                <span>Rozet Yok</span>
+            `;
+            badgesContainer.appendChild(emptyBadge);
+            return;
+        }
+
+        // Rozetleri göster (maksimum 6 adet)
+        const maxBadgesToShow = Math.min(badges.length, 6);
+        for (let i = 0; i < maxBadgesToShow; i++) {
+            const badge = badges[i];
+            const badgeItem = document.createElement('div');
+            badgeItem.className = 'badge-item earned';
+            badgeItem.innerHTML = `
+                <div class="badge-icon" title="${badge.name || 'Rozet'}">
+                    <i class="${badge.icon || 'fas fa-award'}"></i>
+                </div>
+                <span>${badge.name || 'Rozet'}</span>
+            `;
+            badgesContainer.appendChild(badgeItem);
+        }
+
+        // Eğer daha fazla rozet varsa "ve daha fazla" göster
+        if (badges.length > maxBadgesToShow) {
+            const moreBadge = document.createElement('div');
+            moreBadge.className = 'badge-item more-badge';
+            moreBadge.innerHTML = `
+                <div class="badge-placeholder">+${badges.length - maxBadgesToShow}</div>
+                <span>Daha Fazla</span>
+            `;
+            badgesContainer.appendChild(moreBadge);
+        }
     }
 
     // --- Fill User Data ---
-
-    // Set avatar and username
-    if (user) {
+    function populateUserData() {
         // Set avatar
         if (user.avatar_url) {
             avatar.src = user.avatar_url;
             avatar.onerror = function () {
                 this.src = 'images/defaultavatar.png';
+                console.log('Failed to load avatar, using default');
             };
         } else {
             avatar.src = 'images/defaultavatar.png';
         }
 
-        // Set username
-        username.textContent = user.username || 'Kullanıcı';
+        // Set username - varsayılan olarak "Kullanıcı" değil, gerçek kullanıcı adını kullanma
+        username.textContent = user.username || user.display_name || user.name || 'İsimsiz Kullanıcı';
 
         // Set profile tag if available
         if (user.tag) {
@@ -144,8 +198,21 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
             memberSince.textContent = 'Bilinmiyor';
             memberDuration.textContent = 'Bilinmiyor';
         }
-    } else {
-        console.error('No user data provided for profile modal');
+
+        // Rozet verisi - gerçek uygulamada burası dinamik olacak
+        const sampleBadges = user.badges || [
+            { name: 'Erken Üye', icon: 'fas fa-star' }
+        ];
+
+        // Rozetleri göster
+        renderBadges(sampleBadges);
+    }
+
+    // Kullanıcı verilerini yükle
+    try {
+        populateUserData();
+    } catch (error) {
+        console.error('Error populating user data:', error);
     }
 
     // --- Event Handlers ---
@@ -166,7 +233,7 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
 
     // Remove friend button
     removeFriendBtn.addEventListener('click', async () => {
-        if (confirm(`${user.username} adlı kullanıcıyı arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
+        if (confirm(`${user.username || 'Bu kullanıcıyı'} arkadaşlıktan çıkarmak istediğinize emin misiniz?`)) {
             try {
                 // Find the friendship record
                 const { data: friendship, error: findError } = await supabase
@@ -190,7 +257,7 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
                     throw deleteError;
                 }
 
-                alert(`${user.username} arkadaşlıktan çıkarıldı.`);
+                alert(`${user.username || 'Kullanıcı'} arkadaşlıktan çıkarıldı.`);
                 closePanel();
                 if (typeof onComplete === 'function') {
                     onComplete({ action: 'removed', userId: user.id });
@@ -228,5 +295,7 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
     document.addEventListener('keydown', handleEscKey);
 
     // Show the panel with animation
-    panel.classList.add('active');
+    requestAnimationFrame(() => {
+        panel.classList.add('active');
+    });
 }; 
