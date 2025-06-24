@@ -6,6 +6,7 @@
     display: flex;
     gap: 16px;
     align-items: flex-end;
+    margin-bottom: 12px;
 }
 
 .message-group-avatar {
@@ -102,7 +103,15 @@
 
 .chat-messages {
     flex: 1 1 auto;
-    overflow-y: auto;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch;
+    /* iOS cihazlarda düzgün kaydırma için */
+    scroll-behavior: smooth;
+    /* Animasyonlu kaydırma */
+    overscroll-behavior: contain;
+    /* Kaydırma sırasında taşma davranışını kontrol eder */
+    will-change: scroll-position;
+    /* Tarayıcıya scroll işleminin optimize edilmesi gerektiğini bildirir */
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -128,7 +137,8 @@
 
 /* Kaydırma çubuğu stilleri (isteğe bağlı, daha modern bir görünüm için) */
 .chat-messages::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
+    /* Biraz daha kalın */
 }
 
 .chat-messages::-webkit-scrollbar-track {
@@ -137,13 +147,15 @@
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background-color: var(--background-tertiary);
-    border-radius: 4px;
-    border: 2px solid var(--background-secondary-alt);
+    background-color: var(--primary-color-light, #4f6efd);
+    /* Daha görünür renk */
+    border-radius: 5px;
+    border: 2px solid var(--background-secondary-alt, #36393f);
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-    background-color: var(--item-hover);
+    background-color: var(--primary-color, #5865f2);
+    /* Hover durumunda ana renk */
 }
 
 /* Yükleniyor Spinner'ı */
@@ -366,4 +378,76 @@
 .file-upload-btn:hover {
     background-color: rgba(var(--accent-color-rgb), 0.15);
     color: var(--accent-color);
+}
+
+/* Mesaj grupları arasında daha fazla boşluk */
+.message-group {
+    margin-bottom: 12px;
+}
+
+/* Boş alan göstergesi */
+.empty-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-chat i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.7;
+}
+
+.empty-chat p {
+    font-size: 16px;
+}
+
+/* Vurgulanan mesaj efekti */
+@keyframes highlightFade {
+    0% {
+        background-color: rgba(88, 101, 242, 0.2);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+.highlight-message {
+    animation: highlightFade 2s ease;
+    border-left: 3px solid var(--primary-color, #5865f2);
+    padding-left: 10px !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Sağa kaydırma butonu */
+.scroll-down-btn {
+    position: absolute;
+    right: 20px;
+    bottom: 90px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.scroll-down-btn.visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
 }

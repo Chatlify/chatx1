@@ -977,6 +977,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            // Aşağı kaydırma butonu ekle
+            this.setupScrollDownButton();
+
             // Katılımcı profillerini hafızaya al
             state.participants = {
                 [state.currentUser.id]: state.currentUser,
@@ -1100,12 +1103,88 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         // --- HELPER FUNCTIONS ---
-        scrollToBottom() {
+        scrollToBottom(smooth = true) {
             if (ui.chatMessages) {
                 // Hafif bir gecikme, DOM'un güncellenmesine izin verir
                 setTimeout(() => {
-                    ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+                    if (smooth) {
+                        ui.chatMessages.scrollTo({
+                            top: ui.chatMessages.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+                    }
                 }, 50);
+            }
+        },
+
+        // Belirli bir mesaja kaydır
+        scrollToMessage(messageId) {
+            if (ui.chatMessages) {
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    setTimeout(() => {
+                        messageElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                        // Vurgu efekti ekle
+                        messageElement.classList.add('highlight-message');
+                        setTimeout(() => {
+                            messageElement.classList.remove('highlight-message');
+                        }, 2000);
+                    }, 100);
+                }
+            }
+        },
+
+        // Aşağı kaydırma butonu ekle ve kaydırma olaylarını izle
+        setupScrollDownButton() {
+            if (!ui.chatPanel) return;
+
+            // Varsa önceki butonu kaldır
+            const existingBtn = document.querySelector('.scroll-down-btn');
+            if (existingBtn) existingBtn.remove();
+
+            // Yeni aşağı kaydırma butonu oluştur
+            const scrollDownBtn = document.createElement('div');
+            scrollDownBtn.className = 'scroll-down-btn';
+            scrollDownBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            scrollDownBtn.addEventListener('click', () => this.scrollToBottom(true));
+
+            // Butonu chat paneline ekle
+            ui.chatPanel.appendChild(scrollDownBtn);
+
+            // Kaydırma olaylarını izle
+            if (ui.chatMessages) {
+                ui.chatMessages.addEventListener('scroll', () => {
+                    const { scrollTop, scrollHeight, clientHeight } = ui.chatMessages;
+                    // En aşağıdan 200px yukarıdaysak butonu göster
+                    const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
+
+                    if (!isNearBottom) {
+                        scrollDownBtn.classList.add('visible');
+                    } else {
+                        scrollDownBtn.classList.remove('visible');
+                    }
+                });
+
+                // Yeni mesaj geldiğinde kaydırma pozisyonunu kontrol et
+                const checkScroll = () => {
+                    const { scrollTop, scrollHeight, clientHeight } = ui.chatMessages;
+                    // Kullanıcı mesajı okuyorsa (aşağıda değilse) otomatik kaydırma
+                    const shouldAutoScroll = scrollHeight - scrollTop - clientHeight < 200;
+
+                    if (shouldAutoScroll) {
+                        this.scrollToBottom(true);
+                    }
+                };
+
+                // chatMessages'e bir MutationObserver ekleyerek yeni mesaj geldiğini izle
+                const observer = new MutationObserver(checkScroll);
+                observer.observe(ui.chatMessages, { childList: true, subtree: true });
             }
         },
     };
