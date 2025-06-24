@@ -1,13 +1,13 @@
 import { supabase } from './auth_config.js';
 
-// Cloudinary Ayarları
-// Bu değerleri kendi Cloudinary hesabınızdan almanız gerekiyor:
-// 1. https://cloudinary.com adresine gidin ve ücretsiz hesap oluşturun
-// 2. Dashboard'a girin ve Cloud name değerini alın (örn: "your_cloud_name")
-// 3. Settings > Upload > Upload presets bölümüne gidin ve "unsigned" bir preset oluşturun
-// 4. Oluşturduğunuz preset'in adını aşağıya yazın (örn: "your_upload_preset")
-const CLOUDINARY_CLOUD_NAME = 'dxr8bxvbp'; // Cloudinary dashboard'dan alınan cloud name
-const CLOUDINARY_UPLOAD_PRESET = 'chatlify_users'; // Unsigned upload preset adı
+// Cloudinary Settings
+// You need to get these values from your own Cloudinary account:
+// 1. Go to https://cloudinary.com and create a free account
+// 2. Go to Dashboard and get your Cloud name (e.g., "your_cloud_name")
+// 3. Go to Settings > Upload > Upload presets and create an "unsigned" preset
+// 4. Enter the name of your preset below (e.g., "your_upload_preset")
+const CLOUDINARY_CLOUD_NAME = 'dxr8bxvbp'; // Cloud name from Cloudinary dashboard
+const CLOUDINARY_UPLOAD_PRESET = 'chatlify_users'; // Unsigned upload preset name
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,21 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentStep = 1;
     const stepSubtitles = [
-        "Seni tanıyabilmemiz için harika bir kullanıcı adı seç!",
-        "Hesabını güvenceye almak için e-posta adresini ekle",
-        "Kendini göster! Harika bir profil fotoğrafı ekle",
-        "Hesabını koruyacak güçlü bir şifre belirle",
-        "Neredeyse bitti! Sadece son bir adım kaldı"
+        "Choose an awesome username that represents you!",
+        "Add your email to secure your account",
+        "Show yourself! Add a great profile picture",
+        "Create a strong password to protect your account",
+        "Almost done! Just one more step"
     ];
 
-    // Avatar elementleri
+    // Avatar elements
     const avatarPreview = document.getElementById('avatarPreview');
     const avatarInput = document.getElementById('avatarInput');
     const avatarPreviewImg = document.querySelector('.avatar-preview-img');
     const avatarPreviewText = document.querySelector('.avatar-preview-text');
     let avatarFile = null;
 
-    // Varsayılan avatar dosya isimleri
+    // Default avatar file names
     const defaultAvatarFiles = [
         'images/chatlifyprofile1.png',
         'images/chatlifyprofile2.png',
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         terms: { input: document.getElementById('terms'), error: null, validation: (value) => value.checked }
     };
 
-    // Avatar yükleme işlevselliği
+    // Avatar upload functionality
     avatarPreview.addEventListener('click', () => {
         avatarInput.click();
     });
@@ -62,10 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
     avatarInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
-            // Dosya tipi ve boyut kontrolü
+            // File type and size check
             const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
             if (!allowedTypes.includes(file.type)) {
-                showError('avatar', 'Geçersiz dosya türü. Lütfen PNG, JPG veya GIF seçin.');
+                showError('avatar', 'Invalid file type. Please select PNG, JPG or GIF.');
                 avatarFile = null;
                 resetAvatarPreview();
                 return;
@@ -73,13 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const maxSize = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSize) {
-                showError('avatar', 'Dosya boyutu 5MB sınırını aşıyor.');
+                showError('avatar', 'File size exceeds 5MB limit.');
                 avatarFile = null;
                 resetAvatarPreview();
                 return;
             }
 
-            // Dosyayı sakla ve önizleme göster
+            // Store the file and show preview
             avatarFile = file;
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Adım işlevselliği
+    // Step functionality
     nextButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const nextStep = parseInt(btn.getAttribute('data-next'));
@@ -113,14 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function goToStep(step) {
-        // Mevcut adımı gizle
+        // Hide current step
         stepContents.forEach(content => {
             if (parseInt(content.getAttribute('data-step')) === currentStep) {
                 content.style.display = 'none';
             }
         });
 
-        // Adım göstergesini güncelle
+        // Update step indicator
         steps.forEach(stepEl => {
             const stepNum = parseInt(stepEl.getAttribute('data-step'));
             if (stepNum < step) {
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Bağlantıları (connectors) güncelle
+        // Update connectors
         stepConnectors.forEach((connector, index) => {
             if (index < step - 1) {
                 connector.classList.add('active');
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Yeni adımı göster ve altyazıyı güncelle
+        // Show new step and update subtitle
         currentStep = step;
         stepSubtitle.textContent = stepSubtitles[currentStep - 1];
 
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (parseInt(content.getAttribute('data-step')) === currentStep) {
                 content.style.display = 'block';
 
-                // Odaklanılacak ilk input'u bul ve odaklan
+                // Find first input and focus
                 const firstInput = content.querySelector('input');
                 if (firstInput) {
                     setTimeout(() => {
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Son adımda tüm alanları kontrol et
+        // Check all fields on the last step
         if (currentStep === 5) {
             validateForm();
         }
@@ -170,13 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateStep(step) {
         let isValid = true;
 
-        // Her adım için özel doğrulama
+        // Custom validation for each step
         if (step === 1) {
             isValid = validateField('username');
         } else if (step === 2) {
             isValid = validateField('email');
         } else if (step === 3) {
-            // Avatar adımı opsiyonel, bu nedenle her zaman geçerli
+            // Avatar step is optional, so always valid
             isValid = true;
         } else if (step === 4) {
             isValid = validateField('password') && validateField('confirmPassword');
@@ -213,14 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (fieldName === 'confirmPassword') {
             isValid = field.validation(field.input.value);
-            errorMessage = isValid ? '' : 'Şifreler eşleşmiyor.';
+            errorMessage = isValid ? '' : 'Passwords do not match.';
         } else if (fieldName === 'terms') {
             isValid = field.validation(field.input);
         } else {
             isValid = field.validation(field.input.value);
-            if (fieldName === 'username') errorMessage = isValid ? '' : 'Kullanıcı adı en az 3 karakter olmalıdır.';
-            if (fieldName === 'email') errorMessage = isValid ? '' : 'Geçersiz e-posta adresi.';
-            if (fieldName === 'password') errorMessage = isValid ? '' : 'Şifre en az 8 karakter olmalıdır.';
+            if (fieldName === 'username') errorMessage = isValid ? '' : 'Username must be at least 3 characters.';
+            if (fieldName === 'email') errorMessage = isValid ? '' : 'Invalid email address.';
+            if (fieldName === 'password') errorMessage = isValid ? '' : 'Password must be at least 8 characters.';
         }
 
         if (field.error) {
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return isFormValid;
     };
 
-    // Kullanıcı etkileşimleri için alan validasyonları
+    // User interaction field validations
     Object.values(fields).forEach(field => {
         if (field.input && field.input.type === 'checkbox') {
             field.input.addEventListener('change', validateForm);
@@ -259,28 +259,28 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
 
         if (!validateForm()) {
-            return; // Form geçerli değilse işlemi durdur
+            return; // Stop if form is not valid
         }
 
         submitBtn.disabled = true;
-        submitBtn.querySelector('.btn-text').textContent = 'Kaydediliyor...';
+        submitBtn.querySelector('.btn-text').textContent = 'Creating...';
 
-        // Genel hata mesajını temizle
+        // Clear general error message
         clearError('username');
 
         try {
             let finalAvatarUrl = null;
 
-            // 1. Adım: Eğer avatar seçildiyse Cloudinary'ye yükle
+            // Step 1: Upload avatar to Cloudinary if selected
             if (avatarFile) {
                 try {
-                    // Cloudinary API bilgilerinin doğru ayarlanıp ayarlanmadığını kontrol et
+                    // Check if Cloudinary API details are properly set
                     if (CLOUDINARY_CLOUD_NAME === 'your_cloud_name' || CLOUDINARY_UPLOAD_PRESET === 'your_upload_preset') {
-                        console.warn('Cloudinary API bilgileri ayarlanmamış. Avatar yükleme atlanıyor ve varsayılan avatar kullanılacak.');
-                        throw new Error('Cloudinary API bilgileri ayarlanmamış');
+                        console.warn('Cloudinary API details not set. Skipping avatar upload and using default avatar.');
+                        throw new Error('Cloudinary API details not set');
                     }
 
-                    console.log('Cloudinary\'ye avatar yükleniyor...');
+                    console.log('Uploading avatar to Cloudinary...');
                     console.log('URL:', CLOUDINARY_URL);
                     console.log('Upload Preset:', CLOUDINARY_UPLOAD_PRESET);
 
@@ -295,37 +295,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({}));
-                        console.error('Cloudinary API Hatası:', errorData);
-                        throw new Error(`Avatar yüklenemedi. Hata kodu: ${response.status}`);
+                        console.error('Cloudinary API Error:', errorData);
+                        throw new Error(`Could not upload avatar. Error code: ${response.status}`);
                     }
 
                     const data = await response.json();
                     finalAvatarUrl = data.secure_url;
-                    console.log('Avatar başarıyla yüklendi:', finalAvatarUrl);
+                    console.log('Avatar uploaded successfully:', finalAvatarUrl);
                 } catch (uploadError) {
-                    console.error('Avatar yükleme hatası:', uploadError);
-                    // Hata mesajını göster ama kayıt işlemini durdurma
-                    showError('avatar', 'Avatar yüklenemedi. Varsayılan avatar kullanılacak.');
-                    // Avatar yüklenemediğinde varsayılan avatar kullanılacak, finalAvatarUrl null kalacak
+                    console.error('Avatar upload error:', uploadError);
+                    // Show error message but don't stop registration
+                    showError('avatar', 'Could not upload avatar. Default avatar will be used.');
+                    // Default avatar will be used if upload fails, finalAvatarUrl remains null
                 }
             }
 
-            // 2. Adım: Eğer avatar yoksa veya yüklenemediyse varsayılan bir avatar seç
+            // Step 2: If no avatar or upload failed, select a default avatar
             if (!finalAvatarUrl) {
                 const randomIndex = Math.floor(Math.random() * defaultAvatarFiles.length);
                 const randomAvatarPath = defaultAvatarFiles[randomIndex];
                 finalAvatarUrl = new URL(randomAvatarPath, window.location.origin).href;
-                console.log('Varsayılan avatar atandı:', finalAvatarUrl);
+                console.log('Default avatar assigned:', finalAvatarUrl);
             }
 
-            // 3. Adım: Supabase'e kayıt ol
+            // Step 3: Register with Supabase
             const { data, error } = await supabase.auth.signUp({
                 email: fields.email.input.value,
                 password: fields.password.input.value,
                 options: {
                     data: {
                         username: fields.username.input.value,
-                        avatar_url: finalAvatarUrl // Avatar URL'sini kullanıcı meta verisine ekle
+                        avatar_url: finalAvatarUrl // Add avatar URL to user metadata
                     }
                 }
             });
@@ -334,19 +334,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw error;
             }
 
-            // Başarılı kayıt
-            alert('Kayıt başarılı! Lütfen e-posta adresinize gönderilen onay linkine tıklayarak hesabınızı doğrulayın.');
-            window.location.href = '/login.html'; // Giriş sayfasına yönlendir
+            // Successful registration
+            alert('Registration successful! Please click the confirmation link sent to your email to verify your account.');
+            window.location.href = '/login.html'; // Redirect to login page
 
         } catch (error) {
-            console.error('Kayıt sırasında hata:', error);
-            showError('username', `Kayıt başarısız: ${error.message}`);
+            console.error('Registration error:', error);
+            showError('username', `Registration failed: ${error.message}`);
         } finally {
             submitBtn.disabled = false;
-            submitBtn.querySelector('.btn-text').textContent = 'Hesabımı Oluştur';
+            submitBtn.querySelector('.btn-text').textContent = 'Create My Account';
         }
     });
 
-    // Sayfa yüklendiğinde ilk adıma gidelim
+    // Go to first step when page loads
     goToStep(1);
 }); 
