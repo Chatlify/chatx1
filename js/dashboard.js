@@ -1526,106 +1526,104 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- DYNAMIC COMPONENT LOADER ---
+    // Basit bellek içi cache ile HTML şablonunu yalnızca ilk seferde çek
     const componentHtmlCache = new Map();
-    const loadedResources = new Set();
-
-    const components = {
-        'add-friend': {
-            panelId: 'add-friend-panel',
-            css: './components/add-friend/add-friend.css',
-            js: './components/add-friend/add-friend.js'
-        },
-        'join-server': {
-            panelId: 'join-server-panel',
-            css: './components/join-server/join-server.css',
-            js: './components/join-server/join-server.js'
-        },
-        'user-settings': {
-            html: './components/user-settings/user-settings.html',
-            css: './components/user-settings/user-settings.css',
-            js: './components/user-settings/user-settings.js'
-        },
-        'profile-modal': {
-            html: 'components/profile-modal/profile-modal.html',
-            css: 'components/profile-modal/profile-modal.css',
-            js: 'components/profile-modal/profile-modal.js',
-            initFunction: 'initializeProfileModal'
-        }
-    };
-
-    function loadCss(path) {
-        if (loadedResources.has(path)) return;
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = path;
-        document.head.appendChild(link);
-        loadedResources.add(path);
-    }
-
+    /**
+     * Loads an HTML component into the DOM and initializes its specific JS.
+     * @param {string} componentName - The name of the component (e.g., 'add-friend').
+     */
     async function loadComponent(componentName) {
-        log(`'${componentName}' bileşeni yükleniyor...`);
-        const component = components[componentName];
-        if (!component) {
-            console.error("Bilinmeyen bileşen:", componentName);
-            return;
-        }
-
         try {
-            // Load CSS and JS first, if they haven't been loaded yet.
-            if (component.css && !loadedResources.has(component.css)) {
-                loadCss(component.css);
-            }
-            if (component.js && !loadedResources.has(component.js)) {
-                await import(`${component.js}?v=${new Date().getTime()}`);
-                loadedResources.add(component.js);
+            // Komponentler için farklı yollar tanımla
+            const componentPaths = {
+                'add-friend': {
+                    html: 'components/add-friend/add-friend.html',
+                    css: 'components/add-friend/add-friend.css',
+                    js: 'components/add-friend/add-friend.js',
+                    initFunction: 'initializeAddFriendPanel'
+                },
+                'join-server': {
+                    html: 'components/join-server/join-server.html',
+                    css: 'components/join-server/join-server.css',
+                    js: 'components/join-server/join-server.js',
+                    initFunction: 'initializeJoinServerPanel'
+                },
+                'profile-modal': {
+                    html: 'components/profile-modal/profile-modal.html',
+                    css: 'components/profile-modal/profile-modal.css',
+                    js: 'components/profile-modal/profile-modal.js',
+                    initFunction: 'initializeProfileModal'
+                }
+                // Diğer komponentler buraya eklenebilir
+            };
+
+            const component = componentPaths[componentName];
+            if (!component) {
+                throw new Error(`Bileşen bulunamadı: ${componentName}`);
             }
 
-            // Handle pre-loaded components by showing them
-            if (component.panelId) {
-                const panel = document.getElementById(component.panelId);
-                if (panel) {
-                    panel.style.display = 'flex';
-                    // The component's own JS should handle initialization.
-                    // We can re-trigger it if needed.
-                    const scriptModule = await import(`${component.js}?v=${new Date().getTime()}`);
-                    if (scriptModule.default && typeof scriptModule.default === 'function') {
-                        scriptModule.default();
-                    }
+            // HTML şablonunu yükle (önbellekli)
+            let htmlContent;
+            if (componentHtmlCache.has(component.html)) {
+                htmlContent = componentHtmlCache.get(component.html);
+            } else {
+                const htmlResponse = await fetch(component.html);
+                if (!htmlResponse.ok) throw new Error(`HTML yüklenemedi: ${component.html}`);
+                htmlContent = await htmlResponse.text();
+                componentHtmlCache.set(component.html, htmlContent);
+            }
+
+            // CSS dosyasını kontrol et ve yükle
+            const existingCss = document.head.querySelector(`link[href="${component.css}"]`);
+            if (!existingCss) {
+                const cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.href = component.css;
+                document.head.appendChild(cssLink);
+            }
+
+            // JS dosyasını kontrol et ve yükle
+            const existingJs = document.head.querySelector(`script[src="${component.js}"]`);
+            if (!existingJs) {
+                const jsScript = document.createElement('script');
+                jsScript.src = component.js;
+                document.head.appendChild(jsScript);
+
+                // Script yüklenene kadar bekle
+                await new Promise((resolve, reject) => {
+                    jsScript.onload = resolve;
+                    jsScript.onerror = reject;
+                });
+            }
+
+            // Container oluştur
+            let container = document.getElementById(`${componentName}-modal-container`);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = `${componentName}-modal-container`;
+                document.body.appendChild(container);
+            }
+
+            // HTML içeriğini container'a yerleştir
+            container.innerHTML = htmlContent;
+
+            // Bileşenin initialize fonksiyonunu çağır
+            // Küçük bir gecikme ekleyerek DOM'un güncellenmesini bekle
+            setTimeout(() => {
+                if (window[component.initFunction]) {
+                    window[component.initFunction](supabase, () => {
+                        console.log(`${componentName} bileşeni kapatıldı`);
+                        // Burada gerekliyse yenileme işlemi yapılabilir
+                        fetchAndRenderAll();
+                    });
                 } else {
-                    throw new Error(`Panel #${component.panelId} not found in DOM.`);
+                    console.error(`Initialize fonksiyonu bulunamadı: ${component.initFunction}`);
                 }
-            }
-            // Handle dynamically loaded components
-            else if (component.html) {
-                let htmlContent;
-                if (componentHtmlCache.has(component.html)) {
-                    htmlContent = componentHtmlCache.get(component.html);
-                } else {
-                    const response = await fetch(component.html);
-                    if (!response.ok) throw new Error(`HTML could not be fetched: ${component.html}`);
-                    htmlContent = await response.text();
-                    componentHtmlCache.set(component.html, htmlContent);
-                }
+            }, 100);
 
-                // The container for modals like 'profile-modal' is created dynamically
-                let container = document.getElementById(`${componentName}-modal-container`);
-                if (!container) {
-                    container = document.createElement('div');
-                    container.id = `${componentName}-modal-container`;
-                    document.body.appendChild(container);
-                }
-                container.innerHTML = htmlContent;
-
-                // For legacy components that rely on a global init function
-                if (component.initFunction && window[component.initFunction]) {
-                    // The caller (`showProfileModal`) is responsible for invoking this.
-                    // This function just ensures the code is loaded.
-                }
-            }
-            log(`'${componentName}' başarıyla yüklendi.`);
         } catch (error) {
-            console.error(`Error loading component '${componentName}':`, error);
-            showToast(`Bileşen yüklenemedi.`, 'error');
+            console.error(`${componentName} bileşeni yüklenirken hata oluştu:`, error);
+            alert(`Bileşen yüklenemedi: ${error.message}`);
         }
     }
 
