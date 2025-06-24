@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Cloudinary yapılandırması (JavaScript tarafında yükleme yapıyoruz)
     const CLOUDINARY_CLOUD_NAME = "dxr8bxvbp"; // Burayı kendi cloud name'inizle değiştirin
-    const CLOUDINARY_UPLOAD_PRESET = "0FZD0kmLLYmTAAqEKIaiS8CGlbo"; // Unsigned preset adı (genellikle ml_default olarak gelir)
+    const CLOUDINARY_UPLOAD_PRESET = "chatlify_users"; // Cloudinary panelindeki preset adı
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
     // --- 1. STATE MANAGEMENT ---
