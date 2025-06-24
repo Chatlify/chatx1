@@ -33,7 +33,6 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
         tag: modal.querySelector('.profile-tag'),
         bio: modal.querySelector('.bio'),
         memberSince: modal.querySelector('.member-since'),
-        memberDuration: modal.querySelector('.member-duration'),
 
         // Rozetler
         badgesContainer: modal.querySelector('.badges-container'),
@@ -161,35 +160,6 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
     }
 
     /**
-     * Geçen süre hesaplama
-     */
-    function calculateTimeElapsed(dateString) {
-        if (!dateString) return 'Bilinmiyor';
-
-        try {
-            const startDate = new Date(dateString);
-            if (isNaN(startDate.getTime())) return 'Geçersiz Tarih';
-
-            const now = new Date();
-            const diffTime = Math.abs(now - startDate);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            const diffMonths = Math.floor(diffDays / 30);
-            const diffYears = Math.floor(diffDays / 365);
-
-            if (diffYears > 0) {
-                return `${diffYears} yıl ${Math.floor((diffDays % 365) / 30)} ay`;
-            } else if (diffMonths > 0) {
-                return `${diffMonths} ay ${diffDays % 30} gün`;
-            } else {
-                return `${diffDays} gün`;
-            }
-        } catch (error) {
-            console.error('Süre hesaplama hatası:', error);
-            return 'Bilinmiyor';
-        }
-    }
-
-    /**
      * Kullanıcı bilgilerini görüntüler
      */
     function renderUserData() {
@@ -244,10 +214,8 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
             // Üyelik bilgisi
             if (user.created_at) {
                 elements.memberSince.textContent = formatDate(user.created_at);
-                elements.memberDuration.textContent = calculateTimeElapsed(user.created_at);
             } else {
                 elements.memberSince.textContent = 'Bilinmiyor';
-                elements.memberDuration.textContent = 'Bilinmiyor';
             }
 
             // Rozetleri göster
@@ -260,7 +228,6 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
             elements.username.textContent = 'Kullanıcı Bilgisi Yüklenemedi';
             elements.bio.textContent = 'Kullanıcı bilgisi yüklenirken bir hata oluştu.';
             elements.memberSince.textContent = 'Bilinmiyor';
-            elements.memberDuration.textContent = 'Bilinmiyor';
 
             // Boş rozet göster
             elements.badgesContainer.innerHTML = `
