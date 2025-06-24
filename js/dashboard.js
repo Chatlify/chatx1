@@ -249,13 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         activePanel: 'friends',
         lastHeartbeat: Date.now(), // Son heartbeat zamanını tutmak için
         isUploadingImage: false,   // Resim yükleme durumunu izlemek için
-        uploadingImageElement: null, // Yükleme göstergesini tutmak için
-        typingUsers: new Set(),
-        status: 'online',
-        clientId: generateClientId(), // Unique ID for this client
-        lastActivity: Date.now(),
-        isInitialized: false,
-        unreadMessages: {}, // Kullanıcı ID'sine göre okunmamış mesaj sayısı
+        uploadingImageElement: null // Yükleme göstergesini tutmak için
     };
 
     // --- 2. UI ELEMENTS ---
@@ -338,7 +332,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         friendsContentContainer: document.querySelector('.friends-content-container'),
         tabsContainer: document.querySelector('.tabs-container'),
         dashboardContainer: document.querySelector('.dashboard-container'),
-        friendsPanelContainer: document.querySelector('.friends-panel-container'),
     };
 
     // --- 3. SUPABASE SERVICE ---
@@ -670,17 +663,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const senderProfile = state.participants[newMessage.sender_id];
                     newMessage.sender = senderProfile || { username: 'Bilinmeyen Kullanıcı', avatar_url: 'images/defaultavatar.png' };
 
-                    // 3. BİLDİRİM KONTROLÜ - Mesaj, şu an görüntülenen sohbetten gelmiyorsa bildirim ekle
-                    if (!state.currentFriend || state.currentFriend.id !== newMessage.sender_id) {
-                        // Mevcut bildirim sayısını artır
-                        const currentCount = state.unreadMessages[newMessage.sender_id] || 0;
-                        updateNotificationBadge(newMessage.sender_id, currentCount + 1);
-                        console.log(`[Notification] Added new message notification for user ${newMessage.sender_id}, count: ${currentCount + 1}`);
-
-                        // DM listesini yeniden render et
-                        renderer.renderDirectMessagesList();
-                    }
-
                     // Eğer mesaj zaten ekranda varsa (çok nadir bir durum), tekrar ekleme
                     if (document.querySelector(`[data-message-id="${newMessage.id}"]`)) {
                         console.log(`[Sub] Message with ID ${newMessage.id} already exists. Skipping render.`);
@@ -882,31 +864,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
 
         renderDirectMessagesList() {
-            console.log('[RENDER] Rendering direct messages list');
-            const { friends, onlineFriends, unreadMessages } = state;
+            const { friends, onlineFriends } = state;
             const { dmList } = ui;
-
-            if (!dmList) {
-                console.error('[RENDER] DM list container not found!');
-                return;
-            }
-
             dmList.innerHTML = ''; // Clear previous list
 
             if (friends.length === 0) {
                 dmList.innerHTML = '<li class="dm-item-empty" style="padding: 10px 15px; color: var(--text-muted);">Sohbet edecek kimse yok.</li>';
-                console.log('[RENDER] No friends to display');
                 return;
             }
 
-            console.log('[RENDER] Current unreadMessages state:', unreadMessages);
-
             const friendsHTML = friends.map(friend => {
                 const isOnline = onlineFriends.has(friend.id);
-                const unreadCount = unreadMessages[friend.id] || 0;
-
-                console.log(`[RENDER] Friend: ${friend.username}, unreadCount: ${unreadCount}`);
-
                 return `
                     <li class="dm-item" data-user-id="${friend.id}" title="${friend.username}">
                         <div class="dm-item-avatar">
@@ -914,15 +882,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="status-dot ${isOnline ? 'online' : ''}"></div>
                         </div>
                         <span class="dm-item-name">${friend.username}</span>
-                        <div class="dm-notification-badge ${unreadCount > 0 ? 'visible' : ''}" data-count="${unreadCount}">
-                            ${unreadCount > 99 ? '99+' : unreadCount}
-                        </div>
                     </li>
                 `;
             }).join('');
 
             dmList.innerHTML = friendsHTML;
-            console.log('[RENDER] Direct messages list rendered successfully');
         },
 
         renderMessages(messages) {
@@ -1006,19 +970,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // YENİ VE ÖNEMLİ: Yeni bir sohbet göstermeden önce, eskisini tamamen temizle.
             cleanupChatState();
 
-            const { chatPanel, chatHeaderUser, dashboardContainer, friendsPanelContainer } = ui;
+            const { chatPanel, chatHeaderUser, dashboardContainer } = ui;
 
             if (!dashboardContainer || !chatPanel) {
                 console.error("[CHAT] Critical UI element not found!");
                 return;
             }
-
-            // Friends panelini gizle, chat panelini göster
-            if (friendsPanelContainer) friendsPanelContainer.classList.add('hidden');
-            chatPanel.classList.remove('hidden');
-
-            // Sohbet açıldığında bildirimleri sıfırla
-            updateNotificationBadge(friend.id, 0);
 
             // Aşağı kaydırma butonu ekle
             this.setupScrollDownButton();
@@ -1075,12 +1032,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Dashboard'a 'chat-active' sınıfını ekleyerek tüm CSS değişikliklerini tetikle
             dashboardContainer.classList.add('chat-active');
 
+            // 'hidden' sınıfını sohbet panelinden kaldır
+            chatPanel.classList.remove('hidden');
 
             // Metin kutusuna odaklan
             if (ui.chatInput) {
                 setTimeout(() => {
                     ui.chatInput.focus();
-                }, 300); // Transition süresiyle uyumlu
+                }, 300);
             }
         },
 
@@ -1121,16 +1080,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         hideChatPanel() {
             console.log('[UI] Hiding chat panel.');
-            const { dashboardContainer, chatMessages, chatHeaderUser, chatPanel, friendsPanelContainer } = ui;
+            const { dashboardContainer, chatMessages, chatHeaderUser } = ui;
 
             if (dashboardContainer) {
                 dashboardContainer.classList.remove('chat-active');
             }
-
-            // Chat panelini gizle, friends panelini göster
-            if (chatPanel) chatPanel.classList.add('hidden');
-            if (friendsPanelContainer) friendsPanelContainer.classList.remove('hidden');
-
 
             // Merkezi temizlik fonksiyonunu çağır.
             cleanupChatState();
@@ -1451,6 +1405,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function updateNotificationBadge(userId, count) {
+        // State'i güncelle
+        if (count <= 0) {
+            delete state.unreadMessages[userId];
+        } else {
+            state.unreadMessages[userId] = count;
+        }
+
+        // DOM'u güncelle
+        const dmItem = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
+        if (!dmItem) return;
+
+        const badge = dmItem.querySelector('.dm-notification-badge');
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.add('visible');
+        } else {
+            badge.classList.remove('visible');
+        }
+    }
+
+    function subscribeToAllConversations(conversationIds) {
+        console.log(`[NOTIFICATIONS] Subscribing to ${conversationIds.length} conversations for notifications.`);
+
+        conversationIds.forEach(convoId => {
+            const channel = supabase.channel(`notifications:${convoId}`);
+
+            channel.on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `conversation_id=eq.${convoId}`
+            }, payload => {
+                const newMessage = payload.new;
+                console.log(`[NOTIFICATIONS] New message detected in convo ${convoId}`, newMessage);
+
+                // Kendine bildirim gönderme
+                if (newMessage.sender_id === state.currentUser.id) {
+                    return;
+                }
+
+                // Eğer sohbet zaten açıksa bildirim gönderme
+                if (state.currentConversationId === newMessage.conversation_id) {
+                    return;
+                }
+
+                // Bildirim sayısını artır
+                const currentCount = state.unreadMessages[newMessage.sender_id] || 0;
+                updateNotificationBadge(newMessage.sender_id, currentCount + 1);
+
+                // Arkadaş listesini yeniden render et (rozetin görünmesi için)
+                renderer.renderDirectMessagesList();
+            })
+                .subscribe(status => {
+                    if (status === 'SUBSCRIBED') {
+                        // console.log(`[NOTIFICATIONS] Successfully subscribed to convo ${convoId}`);
+                    } else {
+                        console.warn(`[NOTIFICATIONS] Subscription to ${convoId} failed with status: ${status}`);
+                    }
+                });
+        });
+    }
+
     const init = async () => {
         try {
             // 1. Get User Session First
@@ -1463,13 +1482,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // 2. Fetch full user profile and merge into state
             const userProfile = await supabaseService.getUserProfile(sessionUser.id);
-            state.currentUser = { ...sessionUser, ...userProfile }; // Important: merge profile data
+            state.currentUser = { ...sessionUser, ...userProfile };
             console.log('[INIT] Current user loaded:', state.currentUser);
 
             renderer.renderUserFooter(state.currentUser);
 
             // 3. Fetch and render all data
-            fetchAndRenderAll();
+            await fetchAndRenderAll();
+
+            // Sonra tüm sohbet kanallarına abone ol
+            const conversationIds = await supabaseService.getUserConversationIds(state.currentUser.id);
+            if (conversationIds.length > 0) {
+                subscribeToAllConversations(conversationIds);
+            }
 
             // 4. Set up event listeners
             if (ui.tabsContainer) {
@@ -2473,46 +2498,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-    }
-
-    // Bildirim rozeti güncelleme fonksiyonu
-    function updateNotificationBadge(userId, count) {
-        console.log(`[BADGE] Updating notification badge for user ${userId} with count ${count}`);
-
-        // State'i güncelle
-        if (count === 0) {
-            delete state.unreadMessages[userId];
-        } else {
-            state.unreadMessages[userId] = count;
-        }
-
-        console.log(`[BADGE] State unreadMessages updated:`, state.unreadMessages);
-
-        // DOM'u güncelle
-        const dmItem = document.querySelector(`.dm-item[data-user-id="${userId}"]`);
-        if (!dmItem) {
-            console.warn(`[BADGE] No dm-item found for user ${userId}`);
-            return;
-        }
-
-        // Eğer bildirim rozeti yoksa oluştur
-        let badge = dmItem.querySelector('.dm-notification-badge');
-        if (!badge) {
-            badge = document.createElement('div');
-            badge.className = 'dm-notification-badge';
-            badge.setAttribute('data-count', '0');
-            dmItem.appendChild(badge);
-            console.log(`[BADGE] Created new badge element for user ${userId}`);
-        }
-
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : count;
-            badge.classList.add('visible');
-            console.log(`[BADGE] Badge set to visible with count ${badge.textContent}`);
-        } else {
-            badge.classList.remove('visible');
-            console.log(`[BADGE] Badge hidden for user ${userId}`);
-        }
     }
 
     init();
