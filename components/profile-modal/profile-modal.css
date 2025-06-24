@@ -160,28 +160,37 @@
     position: absolute;
     bottom: 5px;
     right: 5px;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     border: 3px solid var(--background-secondary);
     background-color: var(--text-muted);
     z-index: 2;
+    transition: all 0.3s ease;
 }
 
 #profile-modal .status-indicator.online {
     background-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+    animation: pulseOnline 2s infinite;
 }
 
 #profile-modal .status-indicator.offline {
     background-color: var(--text-muted);
 }
 
-#profile-modal .status-indicator.idle {
-    background-color: #f39c12;
-}
+@keyframes pulseOnline {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
 
-#profile-modal .status-indicator.dnd {
-    background-color: #e74c3c;
+    70% {
+        box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
 }
 
 /* Kullanıcı Adı ve Etiket */
@@ -214,6 +223,17 @@
     background-color: var(--background-tertiary);
     padding: 8px 16px;
     border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+#profile-modal .profile-status.online {
+    background-color: rgba(46, 204, 113, 0.15);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+#profile-modal .profile-status.offline {
+    background-color: rgba(189, 195, 199, 0.15);
+    border: 1px solid rgba(189, 195, 199, 0.3);
 }
 
 #profile-modal .status-dot {
@@ -221,10 +241,27 @@
     height: 10px;
     border-radius: 50%;
     background-color: var(--text-muted);
+    transition: all 0.3s ease;
 }
 
 #profile-modal .status-dot.online {
     background-color: #2ecc71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
+    animation: smallPulse 2s infinite;
+}
+
+@keyframes smallPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 5px rgba(46, 204, 113, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
 }
 
 #profile-modal .status-text {

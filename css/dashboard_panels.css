@@ -1068,36 +1068,31 @@
     position: absolute;
     bottom: 5px;
     right: 5px;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    background-color: #6c757d;
-    /* Offline color */
-    border: 3px solid var(--background-secondary);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--main-bg);
+    background-color: var(--text-muted);
     transition: all 0.3s ease;
-    z-index: 3;
 }
 
 .friend-card .card-avatar .status-dot.online {
-    background-color: #28a745;
-    /* Online color */
-    box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
-    animation: pulse 2s infinite;
+    background-color: #2ecc71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
+    animation: friendStatusPulse 2.5s infinite;
 }
 
-/* Pulse Animation for Online Status */
-@keyframes pulse {
+@keyframes friendStatusPulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
     }
 
     70% {
-        box-shadow: 0 0 0 6px rgba(40, 167, 69, 0);
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
     }
 
     100% {
-        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
     }
 }
 
@@ -1493,19 +1488,78 @@
 
 .dm-item-avatar .status-dot {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
+    bottom: 3px;
+    right: 3px;
     width: 12px;
     height: 12px;
     border-radius: 50%;
+    border: 2px solid var(--background-primary);
     background-color: var(--text-muted);
-    border: 2px solid var(--background-tertiary);
     transition: all 0.3s ease;
     z-index: 2;
 }
 
 .dm-item-avatar .status-dot.online {
-    background-color: var(--success-color);
-    box-shadow: 0 0 6px var(--success-color);
-    animation: pulse 2s infinite;
+    background-color: #2ecc71;
+    box-shadow: 0 0 6px rgba(46, 204, 113, 0.5);
+    animation: dmStatusPulse 3s infinite;
+}
+
+@keyframes dmStatusPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 4px rgba(46, 204, 113, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}
+
+/* Chat Status Styling */
+.chat-header .chat-status {
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.chat-header .chat-status.online {
+    color: #2ecc71;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+}
+
+/* Footer status dot */
+.dm-user-avatar .dm-status {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--background-primary);
+    background-color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.dm-user-avatar .dm-status.online {
+    background-color: #2ecc71;
+    box-shadow: 0 0 6px rgba(46, 204, 113, 0.5);
+    animation: footerStatusPulse 3s infinite;
+}
+
+@keyframes footerStatusPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 4px rgba(46, 204, 113, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
 }

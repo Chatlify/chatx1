@@ -202,10 +202,24 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
                 elements.statusIndicator.classList.add('online');
                 elements.statusIndicator.classList.remove('offline');
                 elements.statusDot.classList.add('online');
+
+                // Yeni: profile-status container'a online/offline class ekleme
+                const profileStatus = modal.querySelector('.profile-status');
+                if (profileStatus) {
+                    profileStatus.classList.add('online');
+                    profileStatus.classList.remove('offline');
+                }
             } else {
                 elements.statusIndicator.classList.remove('online');
                 elements.statusIndicator.classList.add('offline');
                 elements.statusDot.classList.remove('online');
+
+                // Yeni: profile-status container'a online/offline class ekleme
+                const profileStatus = modal.querySelector('.profile-status');
+                if (profileStatus) {
+                    profileStatus.classList.remove('online');
+                    profileStatus.classList.add('offline');
+                }
             }
 
             // Biyografi

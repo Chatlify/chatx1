@@ -237,6 +237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingRequests: [],
         activeFriendsTab: 'all', // 'all', 'online', 'pending'
         messages: [], // To hold current chat messages
+        currentFriend: null,
+        participants: {},
+        activePanel: 'friends',
+        lastHeartbeat: Date.now() // Son heartbeat zamanını tutmak için
     };
 
     // --- 2. UI ELEMENTS ---
@@ -836,8 +840,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (dmUserName) dmUserName.textContent = profile.username || 'Kullanıcı';
             if (dmUserAvatar) dmUserAvatar.src = profile.avatar_url || 'images/defaultavatar.png';
 
-            // Durum bilgisini ayarla
-            const isOnline = true; // Şu an için her zaman çevrimiçi gösterelim
+            // Durum bilgisini ayarla - her zaman aktif yerine gerçek durumunu göster
+            const isOnline = state.onlineFriends.has(profile.id);
             if (dmUserStatus) dmUserStatus.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
 
             // Durum noktasını güncelle
@@ -1458,32 +1462,60 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 5. Setup Real-time Subscriptions
             // Not: Her kanal için doğru formatı ve bağlantı mantığını kullan
 
-            // Kullanıcı varlık durumu (presence) kanalı
-            const presenceChannel = supabase.channel('presence');
+            // Kullanıcı varlık durumu (presence) kanalı - güvenilir çevrimiçi takibi için optimize edildi
+            const presenceChannel = supabase.channel('online_users');
+
+            // Kanalı state'e kaydet ki diğer fonksiyonlar da erişebilsin
+            state.presenceChannel = presenceChannel;
 
             presenceChannel
                 .on('presence', { event: 'sync' }, () => {
                     const newState = presenceChannel.presenceState();
                     console.log('[Presence] Received updated presence state:', newState);
-                    state.onlineFriends = new Set(Object.keys(newState));
+
+                    // Çevrimiçi kullanıcıların ID'lerini Set olarak sakla
+                    const onlineUserIds = new Set();
+
+                    // Her bir kullanıcıyı döngüye al
+                    Object.keys(newState).forEach(userId => {
+                        // Kullanıcı ID'sini temizle (bazen ekstra karakterler olabilir)
+                        const cleanUserId = userId.replace(/^online_users:/, '');
+                        onlineUserIds.add(cleanUserId);
+                    });
+
+                    // State'i güncelle
+                    state.onlineFriends = onlineUserIds;
+
+                    // UI'ı güncelle - tüm çevrimiçi göstergeleri güncelle
                     renderer.render();
                     renderer.renderDirectMessagesList();
+
+                    // Eğer profil modalı açıksa ve görüntülenen kullanıcı çevrimiçi/çevrimdışı olduysa, onu da güncelle
+                    if (state.currentFriend) {
+                        updateFriendOnlineStatus(state.currentFriend.id);
+                    }
+
+                    // Eğer bir sohbet açıksa, sohbetin başlığında görünen durumu güncelle
+                    updateChatHeaderStatus();
                 })
                 .on('presence', { event: 'join' }, ({ key, newPresences }) => {
                     console.log('[Presence] User joined:', newPresences);
+                    // Burada isteğe bağlı olarak bildirim gösterebilirsiniz
                 })
                 .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
                     console.log('[Presence] User left:', leftPresences);
+                    // Burada isteğe bağlı olarak bildirim gösterebilirsiniz
                 })
                 .subscribe(async (status) => {
                     console.log(`[Presence] Subscription status: ${status}`);
                     if (status === 'SUBSCRIBED') {
                         try {
-                            await presenceChannel.track({
-                                user_id: state.currentUser.id,
-                                online_at: new Date().toISOString(),
-                                username: state.currentUser.username
-                            });
+                            // Kullanıcı bilgilerini track et
+                            await trackPresence();
+
+                            // Düzenli heartbeat göndermeyi başlat
+                            startPresenceHeartbeat();
+
                             console.log('[Presence] Successfully tracked user presence');
                         } catch (error) {
                             console.error('[Presence] Error tracking presence:', error);
@@ -1879,6 +1911,140 @@ document.addEventListener('DOMContentLoaded', async () => {
             !gifBtn.contains(e.target)) {
             gifPanel.classList.remove('active');
             gifBtn.classList.remove('active');
+        }
+    }
+
+    /**
+     * Kullanıcının çevrimiçi durumunu Supabase'e düzenli olarak bildirmek için
+     * düzenli aralıklarla çalışan heartbeat fonksiyonu
+     */
+    function startPresenceHeartbeat() {
+        // Tarayıcı kapatıldığında çevrimdışı olarak işaretle
+        window.addEventListener('beforeunload', async () => {
+            if (state.presenceChannel) {
+                try {
+                    await state.presenceChannel.untrack();
+                    console.log('[Presence] Successfully untracked before page unload');
+                } catch (e) {
+                    console.error('[Presence] Error untracking presence:', e);
+                }
+            }
+        });
+
+        // Düzenli olarak varlık bilgisini güncelle (30 saniye)
+        setInterval(async () => {
+            // Kullanıcı oturumu aktif mi kontrol et
+            if (state.currentUser && state.presenceChannel) {
+                await trackPresence();
+            }
+        }, 30000); // 30 saniye
+
+        // Sayfa görünürlüğü değiştiğinde presence durumunu güncelle
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+                // Sayfa görünür olduğunda tekrar çevrimiçi yap
+                await trackPresence();
+            } else if (document.visibilityState === 'hidden') {
+                // Sayfa görünmez olduğunda çevrimdışı işaretle
+                try {
+                    await state.presenceChannel.untrack();
+                    console.log('[Presence] User marked as offline (page hidden)');
+                } catch (e) {
+                    console.error('[Presence] Error untracking presence when page hidden:', e);
+                }
+            }
+        });
+    }
+
+    /**
+     * Kullanıcının çevrimiçi durumunu Supabase'e bildirir
+     */
+    async function trackPresence() {
+        if (!state.currentUser || !state.presenceChannel) return;
+
+        try {
+            await state.presenceChannel.track({
+                user_id: state.currentUser.id,
+                username: state.currentUser.username,
+                avatar_url: state.currentUser.avatar_url,
+                online_at: new Date().toISOString(),
+                client_reference_id: generateClientId()
+            });
+
+            state.lastHeartbeat = Date.now();
+            console.log('[Presence] Heartbeat sent at:', new Date().toLocaleTimeString());
+        } catch (error) {
+            console.error('[Presence] Failed to send presence heartbeat:', error);
+        }
+    }
+
+    /**
+     * Her istemci için benzersiz bir ID oluşturur
+     * Bu, aynı kullanıcının birden fazla cihazda oturum açmasını destekler
+     */
+    function generateClientId() {
+        // LocalStorage'da kayıtlı bir ID var mı kontrol et
+        let clientId = localStorage.getItem('chatlify_client_id');
+
+        // Yoksa yeni bir ID oluştur ve kaydet
+        if (!clientId) {
+            clientId = `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            localStorage.setItem('chatlify_client_id', clientId);
+        }
+
+        return clientId;
+    }
+
+    /**
+     * Açık olan sohbet başlığındaki çevrimiçi durumunu günceller
+     */
+    function updateChatHeaderStatus() {
+        if (!state.currentFriend) return;
+
+        const chatHeaderUser = ui.chatHeaderUser;
+        if (!chatHeaderUser) return;
+
+        const statusEl = chatHeaderUser.querySelector('.chat-status');
+        if (!statusEl) return;
+
+        const isOnline = state.onlineFriends.has(state.currentFriend.id);
+        statusEl.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+        statusEl.className = `chat-status ${isOnline ? 'online' : 'offline'}`;
+    }
+
+    /**
+     * Bir kullanıcının çevrimiçi durumunu profil modalı için günceller
+     */
+    function updateFriendOnlineStatus(userId) {
+        // Profil modalı açık mı kontrol et
+        const modal = document.getElementById('profile-modal');
+        if (!modal || !modal.classList.contains('active')) return;
+
+        const isOnline = state.onlineFriends.has(userId);
+
+        // Status elementlerini bul
+        const statusText = modal.querySelector('.status-text');
+        const statusIndicator = modal.querySelector('.status-indicator');
+        const statusDot = modal.querySelector('.status-dot');
+
+        if (statusText) statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+
+        if (statusIndicator) {
+            if (isOnline) {
+                statusIndicator.classList.add('online');
+                statusIndicator.classList.remove('offline');
+            } else {
+                statusIndicator.classList.remove('online');
+                statusIndicator.classList.add('offline');
+            }
+        }
+
+        if (statusDot) {
+            if (isOnline) {
+                statusDot.classList.add('online');
+            } else {
+                statusDot.classList.remove('online');
+            }
         }
     }
 
