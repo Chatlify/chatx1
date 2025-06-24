@@ -7,6 +7,8 @@
  * @param {function} onComplete - A callback function to run after the panel is closed or an action is completed.
  */
 window.initializeProfileModal = function (user, currentUser, supabase, onComplete) {
+    console.log("Initializing profile modal with user data:", user);
+
     const panel = document.getElementById('profile-modal');
     if (!panel) {
         console.error('Profile Modal not found in the DOM.');
@@ -90,39 +92,60 @@ window.initializeProfileModal = function (user, currentUser, supabase, onComplet
     // --- Fill User Data ---
 
     // Set avatar and username
-    avatar.src = user.avatar_url || 'images/defaultavatar.png';
-    username.textContent = user.username || 'Kullanıcı';
+    if (user) {
+        // Set avatar
+        if (user.avatar_url) {
+            avatar.src = user.avatar_url;
+            avatar.onerror = function () {
+                this.src = 'images/defaultavatar.png';
+            };
+        } else {
+            avatar.src = 'images/defaultavatar.png';
+        }
 
-    // Set profile tag if available
-    if (user.tag) {
-        profileTag.textContent = `#${user.tag}`;
+        // Set username
+        username.textContent = user.username || 'Kullanıcı';
+
+        // Set profile tag if available
+        if (user.tag) {
+            profileTag.textContent = `#${user.tag}`;
+            profileTag.style.display = '';
+        } else {
+            profileTag.style.display = 'none';
+        }
+
+        // Set online status
+        const isOnline = user.is_online || false;
+        statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+
+        // Update status indicators
+        if (isOnline) {
+            statusDot.classList.add('online');
+            statusIndicator.classList.add('online');
+            statusIndicator.classList.remove('offline');
+        } else {
+            statusDot.classList.remove('online');
+            statusIndicator.classList.remove('online');
+            statusIndicator.classList.add('offline');
+        }
+
+        // Set bio
+        if (user.bio) {
+            bio.textContent = user.bio;
+        } else {
+            bio.textContent = 'Bu kullanıcı henüz hakkında bir şey yazmamış.';
+        }
+
+        // Set membership info
+        if (user.created_at) {
+            memberSince.textContent = formatDate(user.created_at);
+            memberDuration.textContent = calculateTimeElapsed(user.created_at);
+        } else {
+            memberSince.textContent = 'Bilinmiyor';
+            memberDuration.textContent = 'Bilinmiyor';
+        }
     } else {
-        profileTag.style.display = 'none';
-    }
-
-    // Set online status
-    const isOnline = user.is_online || false;
-    statusText.textContent = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
-
-    // Update status indicators
-    if (isOnline) {
-        statusDot.classList.add('online');
-        statusIndicator.classList.add('online');
-    } else {
-        statusDot.classList.remove('online');
-        statusIndicator.classList.remove('online');
-        statusIndicator.classList.add('offline');
-    }
-
-    // Set bio
-    if (user.bio) {
-        bio.textContent = user.bio;
-    }
-
-    // Set membership info
-    if (user.created_at) {
-        memberSince.textContent = formatDate(user.created_at);
-        memberDuration.textContent = calculateTimeElapsed(user.created_at);
+        console.error('No user data provided for profile modal');
     }
 
     // --- Event Handlers ---

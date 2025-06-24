@@ -33,7 +33,8 @@
     border: 1px solid var(--divider-color);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 600px;
+    max-width: 700px;
+    /* Increased width for horizontal layout */
     position: relative;
     transform: scale(0.9);
     transition: transform 0.3s ease;
@@ -88,36 +89,44 @@
 }
 
 #profile-modal .profile-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
     padding: 20px;
 }
 
-/* Profile Main Section */
-#profile-modal .profile-main {
+/* Horizontal Layout for Profile */
+#profile-modal .profile-horizontal-layout {
     display: flex;
-    align-items: center;
+    flex-direction: row;
     gap: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--divider-color);
+    align-items: flex-start;
 }
 
-#profile-modal .profile-avatar-container {
+/* Left Section - Avatar and Basic Info */
+#profile-modal .profile-left-section {
+    width: 200px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--background-secondary);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--divider-color);
+}
+
+#profile-modal .profile-avatar-container {
+    margin-bottom: 15px;
 }
 
 #profile-modal .profile-avatar {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     border: 3px solid var(--primary-color);
     overflow: hidden;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
 }
 
 #profile-modal .profile-avatar img {
@@ -153,30 +162,13 @@
     background-color: var(--danger-color);
 }
 
-#profile-modal .profile-badges {
-    display: flex;
-    gap: 5px;
-}
-
-#profile-modal .profile-badges .badge {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-}
-
 #profile-modal .profile-info {
-    flex: 1;
+    width: 100%;
 }
 
 #profile-modal .profile-username {
     margin: 0 0 5px;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-color);
 }
@@ -184,6 +176,7 @@
 #profile-modal .profile-status {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     margin-bottom: 5px;
 }
@@ -210,13 +203,15 @@
     font-weight: 500;
 }
 
-/* Profile Cards */
-#profile-modal .profile-cards {
+/* Right Section - Info Cards and Actions */
+#profile-modal .profile-right-section {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+/* Profile Cards */
 #profile-modal .profile-card {
     background-color: var(--background-secondary);
     border-radius: var(--border-radius-md);
@@ -256,65 +251,71 @@
 
 #profile-modal .bio {
     margin: 0;
-    color: var(--text-secondary);
     font-size: 14px;
+    color: var(--text-secondary);
     line-height: 1.5;
 }
 
-/* Membership Info */
 #profile-modal .membership-info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 #profile-modal .info-item {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
+    align-items: center;
 }
 
 #profile-modal .info-label {
-    color: var(--text-secondary);
+    font-size: 14px;
     font-weight: 500;
+    color: var(--text-color);
 }
 
 #profile-modal .info-value {
-    color: var(--text-color);
-    font-weight: 600;
-}
-
-/* Mutual Friends */
-#profile-modal .mutual-friends {
     font-size: 14px;
     color: var(--text-secondary);
+}
+
+#profile-modal .mutual-friends {
+    min-height: 40px;
 }
 
 #profile-modal .no-mutual-friends {
     margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
     font-style: italic;
 }
 
 /* Profile Actions */
 #profile-modal .profile-actions {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 #profile-modal .action-btn {
-    padding: 12px;
-    border: none;
-    border-radius: var(--border-radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    padding: 10px 15px;
+    border-radius: var(--border-radius-md);
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s ease;
+    background-color: var(--background-tertiary);
+    color: var(--text-color);
+}
+
+#profile-modal .action-btn:hover {
+    transform: translateY(-2px);
 }
 
 #profile-modal .action-btn i {
@@ -328,7 +329,7 @@
 
 #profile-modal .message-btn:hover {
     background-color: var(--primary-color-dark);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 #profile-modal .call-btn {
@@ -337,42 +338,53 @@
 }
 
 #profile-modal .call-btn:hover {
-    background-color: var(--success-color-hover);
-    transform: translateY(-2px);
+    background-color: var(--success-color-dark, #2a9d48);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 #profile-modal .remove-friend-btn {
-    background-color: rgba(var(--danger-color-rgb), 0.1);
+    background-color: var(--danger-color-muted, #ff444420);
     color: var(--danger-color);
 }
 
 #profile-modal .remove-friend-btn:hover {
     background-color: var(--danger-color);
     color: white;
-    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 #profile-modal .block-btn {
     background-color: var(--background-tertiary);
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 #profile-modal .block-btn:hover {
-    background-color: var(--background-secondary);
-    color: var(--text-color);
-    transform: translateY(-2px);
+    background-color: #444;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Styles */
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #profile-modal .profile-horizontal-layout {
+        flex-direction: column;
+    }
+
+    #profile-modal .profile-left-section {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    #profile-modal .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+}
+
 @media (max-width: 576px) {
     #profile-modal .modal-container {
         max-width: 95%;
         max-height: 80vh;
-    }
-
-    #profile-modal .profile-main {
-        flex-direction: column;
-        text-align: center;
     }
 
     #profile-modal .profile-actions {
