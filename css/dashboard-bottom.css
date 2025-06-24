@@ -12,7 +12,8 @@
 
 .main-content {
     flex: 1;
-    padding-bottom: 120px; /* Space for bottom nav */
+    padding-bottom: 120px;
+    /* Space for bottom nav */
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -424,6 +425,7 @@
         opacity: 0;
         transform: translateX(-50%) translateY(5px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -529,11 +531,13 @@
     }
 
     .dm-section {
-        display: none; /* Hide DM section on very small screens */
+        display: none;
+        /* Hide DM section on very small screens */
     }
 
     .user-details {
-        display: none; /* Hide user details text on very small screens */
+        display: none;
+        /* Hide user details text on very small screens */
     }
 
     .user-info {
@@ -585,9 +589,12 @@
 }
 
 @keyframes notificationPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.1);
     }
